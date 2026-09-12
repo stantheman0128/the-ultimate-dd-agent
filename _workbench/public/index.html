@@ -273,16 +273,15 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 
   <section id="tab-recon">
     <div class="panel">
-      <h2>關鍵資訊比對 <span class="hint">先看不一致及待確認項目，點選儲存格即可核對原文</span></h2>
+      <h2>關鍵資訊比對 <span class="hint">先處理差異與待確認事項，展開後可逐筆核對來源</span></h2>
       <div class="toolbar">
-        <select id="cmFilter" aria-label="查核項目篩選" onchange="renderConflictMap()"><option value="issues">不一致、基礎不同及單一來源</option><option value="conflict">只看資料不一致</option><option value="">全部事實</option></select>
-        <span id="cmStats" style="font-size:12px;color:var(--ink-3)"></span>
+        <select id="cmFilter" aria-label="查核項目篩選" onchange="renderConflictMap()"><option value="issues">需要確認的事項</option><option value="conflict">資料不一致</option><option value="basis_mismatch">口徑待釐清</option><option value="unverified">尚待確認</option><option value="single_source">待交叉驗證</option><option value="consistent">核對一致</option><option value="">全部事項</option></select>
+        <input id="cmQuery" type="search" aria-label="搜尋查核事項" placeholder="搜尋查核事項…" oninput="renderConflictMap()"><span id="cmStats" style="font-size:12px;color:var(--ink-3)"></span>
       </div>
-      <div class="cmap scroll-x" id="cmap">尚無查核結果。請先上傳資料，再開始盡調分析。</div>
+      <div class="findings-list" id="cmap">尚無查核結果。請先上傳資料，再開始盡調分析。</div>
     </div>
     <div class="panel">
-      <h2>跨文件查核摘要 <span class="hint">整理各文件的數據差異、計算基礎與待確認事項</span></h2>
-      <div class="mdr" id="factsView">完成盡調分析後，這裡會顯示查核結果。</div>
+      <details><summary>完整查核報告</summary><div class="mdr" id="factsView">完成盡調分析後，這裡會顯示查核結果。</div></details>
     </div>
   </section>
 
@@ -325,7 +324,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <div class="chat-layout"><div class="chat-history" id="chatHistory"></div><div class="chat-main">
       <div class="chat-topline"><div class="conversation-context"><span class="context-icon ui-icon" style="--icon:url(/icons/folder-open.svg)" aria-hidden="true"></span><span id="chatTitle">新的討論</span></div><span id="aiHint">回答附資料來源</span></div>
       <div class="chat-log" id="chatLog" role="log" aria-label="專案對話紀錄" aria-live="polite"></div>
-      <div id="memoryBar" class="memory-bar"><button onclick="openMemory()">使用記憶：團隊通則 · 本案　調整</button><span id="memoryLearning" role="status"></span></div><div class="chat-composer"><div class="composer-label"><span class="ui-icon" style="--icon:url(/icons/message-square.svg)" aria-hidden="true"></span><label for="aiQ">詢問本案資料</label></div><textarea id="aiQ" aria-label="訊息" placeholder="輸入問題，或接著追問…" oninput="updateComposer()" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();askAI()}"></textarea><div class="chat-composer-foot"><button class="composer-files" type="button" onclick="pickTab('docs')" data-icon="folder-open">資料室</button><small><kbd>Enter</kbd> 送出 · <kbd>Shift ↵</kbd> 換行</small><div class="chat-actions"><button id="chatStop" onclick="stopChat()" hidden>停止回覆</button><button class="primary" id="aiBtn" onclick="askAI()">送出提問</button></div></div></div>
+      <div id="memoryBar" class="memory-bar"><button onclick="openMemory()">使用記憶：團隊通則 · 本案　調整</button><span id="memoryLearning" role="status"></span></div><div class="chat-composer"><div class="composer-label"><span class="ui-icon" style="--icon:url(/icons/message-square.svg)" aria-hidden="true"></span><label for="aiQ">詢問本案資料</label></div><textarea id="aiQ" rows="1" aria-label="訊息" placeholder="輸入問題，或接著追問…" oninput="updateComposer()" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();askAI()}"></textarea><div class="chat-composer-foot"><button class="composer-files" type="button" onclick="pickTab('docs')" data-icon="folder-open">資料室</button><small><kbd>Enter</kbd> 送出 · <kbd>Shift ↵</kbd> 換行</small><div class="chat-actions"><button id="chatStop" onclick="stopChat()" hidden>停止回覆</button><button class="primary" id="aiBtn" onclick="askAI()">送出提問</button></div></div></div>
       <div class="chat-live" id="chatLive" role="status" aria-live="polite"></div>
     </div></div>
   </section>
@@ -415,7 +414,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
  <section><div class="memory-tools"><label>管理記憶 <select id="memoryScope" onchange="loadMemory()"></select></label><button onclick="loadMemory()">重新整理</button><button onclick="editMemory()">新增記憶</button></div><p id="memoryJob" role="status"></p><button id="memoryRetry" hidden onclick="retryMemoryJobs()">重試整理</button><div id="memoryList"></div>
  <form id="memoryEditor" hidden onsubmit="event.preventDefault();saveMemoryEntry()"><label>標題<input id="memoryTitle" required maxlength="100"></label><label>記憶內容<textarea id="memoryContent" required maxlength="2000" rows="5"></textarea></label><label>使用狀態<select id="memoryStatus"><option value="active">使用中（確認此記憶）</option><option value="candidate">待確認</option><option value="disabled">已停用</option></select></label><p id="memorySource"></p><button type="button" id="memoryOpenSource" hidden onclick="openMemorySource()">開啟來源對話</button><details id="memoryVersions"></details><div class="memory-editor-actions"><button type="submit" class="primary">儲存記憶</button><button type="button" id="memoryRemove" onclick="document.getElementById('memoryDeleteConfirm').hidden=false">刪除記憶</button></div><div id="memoryDeleteConfirm" hidden><p>刪除此記憶及過去版本？原始對話紀錄仍會保留。</p><button type="button" onclick="removeMemoryEntry()">確定刪除</button></div></form></section>
 </dialog>
-<script src="/project-chat.js"></script><script src="/memory.js"></script>
+<script src="/review-utils.js"></script><script src="/project-chat.js"></script><script src="/memory.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -685,18 +684,21 @@ async function refreshLog(){
 }
 function fmtT(ts){ const d=new Date(ts); return d.toTimeString().slice(0,8); }
 function renderTimeline(el, events, append){
-  if(!events || !events.length){ if(!append) el.innerHTML='尚無分析紀錄'; return; }
-  const h = events.map(e=>`<div class="k-${esc(e.kind)}"><span class="t">${fmtT(e.ts)}</span><span class="a${e.agent==='main'?' main':''}" title="${esc(e.agent)}">${esc(e.agent)}</span><span>${esc(e.text)}</span></div>`).join('');
-  if(append){ el.insertAdjacentHTML('beforeend', h); } else el.innerHTML = h;
-  el.scrollTop = el.scrollHeight;
+ el._events=(append?[...(el._events||[]),...(events||[])]:events||[]).slice(-200);
+ const all=el._events,diagnostics=all.filter(ReviewUI.isDiagnostic),visible=all.filter(e=>!ReviewUI.isDiagnostic(e));
+ if(!all.length){el.innerHTML='尚無分析紀錄';return;}
+ el.innerHTML=visible.map(e=>`<div class="k-${esc(e.kind)}"><span class="t">${fmtT(e.ts)}</span><span class="a" title="${esc(e.agent)}">${esc(e.agent)}</span><span>${esc(e.text)}</span></div>`).join('')+(diagnostics.length?`<details class="run-diagnostics"><summary>${diagnostics.length} 筆技術診斷（含 MCP／環境訊息）</summary><p>診斷訊息不等於分析失敗，請以分析完成狀態及產出為準；完整內容見技術紀錄。</p>${diagnostics.map(e=>`<pre>${esc(e.text)}</pre>`).join('')}</details>`:'');
+ el.scrollTop=el.scrollHeight;
 }
+
 function statsLine(ev){
   const evs = ev.events||[];
   const c = ev.counts || { agents: evs.filter(e=>e.kind==='spawn').length, reads: evs.filter(e=>e.kind==='read').length, writes: evs.filter(e=>e.kind==='write').length };
   const done = evs.find(e=>e.kind==='done');
   const t0 = ev.started || (evs[0]&&evs[0].ts); const t1 = ev.running ? Date.now() : (evs.length? evs[evs.length-1].ts : t0);
   const secs = t0 ? Math.max(0, Math.round((t1-t0)/1000)) : 0;
-  return `<span>代理 <b>${c.agents}</b></span><span>讀取 <b>${c.reads}</b></span><span>寫入 <b>${c.writes}</b></span><span>耗時 <b>${secs}s</b></span>${done&&done.cost!=null?`<span>成本 <b>$${Number(done.cost).toFixed(2)}</b></span>`:''}${ev.running?'<span class="chip run">執行中</span>':''}`;
+  const state=ReviewUI.runState(evs,ev.running);
+  return `<span class="run-state ${state.level}">${esc(state.label)}</span>${c.agents||c.reads||c.writes?`<span>已回報：代理 ${c.agents} · 讀取 ${c.reads} · 寫入 ${c.writes}</span>`:'<span>執行器未提供完整讀寫統計</span>'}<span>耗時 <b>${secs}s</b></span>${done&&done.cost!=null?`<span>成本 <b>$${Number(done.cost).toFixed(2)}</b></span>`:''}${ev.running?'<span class="chip run">執行中</span>':''}`;
 }
 function humanSize(n){ return n>1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB'; }
 const CAT_LABELS={'Company & strategy':'公司與經營策略','Products & technology':'產品與技術','Commercial & traction':'業務與營運','Financials':'財務資料','Corporate & legal':'股權與法務','Reference & media':'其他參考資料'};
@@ -816,33 +818,21 @@ function fmtVal(v, unit){
   if (typeof v==='number'){ if(unit==='pct'||(Math.abs(v)<=1&&unit!=='count'&&unit!=='days'&&unit!=='months'&&unit!=='shares'&&String(v).includes('.'))) return (v*100).toFixed(1).replace(/\.0$/,'')+'%'; return v.toLocaleString(undefined,{maximumFractionDigits:2}); }
   return String(v);
 }
+let cmLimit=30, cmKey="";
+function moreFindings(){cmLimit+=30;renderConflictMap();}
 function renderConflictMap(){
-  const el=$('cmap'); const facts=FACTS.facts||[]; const docs=FACTS.docs||{};
-  if(!facts.length){ el.innerHTML='尚無查核結果。請先上傳資料，再開始盡調分析。'; $('cmStats').textContent=''; return; }
-  const filt=$('cmFilter').value;
-  const keep=f=>!filt||(filt==='conflict'?f.status==='conflict':['conflict','basis_mismatch','single_source'].includes(f.status));
-  const rows=facts.filter(keep);
-  const codes=[...new Set(facts.flatMap(f=>(f.values||[]).map(v=>v.doc)))].filter(c=>c!=='NOTES').concat(facts.some(f=>(f.values||[]).some(v=>v.doc==='NOTES'))?['NOTES']:[]);
-  const sevOrd={high:0,medium:1,low:2}; const stOrd={conflict:0,basis_mismatch:1,single_source:2,consistent:3,unverified:4};
-  rows.sort((a,b)=>(stOrd[a.status]??5)-(stOrd[b.status]??5)||(sevOrd[a.severity]??3)-(sevOrd[b.severity]??3));
-  let h=`<table><thead><tr><th>事實</th><th>狀態</th>${codes.map(c=>`<th title="${esc((docs[c]&&docs[c].file)||c)}">${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
-  for(const f of rows){
-    const byDoc={}; for(const v of f.values||[]){ (byDoc[v.doc]=byDoc[v.doc]||[]).push(v); }
-    const d=f.derived;
-    const derivedTxt = d && d.computed!=null ? `重算 ${d.formula} = ${fmtVal(d.computed, (f.values&&f.values[0]&&f.values[0].unit)||'')}${d.match===false?` ⚠ 與揭露差 ${d.delta_pct}%`:(d.match===true?' ✓ 相符':'')}` : '';
-    h+=`<tr class="st-${esc(f.status||'unverified')}"><td class="lbl">${esc(f.label||f.id)}<span class="sev ${esc(f.severity||'')}">${esc(f.severity||'')}</span>${derivedTxt?`<div class="derived">${esc(derivedTxt)}</div>`:''}${f.note?`<div class="note">${esc(f.note)}</div>`:''}</td><td><span class="chip ${f.status==='conflict'?'bad':f.status==='basis_mismatch'?'warn':f.status==='single_source'?'run':'ok'}">${esc(ST_LABEL[f.status]||f.status||'')}</span></td>`;
-    for(const c of codes){
-      const vs=byDoc[c];
-      if(!vs){ h+='<td class="v">—</td>'; continue; }
-      const file=(docs[c]&&docs[c].file)||''; const round=(docs[c]&&docs[c].round)||'';
-      h+=`<td class="v has" data-f="${esc(file)}" data-r="${esc(round)}" data-l="${esc(vs[0].loc||'')}" title="${esc(file)} ${esc(vs[0].loc||'')}${vs[0].basis?' · 計算基礎：'+esc(vs[0].basis):''}" onclick="if(this.dataset.f)openEvidence(this.dataset.f,this.dataset.r,this.dataset.l)">${vs.map(v=>`${esc(fmtVal(v.value,v.unit))}<div style="font-size:10.5px;color:var(--ink-3)">${esc(v.loc||'')}</div>`).join('')}</td>`;
-    }
-    h+='</tr>';
-  }
-  el.innerHTML=h+'</tbody></table>';
-  const n=s=>facts.filter(f=>f.status===s).length;
-  $('cmStats').textContent=`顯示 ${rows.length}／${facts.length} · 矛盾 ${n('conflict')} · 計算基礎 ${n('basis_mismatch')} · 單一來源 ${n('single_source')} · 一致 ${n('consistent')}${FACTS.recomputed_at?` · recompute ${FACTS.recomputed_at.slice(0,16)}`:''}`;
+ const el=$('cmap'),facts=FACTS.facts||[],docs=FACTS.docs||{};
+ const rows=ReviewUI.findings(facts,$('cmFilter').value,$('cmQuery').value);
+ const key=cur+'|'+$('cmFilter').value+'|'+$('cmQuery').value;if(key!==cmKey){cmKey=key;cmLimit=30;}
+ $('cmStats').textContent=`${rows.length} 項符合 · 共 ${facts.length} 項`;
+ el.innerHTML=rows.length?rows.slice(0,cmLimit).map(f=>{
+  const status=ReviewUI.labels[f.status]||'尚待確認';
+  const sources=(f.values||[]).map(v=>{const doc=docs[v.doc]||{};return `<div class="finding-source"><div><span class="finding-doc">${esc(doc.file||v.doc||'未標示文件')}</span><span class="finding-location">${esc(v.loc||'未標示位置')}</span></div><p>${esc(fmtVal(v.value,v.unit))}</p>${v.basis&&v.basis!=='unspecified'?`<small>計算口徑：${esc(v.basis)}</small>`:''}${doc.file?`<button data-f="${esc(doc.file)}" data-r="${esc(doc.round||'')}" data-l="${esc(v.loc||'')}" onclick="openEvidence(this.dataset.f,this.dataset.r,this.dataset.l)">核對原文 ↗</button>`:''}</div>`}).join('');
+  const d=f.derived;
+  return `<details class="finding ${f.status==='conflict'?'finding-conflict':''}"><summary><span class="finding-heading"><strong>${esc(f.label||f.id)}</strong><small>${esc(f.id||'')} · ${(f.values||[]).length} 筆來源${f.severity==='high'?' · 優先確認':''}</small></span><span class="finding-status">${esc(status)}</span></summary><div class="finding-body">${f.note?`<p class="finding-note">${esc(f.note)}</p>`:''}<div class="finding-sources">${sources||'<p>尚無可定位來源，需補充資料。</p>'}</div>${d?`<details class="finding-calculation"><summary>計算與驗算詳情</summary><p>${d.computed!=null?'計算結果：'+esc(fmtVal(d.computed,f.values?.[0]?.unit||'')): '尚無驗算結果'}${d.match===true?' · 與其中一筆揭露數值相符（不代表所有來源一致）':d.match===false?' · 與揭露數值不符':''}</p><code>${esc(d.formula||'')}</code></details>`:''}</div></details>`;
+ }).join('')+(rows.length>cmLimit?`<button onclick="moreFindings()">再顯示 30 項（目前 ${Math.min(cmLimit,rows.length)}／${rows.length}）</button>`:''):'<div class="finding-empty">'+(facts.length?'沒有符合篩選條件的事項。':'尚無查核結果。請先上傳資料，再開始盡調分析。')+'</div>';
 }
+
 function renderNotes(){ $('notesTa').value = D.notes || ''; $('notesStatus').textContent='修改後請儲存'; }
 
 function pickTab(t){
