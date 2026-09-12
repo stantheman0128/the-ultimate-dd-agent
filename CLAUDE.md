@@ -68,7 +68,7 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 | 產業分析師（`persona-ind`） | 競品、上游依賴、差異化、市場成長合理性 |
 | 投委會老鳥（`persona-ic`） | 股權、條款/side letter、創辦人 FTE、組織、出場、文件完備 |
 
-每個 persona 寫 `_analysis/drafts/persona_<fin|ops|ind|ic>.md`，表頭逐字 `| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |`。**證據欄**是機讀引用（`FIN:p.2; CT:Cap Table!B4`，facts.json 的文件代號:位置），工作台用它把每題連回原文頁面；匯整後的 `draft_RN.md` 保留此欄。每題必附：分類／問題／為什麼問／出處／書面 vs 口頭／波次。**出處與動機欄必須完整可讀**：資料來源寫檔名＋頁碼或 tab、引用的具體數字，加一句白話動機 — 不得只寫內部代號（如 F3、persona-ic、FP1-3）。出題前先讀題庫、判斷商業模式原型、re-anchor placeholder 至本案實際數字。核心技巧：number-anchored、時間序列非快照、附合作狀態、指定明確期間、第一波 ≤20 題、敏感題走口頭。**產出草稿前絕不參考使用者的版本**（獨立性是 diff 有效的前提）。
+每個 persona 寫 `_analysis/drafts/persona_<fin|ops|ind|ic>.md`，表頭逐字 `| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |`。**證據欄**是機讀引用（`FIN:p.2; CT:Cap Table!B4`，facts.json 的文件代號:位置），工作台用它把每題連回原文頁面；匯整後的 `draft_RN.md` 保留此欄。每題必附：分類／問題／為什麼問／出處／書面 vs 口頭／波次。**出處與動機欄必須完整可讀**：資料來源寫檔名＋頁碼或 tab、引用的具體數字，加一句白話動機 — 不得只寫內部代號（如 F3、persona-ic、FP1-3）。出題前先讀題庫、判斷商業模式原型、re-anchor placeholder 至本案實際數字。核心技巧：number-anchored、時間序列非快照、附合作狀態、指定明確期間、第一波 ≤20 題、通路依下方書面詢問政策。**產出草稿前絕不參考使用者的版本**（獨立性是 diff 有效的前提）。
 
 匯整（去重＋覆蓋檢查）時的**基線定式檢查**（校準教訓）：題庫中標記 any＋wave 1 的定式（Top-N 客戶 roster＋合約狀態、營收區域分布、全年度營收/成本拆分表）不得因 number-anchored 題優先而被排擠 — 沒有錨定版本就用定式原樣補上。
 
@@ -76,7 +76,7 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 主 session 匯整後必派 question-reviewer（fresh context，不讀 persona 推理）；追問輪必讀上輪最終版與公司回覆。逐題拆 facets、搜證含同義詞、記錄覆蓋、區分公司陳述與文件支持、重驗可比性、評價決策價值、給 verdict。寫 review_RN.json；suppress 與 merge 只標记，不刪除。rewrite 保留原句與新版；defer 降波次；needs_human_check 交人。來源「你」只給建議，不能自行改寫或刪除。
 
 ### 階段 2：統整校對
-- 使用者交出他的版本（工作台上傳至 `_analysis/inbox/`）後做三類 diff：共識（語意相同即算，措辭合併取較佳）／只有 引擎（使用者勾選決定，砍題附原因）／只有使用者（**自動進最終版＋記錄為盲區訓練資料**）。合併輸出 `draft_RN_merged.md`，含「來源」欄（共識／引擎／你）。
+- 使用者交出他的版本（工作台上傳至 `_analysis/inbox/`）後做三類 diff：共識（語意相同即算，措辭合併取較佳）／只有 引擎（使用者勾選決定，砍題附原因）／只有使用者（**一律保存、來源標「你」、Reviewer 可給建議，由人確認；記錄為盲區資料**）。合併輸出 `draft_RN_merged.md`，含「來源」欄（共識／引擎／你）。
 - 使用者對題目的編輯：原句 vs 修改版**成對記錄**（措辭學習）。
 - 合併版 xlsx 含勾選欄與內部欄（出處與動機），存 `_analysis/drafts/`；發出版移除內部欄。
 - **第二層 diff**：使用者上傳「最終發出版」（含同事補題）→ 比對合併版 → 同事新增（新盲區）與修改（措辭）記錄 → 存檔 `qlist/<案名>_Qlist_RN_final.xlsx`。
@@ -127,3 +127,6 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 
 ## 可配置 persona
 persona 名單以派工訊息為準，預設 fin／ops／ind／ic，可增選 tech／legal／model／people。主 session 只派已勾選者，不默默加回停用 persona。每個 persona 獨立出題，Reviewer 統一審核。
+
+## 書面詢問政策
+本團隊一律書面詢問，敏感題以波次 2 表達。

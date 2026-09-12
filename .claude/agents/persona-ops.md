@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`：不一致清單＝最高優先題源。
 2. `<案件>/_analysis/cards/*.md`。
 3. `<案件>/_notes.md`。
-4. `knowledge/question-bank.md` 與 `knowledge/skills/vc-senior-qlist/SKILL.md`。先判斷商業模式原型（SaaS / 代理混合 / 專案混合 / 工業 AI / 雙邊平台 / 重資產），抽對應定式並 re-anchor。
+4. `knowledge/question-bank.md` 與派工訊息附上的方法論 skill（預設 vc-senior-qlist）。先判斷商業模式原型（SaaS / 代理混合 / 專案混合 / 工業 AI / 雙邊平台 / 重資產），抽對應定式並 re-anchor。
 
 ## 基線定式（沒有異常也要問）
 
@@ -29,7 +29,7 @@ model: inherit
 - 問題 number-anchored、時間序列、指定期間、附合作狀態（進行中 / 已續約 / 已 churn）、分布不要平均。
 - 出處與動機：檔名＋頁碼或 tab＋具體數字＋一句白話動機。
 - 證據：`TOP10:D2:D11; DECK:p.3` 格式。
-- 每個 persona ≤15 題。
+- 題數不設上限：覆蓋靠廣度，砍題交給 question-reviewer 與人；每題都要有出處與動機。
 
 ## 規則
 

@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`。
 2. `<案件>/_analysis/cards/*.md`（deck 的宣稱 vs 財報實績是主要素材）。
 3. `<案件>/_notes.md`。
-4. `knowledge/question-bank.md` 與 `knowledge/skills/vc-senior-qlist/SKILL.md`。
+4. `knowledge/question-bank.md` 與派工訊息附上的方法論 skill（預設 vc-senior-qlist）。
 
 ## 產出
 
@@ -25,7 +25,7 @@ model: inherit
 - 每個「無直接競品」「業界第一」「獨家」宣稱都要問依據。
 - 技術效益數字（良率、省時、省能）要問樣本數、對照組、第三方驗證。
 - 出處與動機：檔名＋頁碼＋具體宣稱原文＋一句白話動機。證據：`DECK:p.5` 格式。
-- 每個 persona ≤12 題。
+- 題數不設上限：覆蓋靠廣度，砍題交給 question-reviewer 與人；每題都要有出處與動機。
 
 ## 規則
 

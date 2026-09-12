@@ -911,19 +911,20 @@ async function uploadFiles(fl){
   const files = Array.from(fl || []);
   if (!files.length) return;
   const round = D.state.round;
-  let done = 0; const fail = [];
+  let done = 0,replaced = 0; const fail = [];
   toast(`上傳中… 0/${files.length}`);
   await Promise.all(files.map(async f => {
     try {
       const r = await fetch('/api/upload?' + enc({deal:cur, round, name:f.name}), {method:'POST', body:f});
       if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || r.status);
+      const result=await r.json();if(result.replaced)replaced++;
       done++;
     } catch(e) { fail.push(f.name); }
     toast(`上傳中… ${done}/${files.length}`);
   }));
   toast(fail.length
     ? `完成 ${done}/${files.length}，失敗：${fail.join('、')}（可重新上傳失敗的檔案）`
-    : `已存入 ${done} 個檔案 → ${cur}/round${round}/`);
+    : `已存入 ${done} 個檔案${replaced?`，${replaced} 份舊版已歸檔`:""} → ${cur}/round${round}/`);
   await pickDeal(cur); pickTab('docs');
 }
 function archiveDoc(btn){
@@ -1328,7 +1329,7 @@ async function askAI(){
         if(ev.meta){ meta=ev.meta; $('aiMeta').textContent=`${meta.provider} · ${meta.mode==='api'?'直連 API · '+meta.model:meta.mode==='cli'?'CLI':'假引擎'} · ${meta.retrieval} · ${meta.docs} 份文件 · ${meta.pages} 頁 · 約 ${((meta.tokens||0)/1000).toFixed(0)}K tokens${meta.whole?'（整份 Data Room 進 context）':`（全案約 ${((meta.totalTokens||0)/1000).toFixed(0)}K 超過預算 ${((meta.budget||0)/1000).toFixed(0)}K，BM25 挑頁）`}`; }
         if(ev.delta){ if(!firstAt) firstAt=Date.now(); text+=ev.delta; render(); }
         if(ev.error){ text+=`\n\n**錯誤：**${ev.error}`; render(); }
-        if(ev.usage){ const u=ev.usage; const cr=u.cache_read_input_tokens||0, cw=u.cache_creation_input_tokens||0; $('aiMeta').textContent += ` · 首字 ${firstAt?((firstAt-t0)/1000).toFixed(1):'—'}s · 總 ${((Date.now()-t0)/1000).toFixed(1)}s · in ${(u.input_tokens||0).toLocaleString()} / cache 讀 ${cr.toLocaleString()} 寫 ${cw.toLocaleString()} / out ${(u.output_tokens||0).toLocaleString()}`; }
+        if(ev.usage){ const u=ev.usage; const cr=u.cache_read_input_tokens??u.input_tokens_details?.cached_tokens??u.cached_input_tokens??null, cw=u.cache_creation_input_tokens||0; $('aiMeta').textContent += ` · 首字 ${firstAt?((firstAt-t0)/1000).toFixed(1):'—'}s · 總 ${((Date.now()-t0)/1000).toFixed(1)}s · in ${(u.input_tokens||0).toLocaleString()} / cache 讀 ${cr==null?"未知":cr.toLocaleString()} 寫 ${cw.toLocaleString()} / out ${(u.output_tokens||0).toLocaleString()}`; }
       }
     }
     if(!text) $('aiA').textContent='（沒有回答）';
@@ -1346,7 +1347,7 @@ const HELP = `## 方法論與規則
 
 1. **＋ 新增案件**：自動建立資料夾骨架（round1–3、_analysis、qlist、_notes.md）
 2. **備註頁先寫兩句背景**：怎麼認識的、聊過什麼、文件外的實體（例：某轉投資公司）。這是引擎唯一看不到的資訊，寫了才問得到
-3. **文件頁拖入 Data Room**：自動存進當前 round 資料夾並分類；對方給新版本時先「刪除」舊檔（＝歸檔，引擎會做版本 diff）再上傳新版
+3. **文件頁拖入 Data Room**：自動存進當前 round 資料夾並分類；同名新版本上傳時舊檔自動歸檔並重建索引
 4. **▶ 跑流程**：引擎讀文件做字卡、對帳、四視角出題，產出草稿（可關視窗背景跑，總覽頁看進度）
 5. **審核頁：上傳我的 Q-list → 跑合併**：三類 diff 後每題標來源（共識／Codex／你）；用篩選器切來源、分類、波次；勾選＝保留、砍題選原因、✎ 改問法
 6. **送出決定 → 下載合併版**：拿去與同事定稿
@@ -1367,9 +1368,9 @@ const HELP = `## 方法論與規則
 - **波次（wave）是什麼？** 出題的發送順序：wave 1＝業務優先題（第一波就問）、wave 2＝治理股權類（第二波）、wave 3＝交易文件類。「wave 1/3」表示這題第一波可先要、最遲第三波要拿到
 - **回看舊輪次？** 文件頁本來就列出每一輪；Q-list 部分點上方的「Round N ✓」膠囊即可回看該輪草稿（唯讀），點「回到目前輪次」返回
 - **案件管理**：側欄星號＝置頂；「刪除案件」實際是移到 _trash/ 資料夾（可手動救回）；已結案的案件可按「重新開啟」
-- **進度條**：跑流程時按鈕下方顯示估計進度（依歷史耗時估算，非精確值），詳細即時紀錄在總覽頁
-- **蒸餾什麼時候發生？** 兩層：每輪上傳最終版後自動跑「本輪蒸餾」；結案時跑「全案蒸餾」。成果都寫回 knowledge/question-bank.md
-- **模型怎麼選？** 標題列下拉控制引擎主 session；子代理預設繼承主 session 的模型與 effort
+- **進度條**：跑流程時按鈕下方顯示估計進度（依固定預估，非實測完成比例），詳細即時紀錄在總覽頁
+- **蒸餾什麼時候發生？** 三層：審核送出產生候選規則，人核准後下次派工生效；每輪最終版後蒸餾題庫；結案後彙總全案
+- **模型怎麼選？** 標題列 ⚙ 進階設定可選 provider、模型、effort 與 persona，代理可個別覆寫
 - **工作台需要保持開著嗎？** 頁面可關閉，但執行 server 的主機與程序必須持續運作
 - **想跟 Codex 討論案子？** 在專案根目錄開 Codex 對話，它讀寫的是同一批資料夾
 

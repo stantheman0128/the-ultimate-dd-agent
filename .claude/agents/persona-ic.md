@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`：股權類 conflict 與 single_source（質押、終止、關係人）是首要題源。
 2. `<案件>/_analysis/cards/*.md`。
 3. `<案件>/_notes.md`：文件外的實體與關係（例：會議提到的轉投資公司）必須有題逼出文件。
-4. `knowledge/question-bank.md`（文件請求、股權估值、出場、匯整與反面規則）與 `knowledge/skills/vc-senior-qlist/SKILL.md`。
+4. `knowledge/question-bank.md`（文件請求、股權估值、出場、匯整與反面規則）與派工訊息附上的方法論 skill（預設 vc-senior-qlist）。
 
 ## 產出
 
@@ -23,10 +23,10 @@ model: inherit
 `| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |`
 
 - 文件請求題放最前（缺件對照標準清單：財簽、章程、SPA/SHA、Cap Table 投前投後、組織圖、Term Sheet、財測模型、股東名簿、變更登記、ESOP 台帳）。
-- 直指對方股權登載或法律效力有瑕疵的指控題標「口頭」（反面規則 R4）。
+- 直指對方股權登載或法律效力有瑕疵的指控題依 AGENTS.md 書面詢問政策排波次。
 - 追問輪（round ≥ 2）的靜態盤點題（組織圖、CV、認證）預設波次 2（反面規則 R5）。
 - 出處與動機：檔名＋頁碼或 tab＋具體數字＋一句白話動機。證據：`CT:Cap Table!B4; REG:p.1` 格式。
-- 每個 persona ≤15 題。
+- 題數不設上限：覆蓋靠廣度，砍題交給 question-reviewer 與人；每題都要有出處與動機。
 
 ## 規則
 

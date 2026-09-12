@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`：不一致清單＝最高優先題源；`derived.match=false` 的列＝「自己算過對不上」的題。
 2. `<案件>/_analysis/cards/*.md`：關鍵數字表與疑點段。
 3. `<案件>/_notes.md`：文件外情報。
-4. `knowledge/question-bank.md`（活題庫）與 `knowledge/skills/vc-senior-qlist/SKILL.md` 的 20 條技法。先判斷商業模式原型，再抽對應定式，把 placeholder re-anchor 成本案實際數字。
+4. `knowledge/question-bank.md`（活題庫）與派工訊息附上的方法論 skill（預設 vc-senior-qlist） 的 20 條技法。先判斷商業模式原型，再抽對應定式，把 placeholder re-anchor 成本案實際數字。
 
 ## 產出
 
@@ -25,9 +25,9 @@ model: inherit
 - **問題**：number-anchored（把實際數字與差異寫進題目）、時間序列非快照、指定明確期間、附合作狀態、要分布不要平均。
 - **出處與動機**：檔名＋頁碼或 tab＋引用的具體數字＋一句白話動機。禁用內部代號。
 - **證據**：機讀引用，格式 `FIN:p.2; CT:Cap Table!B4`（facts.json 的 doc 代號:loc，分號分隔），供工作台做連結。
-- **書面/口頭**：本團隊一律書面詢問，敏感題以「口頭」標記讓匯整層決定波次。
+- **書面/口頭**：依 AGENTS.md 的書面詢問政策。
 - **波次**：1＝業務優先、2＝治理股權、3＝交易文件。
-- 每個 persona ≤15 題；寧缺勿濫，但 facts.md 裡每個 high 嚴重度的不一致至少一題。
+- 題數不設上限：覆蓋靠廣度，砍題交給 question-reviewer 與人；每題都要有出處與動機。
 
 ## 規則
 

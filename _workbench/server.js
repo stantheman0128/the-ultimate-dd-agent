@@ -776,9 +776,11 @@ const server = http.createServer(async (req, res) => {
       const rd = path.join(dp, 'round' + round);
       fs.mkdirSync(rd, { recursive: true });
       const saved = safeJoin(rd, fname);
-      fs.writeFileSync(saved, await readBody(req));
+      const contents=await readBody(req),replaced=fs.existsSync(saved);
+      if(replaced){const archive=path.join(dp,'_analysis','_archive');fs.mkdirSync(archive,{recursive:true});fs.renameSync(saved,path.join(archive,Date.now()+'_'+randomUUID().slice(0,8)+'_'+fname));}
+      fs.writeFileSync(saved, contents);
       runIndexer(dp, saved, true); // 上傳即建索引（背景）
-      return json(res, 200, { saved: `round${round}/${fname}`, indexing: true });
+      return json(res, 200, { saved: `round${round}/${fname}`, indexing: true, replaced });
     }
     if (u.pathname === '/api/reindex' && req.method === 'POST') {
       const { deal, file, force } = JSON.parse(await readBody(req));
@@ -871,7 +873,7 @@ const server = http.createServer(async (req, res) => {
       const st = readState(dp);
       const fname = path.basename(name || '');
       if (!fs.existsSync(path.join(dp, '_analysis', 'inbox', fname))) throw httpErr(404, '找不到你上傳的版本');
-      const prompt = `合併審核前置：案子「${deal}」Round ${st.round}。使用者的 Q-list 在「${deal}/_analysis/inbox/${fname}」（用 python3＋openpyxl 讀）。引擎草稿在「${deal}/_analysis/drafts/draft_R${st.round}.md」。照本專案 AGENTS.md 階段 2 做三類 diff：(1) 兩邊都問到（語意相同即算，措辭合併取較佳、number-anchored 版本優先）→ 來源標「共識」；(2) 只有引擎 → 來源標「Codex」；(3) 只有使用者 → 來源標「你」，一律保留，並在 _analysis/diff-reports/blindspots-r${st.round}.md 記錄為盲區訓練資料。輸出寫入「${deal}/_analysis/drafts/draft_R${st.round}_merged.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 來源 | 出處與動機 | 書面/口頭 | 波次 |（來源欄只能是「共識」「Codex」「你」三值之一），排序：共識在前、你的獨有題次之、Codex 獨有題最後。出處與動機欄必須完整可讀：資料來源寫檔名＋頁碼或 tab，加一句白話動機，不得只寫代號；使用者題目的動機用推測並標「（推測）」。完成即結束。`;
+      const prompt = `合併審核前置：案子「${deal}」Round ${st.round}。使用者的 Q-list 在「${deal}/_analysis/inbox/${fname}」（用 python3＋openpyxl 讀）。引擎草稿在「${deal}/_analysis/drafts/draft_R${st.round}.md」。照本專案 AGENTS.md 階段 2 做三類 diff：(1) 兩邊都問到（語意相同即算，措辭合併取較佳、number-anchored 版本優先）→ 來源標「共識」；(2) 只有引擎 → 來源標「Codex」；(3) 只有使用者 → 來源標「你」，一律保存、Reviewer 可給建議、由人確認，並在 _analysis/diff-reports/blindspots-r${st.round}.md 記錄為盲區訓練資料。輸出寫入「${deal}/_analysis/drafts/draft_R${st.round}_merged.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 來源 | 出處與動機 | 書面/口頭 | 波次 |（來源欄只能是「共識」「Codex」「你」三值之一），排序：共識在前、你的獨有題次之、Codex 獨有題最後。出處與動機欄必須完整可讀：資料來源寫檔名＋頁碼或 tab，加一句白話動機，不得只寫代號；使用者題目的動機用推測並標「（推測）」。完成即結束。`;
       startRun(deal, 'merge', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true });
     }
@@ -895,7 +897,7 @@ const server = http.createServer(async (req, res) => {
       const st = readState(dp);
       if (st.closed) throw httpErr(400, '案件已結案');
       const followup = st.round <= 1 ? '' : `這是第 ${st.round} 輪追問，多兩件必做的事：(A) 上輪回覆判定：讀「${deal}/qlist/」內上一輪最終發出版，以及「${deal}/round${st.round}/」內對方回覆的 Q-list xlsx（檔名通常含「回覆」或「Qlist」，用 python3＋openpyxl 讀回答欄），逐題判定：完整回答／部分回答／迴避／與其他資料矛盾，判定表寫入「${deal}/_analysis/reply-judgment-r${st.round - 1}.md」；後三種進本輪追問，題目中要引用對方的原回覆再往下追。(B) 新文件做增量消化並更新 facts.md，新舊矛盾（含版本 diff）為最高優先出題來源。`;
-      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（設定名單的 persona 出題、匯整）及階段 1c（獨立 question-reviewer 回原文審題），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——本團隊一律書面詢問，敏感題以波次 2 表達即可。完成後即結束。`;
+      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（設定名單的 persona 出題、匯整）及階段 1c（獨立 question-reviewer 回原文審題），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——通路與波次遵循 AGENTS.md 的「書面詢問政策」。完成後即結束。`;
       startRun(deal, 'pipeline', prompt, () => {
         const s = readState(dp);
         if (fs.existsSync(path.join(dp, '_analysis', 'drafts', `draft_R${s.round}.md`))) {
@@ -1161,9 +1163,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/ask' && req.method === 'POST') {
       // SSE 串流：{meta} → {delta}* → {usage} → {done}
-      const { deal, question, provider: selectedProvider } = JSON.parse(await readBody(req));
+      const { deal, question, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const config=runConfig(selectedProvider), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli(), ask=askConfig(config);
       const dp = dealPath(deal);
+      if(model&&model!=='default'){if(typeof model!=='string'||!model.trim())throw httpErr(400,'invalid model');ask.model=model;}
       if (!question || !String(question).trim()) throw httpErr(400, '問題不可為空');
       res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
       const send = o => { try { res.write(`data: ${JSON.stringify(o)}\n\n`); } catch {} };
