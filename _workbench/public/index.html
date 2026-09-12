@@ -1,7 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pipeline DD 工作台</title>
+<title>投資盡調工作台</title>
+<link rel="stylesheet" href="/project-chat.css">
 <style>
 :root{
   --bg:#F2F3EF; --surface:#FFFFFF; --surface-2:#FAFBF8;
@@ -136,7 +137,7 @@ mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 2
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:13px;border-radius:10px;padding:10px 18px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:90vw}
 #toast.on{opacity:1}
 .emptynote{color:var(--ink-2);font-size:13.5px;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:10px;padding:16px 18px}
-/* 引擎活動時間軸 */
+/* 分析進度時間軸 */
 .tl{font-family:var(--font-data);font-size:12px;line-height:1.55;background:var(--surface-2);border-radius:8px;padding:8px 10px;max-height:340px;overflow-y:auto}
 .tl div{display:flex;gap:8px;padding:2px 0;border-bottom:1px dashed var(--line)}
 .tl div:last-child{border-bottom:none}
@@ -147,7 +148,7 @@ mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 2
 .tl .k-text{color:var(--ink-2)}
 .runstats{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2);margin:0 0 8px;flex-wrap:wrap}
 .runstats b{color:var(--ink)}
-/* 矛盾圖 */
+/* 關鍵資訊比對 */
 .cmap table{min-width:0;width:auto;font-size:12px}
 .cmap td,.cmap th{padding:6px 8px;vertical-align:middle}
 .cmap td.v{font-family:var(--font-data);white-space:nowrap;color:var(--ink-3)}
@@ -183,24 +184,39 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
   main{padding:18px 16px 60px}
 }
 </style>
+<link rel="stylesheet" href="/workspace.css">
+<link rel="stylesheet" href="/conversation.css">
+<script src="/workspace.js" defer></script>
 
 <div class="app">
 <aside>
-  <div class="brand">Pipeline DD 工作台<small>DD QUESTION PIPELINE</small></div>
-  <div class="sidelabel">案件</div>
+  <div class="brand"><span class="brand-mark" aria-hidden="true">DD</span>投資盡調工作台<small>案件研究・資料查核・問題追蹤</small></div>
+  <div class="sidelabel">投資案件</div><input id="caseFilter" class="case-filter" type="text" aria-label="搜尋案件" placeholder="搜尋案件…" oninput="filterCases()"><div id="caseFilterEmpty" class="case-filter-empty" hidden>找不到符合的案件</div>
   <div id="dealList"></div>
   <button class="newcase" onclick="show('ncOverlay')">＋ 新增案件</button>
-  <div class="sidefoot" id="engineFoot">引擎：偵測中…</div>
+
+  <details class="side-settings"><summary data-icon="settings-2">連線與設定</summary><div class="sidefoot" id="engineFoot">確認連線中…</div></details>
 </aside>
 
 <main>
+  <nav id="workspaceNav" class="tabs" aria-label="案件功能">
+    <button class="tab on" data-t="chat" onclick="pickTab('chat')">專案對話</button>
+    <button class="tab" data-t="overview" onclick="pickTab('overview')">案件總覽</button>
+    <button class="tab" data-t="docs" onclick="pickTab('docs')">資料室<span class="n num" id="tnDocs">0</span></button>
+    <button class="tab" data-t="recon" onclick="pickTab('recon')">資料查核</button>
+    <button class="tab" data-t="review" onclick="pickTab('review')">問題審核<span class="n num" id="tnReview">—</span></button>
+    <button class="tab" data-t="search" onclick="pickTab('search')">搜尋資料</button>
+    <button class="tab" data-t="notes" onclick="pickTab('notes')">訪談筆記</button>
+    <button class="tab" data-t="help" onclick="pickTab('help')">使用說明</button>
+  </nav>
+<div class="workspace-topbar"><span>投資案件</span><span aria-hidden="true">/</span><strong id="workspaceLocation">專案對話</strong><span class="status-light">本機工作空間</span></div>
   <div class="dealhead">
     <div>
       <h1 id="dhName">—</h1>
       <div class="meta" id="dhMeta"></div>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button id="delCaseBtn" class="delbtn" onclick="deleteCase(this)">刪除案件</button>
+    <div class="header-actions">      <button class="primary" id="runBtn" data-icon="play" onclick="runPipeline()">開始盡調分析</button>
+<details class="more-menu"><summary data-icon="ellipsis">案件選項</summary><div class="more-content"><label for="modelSel">分析模型與案件管理</label>      <button id="delCaseBtn" class="delbtn" onclick="deleteCase(this)">刪除案件</button>
       <button id="reopenBtn" style="display:none" onclick="reopenDeal()">重新開啟</button>
       <select id="modelSel" title="Codex 主 session 模型；子代理預設繼承，effort 由 QLIST_CODEX_EFFORT 設定" onchange="localStorage.setItem('qlist_model',this.value)">
         <option value="default">模型：CLI 預設</option>
@@ -208,52 +224,47 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
         <option value="gpt-5.6-sol">模型：5.6 Sol</option>
         <option value="gpt-5.6-terra">模型：5.6 Terra</option>
       </select>
-      <button id="closeBtn" onclick="closeDeal(this)">✓ 結案</button>
-      <button id="distillBtn" style="display:none" onclick="runDistill()">⚗ 跑蒸餾</button>
-      <button class="primary" id="runBtn" onclick="runPipeline()">▶ 跑流程</button>
+      <button id="closeBtn" onclick="closeDeal(this)">結案</button>
+      <button id="distillBtn" style="display:none" onclick="runDistill()">更新題庫經驗</button>
+</div></details>
     </div>
   </div>
   <div class="roundbar" id="roundbar"></div>
   <div class="pbarwrap" id="runbar"><div class="pbar"><i id="pfill"></i></div><span style="font-size:12px;color:var(--ink-2);white-space:nowrap" id="plabel"></span></div>
 
-  <nav class="tabs">
-    <button class="tab on" data-t="overview" onclick="pickTab('overview')">總覽</button>
-    <button class="tab" data-t="docs" onclick="pickTab('docs')">文件<span class="n num" id="tnDocs">0</span></button>
-    <button class="tab" data-t="recon" onclick="pickTab('recon')">對帳</button>
-    <button class="tab" data-t="review" onclick="pickTab('review')">Q-list 審核<span class="n num" id="tnReview">—</span></button>
-    <button class="tab" data-t="search" onclick="pickTab('search')">搜尋</button>
-    <button class="tab" data-t="notes" onclick="pickTab('notes')">備註</button>
-    <button class="tab" data-t="help" onclick="pickTab('help')">說明</button>
-  </nav>
 
-  <section id="tab-overview" class="on">
+
+
+
+  <section id="tab-overview">
+<div class="workflow" aria-label="盡調流程"><span class="workflow-label">案件工作流程</span><button onclick="pickTab('docs')"><span class="step-no">1</span>整理資料室</button><button onclick="pickTab('recon')"><span class="step-no">2</span>查核關鍵資訊</button><button onclick="pickTab('review')"><span class="step-no">3</span>審核問題清單</button><button onclick="pickTab('review')"><span class="step-no">4</span>定稿與追蹤回覆</button></div>
     <div class="cards" id="ovCards"></div>
-    <div class="panel"><h2>已發出的 Q-list <span class="hint">qlist/ 內容（每輪正式版）</span></h2><div id="ovQlists"></div></div>
-    <div class="panel"><h2>引擎活動 <span class="hint">run.events.jsonl：哪個代理在讀哪份文件、第幾頁</span></h2>
+    <div class="panel"><h2>已發出問題清單 <span class="hint">各輪定稿版本與追蹤紀錄</span></h2><div id="ovQlists"></div></div>
+    <div class="panel"><h2>分析進度 <span class="hint">查看目前處理項目與完成紀錄</span></h2>
       <div class="runstats" id="ovStats"></div>
-      <div class="tl" id="ovTl">（尚無執行紀錄）</div>
-      <details style="margin-top:10px"><summary style="font-size:12px;color:var(--ink-2);cursor:pointer">原始 run.log</summary><div class="runlog" id="ovLog" style="margin-top:8px">（尚無執行紀錄）</div></details>
+      <div class="tl" id="ovTl">尚無分析紀錄</div>
+      <details style="margin-top:10px"><summary style="font-size:12px;color:var(--ink-2);cursor:pointer">技術紀錄</summary><div class="runlog" id="ovLog" style="margin-top:8px">尚無分析紀錄</div></details>
     </div>
   </section>
 
   <section id="tab-docs">
     <div class="panel">
-      <h2>Data Room 文件 <span class="hint">上傳寫入當前 round 資料夾；刪除＝移入 _archive/ 歸檔</span></h2>
+      <h2>資料室 <span class="hint">依盡調輪次整理文件，上傳後自動建立中文搜尋索引</span></h2>
       <input type="file" id="fileInput" multiple style="display:none" onchange="uploadFiles(this.files);this.value=''">
       <div class="dropzone" id="dz"
         onclick="document.getElementById('fileInput').click()"
         ondragover="event.preventDefault();this.classList.add('drag')"
         ondragleave="this.classList.remove('drag')"
-        ondrop="event.preventDefault();this.classList.remove('drag');uploadFiles(event.dataTransfer.files)">＋ 把本輪新文件拖到這裡，或點擊選擇檔案</div>
+        ondrop="event.preventDefault();this.classList.remove('drag');uploadFiles(event.dataTransfer.files)">上傳本輪資料 · 拖曳檔案，或點此選取</div>
       <div class="toolbar">
-        <input type="text" id="docQ" placeholder="搜尋檔名…" oninput="renderDocs()">
-        <select id="docView" onchange="renderDocs()"><option value="round">檢視：依輪次</option><option value="cat">檢視：依類別（全部輪次）</option></select>
-        <select id="docRound" onchange="renderDocs()"><option value="">全部輪次</option></select>
-        <select id="docSort" onchange="renderDocs()"><option value="">預設排序</option><option value="name">依名稱</option><option value="round">依輪次</option></select>
-        <button onclick="reindexAll()" title="重建 _analysis/index/（逐頁文字、逐格值與公式）">⟳ 重建索引</button>
+        <input type="text" id="docQ" aria-label="篩選檔案名稱" placeholder="搜尋檔名…" oninput="renderDocs()">
+        <select id="docView" aria-label="文件檢視方式" onchange="renderDocs()"><option value="round">檢視：依輪次</option><option value="cat">檢視：依類別（全部輪次）</option></select>
+        <select id="docRound" aria-label="盡調輪次" onchange="renderDocs()"><option value="">全部輪次</option></select>
+        <select id="docSort" aria-label="文件排序" onchange="renderDocs()"><option value="">預設排序</option><option value="name">依名稱</option><option value="round">依輪次</option></select>
+        <details class="advanced-tools"><summary data-icon="settings-2">資料處理工具</summary><button onclick="reindexAll()" title="重建 _analysis/index/（逐頁文字、逐格值與公式）">重新建立搜尋索引</button></details>
       </div>
-      <div class="scroll-x" id="docsTableWrap"><table>
-        <thead><tr><th>檔案</th><th>輪次</th><th>類別</th><th>大小</th><th>索引</th><th>字卡</th><th></th></tr></thead>
+      <p class="mobile-table-hint">左右滑動表格，查看文件狀態與操作。</p><div class="scroll-x" id="docsTableWrap"><table>
+        <thead><tr><th>檔案</th><th>輪次</th><th>類別</th><th>大小</th><th>資料處理</th><th>文件摘要</th><th></th></tr></thead>
         <tbody id="docsBody"></tbody>
       </table></div>
       <div id="docsCatWrap" style="display:none"></div>
@@ -262,42 +273,42 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 
   <section id="tab-recon">
     <div class="panel">
-      <h2>矛盾圖 <span class="hint">facts.json：事實 × 文件。紅＝矛盾、黃＝口徑不同、藍＝單一來源、綠＝一致；點格子開原文</span></h2>
+      <h2>關鍵資訊比對 <span class="hint">先看不一致及待確認項目，點選儲存格即可核對原文</span></h2>
       <div class="toolbar">
-        <select id="cmFilter" onchange="renderConflictMap()"><option value="issues">矛盾＋口徑＋單一來源</option><option value="conflict">只看矛盾</option><option value="">全部事實</option></select>
+        <select id="cmFilter" aria-label="查核項目篩選" onchange="renderConflictMap()"><option value="issues">不一致、基礎不同及單一來源</option><option value="conflict">只看資料不一致</option><option value="">全部事實</option></select>
         <span id="cmStats" style="font-size:12px;color:var(--ink-3)"></span>
       </div>
-      <div class="cmap scroll-x" id="cmap">（尚未產生 facts.json，跑流程後出現）</div>
+      <div class="cmap scroll-x" id="cmap">尚無查核結果。請先上傳資料，再開始盡調分析。</div>
     </div>
     <div class="panel">
-      <h2>跨文件對帳表 <span class="hint">_analysis/facts.md，引擎跑完階段 1a 自動產生</span></h2>
-      <div class="mdr" id="factsView">（尚未產生，跑流程後出現）</div>
+      <h2>跨文件查核摘要 <span class="hint">整理各文件的數據差異、計算基礎與待確認事項</span></h2>
+      <div class="mdr" id="factsView">完成盡調分析後，這裡會顯示查核結果。</div>
     </div>
   </section>
 
   <section id="tab-review">
     <div class="panel" id="reviewPanel">
-      <h2>合併審核 <span class="hint">勾選＝保留；砍題選原因；✎ 可改問法</span></h2>
+      <h2>盡調問題審核 <span class="hint">勾選要保留的問題，可修改問法；不採用時請註記原因</span></h2>
       <div class="histbanner" id="histBanner"><span id="histLabel"></span><button onclick="viewHistory(null)" style="font-size:12px;padding:4px 10px">回到目前輪次</button></div>
       <div class="mline" id="mergeSetup" style="display:none">
         <span class="chip run" id="mineChip">你的版本</span>
         <input type="file" id="mineInput" accept=".xlsx,.xls" style="display:none" onchange="uploadMine(this.files)">
-        <button onclick="document.getElementById('mineInput').click()">上傳我的 Q-list（xlsx）</button>
+        <button onclick="document.getElementById('mineInput').click()">匯入團隊問題清單</button>
         <span id="mineName" class="file" style="font-size:12px"></span>
-        <button class="primary" id="mergeBtn" disabled onclick="runMerge()">跑合併 → 三類 diff</button>
+        <button class="primary" id="mergeBtn" disabled onclick="runMerge()">比對並合併問題</button>
         <span style="font-size:12px;color:var(--ink-3)" id="mergeHint"></span>
       </div>
       <div class="toolbar" id="revFilters" style="display:none">
-        <select id="fSrc" onchange="applyRevFilters()"></select>
-        <select id="fCat" onchange="applyRevFilters()"></select>
-        <select id="fWave" onchange="applyRevFilters()"></select>
+        <select id="fSrc" aria-label="問題提出來源" onchange="applyRevFilters()"></select>
+        <select id="fCat" aria-label="問題類別" onchange="applyRevFilters()"></select>
+        <select id="fWave" aria-label="提問批次" onchange="applyRevFilters()"></select>
         <button onclick="toggleAll()" id="selAllBtn">全選／取消全選</button>
         <span style="font-size:12px;color:var(--ink-3)" id="fCount"></span>
       </div>
-      <div id="qlist"><div class="emptynote">尚未有草稿，上傳文件後按「▶ 跑流程」。</div></div>
+      <div id="qlist"><div class="emptynote">尚未有草稿，上傳文件後按「開始盡調分析」。</div></div>
       <div class="reviewfoot" id="reviewFoot" style="display:none">
         <span style="font-size:13px;color:var(--ink-2)" id="keepCnt"></span>
-        <button class="primary" onclick="submitReview()">送出決定 → 產出合併版</button>
+        <button class="primary" onclick="submitReview()">儲存審核並匯出問題清單</button>
       </div>
       <div id="mergedBar" class="mline" style="display:none"></div>
       <div class="mline" id="finalBlock" style="display:none">
@@ -309,28 +320,28 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     </div>
   </section>
 
+  <section id="tab-chat" class="on">
+    <div class="chat-hero"><div><div class="chat-eyebrow">案件研究</div><h2>專案對話</h2><p>從資料釐清問題，讓每個判斷都有依據。</p></div><div class="conversation-toolbar"><button class="history-toggle" onclick="toggleChatHistory(this)" aria-expanded="true" aria-controls="chatHistory" data-icon="message-square">討論紀錄</button><button onclick="newChat()" data-icon="plus">新增討論</button></div></div>
+    <div class="chat-layout"><div class="chat-history" id="chatHistory"></div><div class="chat-main">
+      <div class="chat-topline"><div class="conversation-context"><span class="context-icon ui-icon" style="--icon:url(/icons/folder-open.svg)" aria-hidden="true"></span><span id="chatTitle">新的討論</span></div><span id="aiHint">回答附資料來源</span></div>
+      <div class="chat-log" id="chatLog" role="log" aria-label="專案對話紀錄" aria-live="polite"></div>
+      <div id="memoryBar" class="memory-bar"><button onclick="openMemory()">使用記憶：團隊通則 · 本案　調整</button><span id="memoryLearning" role="status"></span></div><div class="chat-composer"><div class="composer-label"><span class="ui-icon" style="--icon:url(/icons/message-square.svg)" aria-hidden="true"></span><label for="aiQ">詢問本案資料</label></div><textarea id="aiQ" aria-label="訊息" placeholder="輸入問題，或接著追問…" oninput="updateComposer()" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();askAI()}"></textarea><div class="chat-composer-foot"><button class="composer-files" type="button" onclick="pickTab('docs')" data-icon="folder-open">資料室</button><small><kbd>Enter</kbd> 送出 · <kbd>Shift ↵</kbd> 換行</small><div class="chat-actions"><button id="chatStop" onclick="stopChat()" hidden>停止回覆</button><button class="primary" id="aiBtn" onclick="askAI()">送出提問</button></div></div></div>
+      <div class="chat-live" id="chatLive" role="status" aria-live="polite"></div>
+    </div></div>
+  </section>
   <section id="tab-search">
     <div class="panel">
-      <h2>問 AI <span class="hint" id="aiHint">整份 Data Room 帶頁碼進 context，串流回答並標出處；點出處開原文</span></h2>
-      <div class="toolbar">
-        <input type="text" id="aiQ" placeholder="例：第 486 頁寫了什麼？／財報附註有沒有提到質押？／Vertex 持股各文件對得上嗎？" onkeydown="if(event.key==='Enter')askAI()">
-        <button class="primary" id="aiBtn" onclick="askAI()">問 Codex</button>
-      </div>
-      <div class="askmeta" id="aiMeta"></div>
-      <div class="mdr" id="aiA" style="display:none"></div>
-    </div>
-    <div class="panel">
-      <h2>全文搜尋 <span class="hint" id="kbScope"></span></h2>
-      <div class="toolbar"><input type="text" id="kbQ" placeholder="搜尋本案件原文（逐頁 / 逐格）與字卡、對帳表、草稿、備註…" oninput="kbSearch()"></div>
-      <div id="kbHits" style="color:var(--ink-3);font-size:13px">輸入關鍵字開始搜尋。</div>
+      <h2>搜尋案件資料 <span class="hint" id="kbScope"></span></h2>
+      <div class="toolbar"><input type="text" id="kbQ" placeholder="輸入關鍵字或文件用途，例如：股權結構、銀行借款、客戶合約" oninput="kbSearch()"></div>
+      <div id="searchStatus" role="status" class="search-status">可用中文搜尋文件主題、公司名稱或條款。</div><div id="kbHits" style="color:var(--ink-3);font-size:13px">輸入關鍵字開始搜尋。</div>
     </div>
   </section>
 
   <section id="tab-notes">
     <div class="panel">
-      <h2>案件背景備註 <span class="hint">_notes.md：文件外情報唯一入口，pipeline 每輪必讀</span></h2>
-      <textarea id="notesTa" style="width:100%;min-height:280px"></textarea>
-      <div class="boxfoot"><button class="primary" onclick="saveNotes()">儲存備註</button></div>
+      <h2>訪談與背景筆記 <span class="hint">記錄管理團隊訪談、會議重點與文件以外的資訊，供後續分析參考</span></h2>
+      <label class="field-label" for="notesTa">會議紀錄與待確認事項</label><textarea id="notesTa" placeholder="記錄日期、與會人員、管理團隊說法，以及需要追蹤的事項。" style="width:100%;min-height:280px"></textarea>
+      <div class="boxfoot"><span id="notesStatus" class="notes-status" role="status">修改後請儲存</span><button class="primary" id="notesSave" onclick="saveNotes()">儲存筆記</button></div>
     </div>
   </section>
 
@@ -346,8 +357,8 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 <div class="overlay" id="ncOverlay">
   <div class="box" style="width:min(440px,100%)">
     <h3>新增案件</h3>
-    <div class="sub">建立資料夾骨架：round1–3、_analysis、qlist、_notes.md</div>
-    <input type="text" id="ncName" placeholder="案件名稱" style="width:100%">
+    <div class="sub">為投資標的建立獨立的資料室、討論紀錄與盡調問題清單。</div>
+    <label class="field-label" for="ncName">公司或案件名稱</label><input type="text" id="ncName" placeholder="例如：極光機器人 A 輪投資" style="width:100%">
     <div class="boxfoot">
       <button onclick="hide('ncOverlay')">取消</button>
       <button class="primary" onclick="createCase()">建立案件</button>
@@ -357,7 +368,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 
 <div class="overlay" id="cardOverlay">
   <div class="box">
-    <h3 id="cardTitle">字卡</h3>
+    <h3 id="cardTitle">文件摘要</h3>
     <div class="mdr" id="cardBody"></div>
     <div class="boxfoot"><button class="primary" onclick="hide('cardOverlay')">關閉</button></div>
   </div>
@@ -377,7 +388,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 <div class="overlay" id="runOverlay">
   <div class="box" style="width:min(820px,100%)">
     <h3 id="runTitle">流程執行中</h3>
-    <div class="sub">底層為 headless Codex · 主 session 派工給子代理 · 可關閉視窗背景執行</div>
+    <div class="sub">正在整理文件、查核資訊並準備盡調問題。可關閉此視窗，稍後回到案件總覽查看進度。</div>
     <div class="runstats" id="runStats"></div>
     <div class="tl" id="runTl" style="max-height:52vh"></div>
     <div class="boxfoot"><button onclick="hide('runOverlay')">背景執行</button></div>
@@ -395,8 +406,16 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <div class="boxfoot"><button id="evDl">下載原始檔</button><button class="primary" onclick="hide('evOverlay')">關閉</button></div>
   </div>
 </div>
+<div class="overlay" id="inputOverlay"><form class="box" style="width:min(440px,100%)" onsubmit="event.preventDefault();finishWorkspaceInput(true)"><h3 id="inputTitle">設定</h3><p class="sub" id="inputHint"></p><label class="field-label" id="inputLabel" for="workspaceInputValue">內容</label><input id="workspaceInputValue" type="text" style="width:100%" autocomplete="off"><div class="boxfoot"><button type="button" onclick="finishWorkspaceInput(false)">取消</button><button type="submit" class="primary">儲存</button></div></form></div>
 <div id="toast" role="status"></div>
 
+<dialog id="memoryDialog" aria-labelledby="memoryHeading">
+ <div class="memory-dialog-head"><div><h2 id="memoryHeading">對話記憶</h2><p>累積案件脈絡，保留團隊的查核經驗。</p></div><button onclick="closeMemory()" aria-label="關閉記憶管理">✕</button></div>
+ <section class="memory-selection"><h3>本次對話使用的記憶</h3><p>團隊通則與本案預設載入。其他專案僅開放記憶，不包含原始文件。</p><details><summary>加入其他專案</summary><input type="search" aria-label="搜尋可加入的專案" placeholder="搜尋專案…" oninput="filterMemoryProjects(this.value)"><div id="memoryProjects"></div></details><button onclick="saveMemorySelection()">套用記憶範圍</button><small>變更後會重新建立回答背景，歷史對話仍保留。</small></section>
+ <section><div class="memory-tools"><label>管理記憶 <select id="memoryScope" onchange="loadMemory()"></select></label><button onclick="loadMemory()">重新整理</button><button onclick="editMemory()">新增記憶</button></div><p id="memoryJob" role="status"></p><button id="memoryRetry" hidden onclick="retryMemoryJobs()">重試整理</button><div id="memoryList"></div>
+ <form id="memoryEditor" hidden onsubmit="event.preventDefault();saveMemoryEntry()"><label>標題<input id="memoryTitle" required maxlength="100"></label><label>記憶內容<textarea id="memoryContent" required maxlength="2000" rows="5"></textarea></label><label>使用狀態<select id="memoryStatus"><option value="active">使用中（確認此記憶）</option><option value="candidate">待確認</option><option value="disabled">已停用</option></select></label><p id="memorySource"></p><button type="button" id="memoryOpenSource" hidden onclick="openMemorySource()">開啟來源對話</button><details id="memoryVersions"></details><div class="memory-editor-actions"><button type="submit" class="primary">儲存記憶</button><button type="button" id="memoryRemove" onclick="document.getElementById('memoryDeleteConfirm').hidden=false">刪除記憶</button></div><div id="memoryDeleteConfirm" hidden><p>刪除此記憶及過去版本？原始對話紀錄仍會保留。</p><button type="button" onclick="removeMemoryEntry()">確定刪除</button></div></form></section>
+</dialog>
+<script src="/project-chat.js"></script><script src="/memory.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -409,7 +428,7 @@ const api = async (path, opts) => {
 };
 const enc = o => Object.entries(o).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
 function show(id){$(id).classList.add('on')}
-function hide(id){$(id).classList.remove('on')}
+function hide(id){if(id==='inputOverlay'&&typeof inputResolve==='function'){const resolve=inputResolve;inputResolve=null;$('workspaceInputValue').value='';resolve(null)}$(id).classList.remove('on')}
 let toastT=null;
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3600)}
 const CATS=['Company & strategy','Products & technology','Commercial & traction','Financials','Corporate & legal','Reference & media'];
@@ -487,6 +506,7 @@ document.addEventListener('click',e=>{
 let EV = {file:'',round:'',page:1,count:0};
 async function openEvidence(file, round, loc){
   const p=parseLoc(loc); const ext=(file.split('.').pop()||'').toLowerCase();
+  $('evDl').style.display='';
   round = round || docRoundOf(file);
   const url='/api/download?'+enc({deal:cur,from:'doc',round,file});
   $('evTitle').textContent=file+(loc?'  ·  '+loc:'');
@@ -532,7 +552,7 @@ async function loadEvPage(n){
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
 
-const LIFE = {collecting:'收集資料中', drafted:'草稿完成，等待審核', merged:'合併版已產出', sent:'已發出，等待回覆', closed:'已結案'};
+const LIFE = {collecting:'收集資料中', drafted:'問題草稿完成，待團隊審核', merged:'合併版已產出', sent:'已發出，等待回覆', closed:'已結案'};
 
 async function loadDeals(sel){
   const {deals} = await api('/api/deals');
@@ -543,23 +563,22 @@ async function loadDeals(sel){
     if (d.state.closed) ds = '已結案';
     else if (d.state.lifecycle==='sent' && d.state.sentAt) {
       const days = Math.floor((Date.now()-new Date(d.state.sentAt))/86400000)+1;
-      ds = `Round ${d.state.round} · 已發出，公司處理第 ${days} 天`;
-    } else ds = `Round ${d.state.round} · ${LIFE[d.state.lifecycle]||d.state.lifecycle}${d.running?' · 執行中':''}`;
-    return `<button class="deal${d.name===sel?' on':''}" data-name="${esc(d.name)}" onclick="pickDeal(this.dataset.name)">
-      <span class="dn"><span class="dot ${dotc}"></span><span style="flex:1;min-width:0">${esc(d.name)}</span>
-        <span class="starbtn${d.state.starred?' on':''}" data-name="${esc(d.name)}" data-s="${d.state.starred?1:0}" role="button" title="置頂" onclick="event.stopPropagation();toggleStar(this)">${d.state.starred?'★':'☆'}</span></span>
-      <span class="ds">${esc(ds)}</span></button>`;
+      ds = `第 ${d.state.round} 輪 · 已發出，公司處理第 ${days} 天`;
+    } else ds = `第 ${d.state.round} 輪 · ${LIFE[d.state.lifecycle]||d.state.lifecycle}${d.running?' · 執行中':''}`;
+    return `<div class="deal-entry"><button class="deal${d.name===sel?' on':''}" title="${esc(d.name)}" data-name="${esc(d.name)}" onclick="pickDeal(this.dataset.name)">
+      <span class="dn"><span class="dot ${dotc}"></span><span>${esc(d.name)}</span></span><span class="ds">${esc(ds)}</span></button>
+      <button class="starbtn${d.state.starred?' on':''}" data-name="${esc(d.name)}" data-s="${d.state.starred?1:0}" aria-label="${d.state.starred?'取消置頂':'置頂'} ${esc(d.name)}" onclick="toggleStar(this)">${d.state.starred?'★':'☆'}</button></div>`;
   }).join('');
   api('/api/engine').then(e => {
     ENGINE = e;
     const tokenChip = e.token ? '<span class="chip ok">OpenAI API key</span>' : '<span class="chip warn">使用環境變數或 Codex 登入</span>';
-    const askChip = e.api ? `<span class="chip ok" title="${esc(e.askModel)}">問 AI：直連 API</span>` : (e.cli ? '<span class="chip warn" title="設 OPENAI_API_KEY 可改走直連 API（串流、快取）">問 AI：走 CLI</span>' : '');
+    const askChip = e.api ? `<span class="chip ok" title="${esc(e.askModel)}">對話：按需檢索</span>` : (e.cli ? '<span class="chip warn" title="設 OPENAI_API_KEY 可改走直連 API（串流、快取）">對話：需 API key</span>' : '');
     $('engineFoot').innerHTML = e.mock
       ? '引擎：<span class="chip warn">假引擎模式</span>'
       : (e.cli ? `引擎：<span title="${esc(e.cliPath||'')}">${esc(e.cli)}</span> ${tokenChip}<br><span style="display:inline-block;margin-top:6px">${askChip}</span><br><button style="margin-top:8px;font-size:12px;padding:4px 10px" onclick="setToken()">設定 OpenAI API key</button>` : '引擎：<span class="chip bad">找不到 CLI（設 CODEX_BIN）</span>' + (e.api ? '<br>' + askChip : ''));
-    $('aiHint').textContent = e.api ? `直連 ${e.askModel} · 整份 Data Room 帶頁碼進 context（預算約 ${Math.round(e.askBudget/1000)}K tokens，超過就挑頁）· 串流 · 點出處開原文` : (e.mock ? '假引擎模式：只示範串流與 context 組裝' : '走 Codex CLI（設 OPENAI_API_KEY 可改直連 API）· 帶頁碼出處');
+    $('aiHint').textContent = e.mock ? '示範模式' : (e.api ? '回答附資料來源' : '請設定 API key');
   });
-  if (!sel && deals.length) pickDeal(deals[0].name);
+  if (!sel && deals.length){const saved=localStorage.getItem('dd-active-case');pickDeal(deals.some(d=>d.name===saved)?saved:deals[0].name);}
 }
 
 async function toggleStar(el){
@@ -583,27 +602,31 @@ async function reopenDeal(){
 let viewRound = null;
 async function pickDeal(name){
   cur = name; viewRound = null;
+  await initChat(name);
+  pickTab('chat');
   D = await api('/api/deal?' + enc({name}));
   document.querySelectorAll('.deal').forEach(b => b.classList.toggle('on', b.dataset.name===name));
   $('dhName').textContent = name;
-  $('dhMeta').textContent = `Round ${D.state.round} · ${LIFE[D.state.lifecycle]||D.state.lifecycle}` + (D.running ? ' · 流程執行中' : '');
+  localStorage.setItem('dd-active-case',name);
+  $('dhMeta').textContent = `第 ${D.state.round} 輪 · ${LIFE[D.state.lifecycle]||D.state.lifecycle}` + (D.running ? ' · 流程執行中' : '');
   Object.keys(EDITS).forEach(k=>delete EDITS[k]);
   try { FACTS = await api('/api/facts?' + enc({deal:name})); } catch { FACTS = {facts:[],docs:{}}; }
   await loadDraft();
   renderRoundbar(); renderOverview(); renderDocs(); renderRecon(); renderNotes();
+  ++kbVersion;clearTimeout(kbT);$('searchStatus').textContent='可用中文搜尋文件主題、公司名稱或條款。';$('kbHits').removeAttribute('aria-busy');
   $('kbScope').textContent = '範圍：' + name;
   $('kbHits').innerHTML = '輸入關鍵字開始搜尋。'; $('kbQ').value='';
-  $('runBtn').textContent = `▶ 跑 Round ${D.state.round} 流程`;
+  $('runBtn').textContent = `啟動盡調分析`;
   $('runBtn').style.display = D.state.closed ? 'none' : '';
   $('closeBtn').style.display = D.state.closed ? 'none' : '';
-  $('closeBtn').textContent = '✓ 結案';
+  $('closeBtn').textContent = '結案';
   $('distillBtn').style.display = D.state.closed ? '' : 'none';
   $('reopenBtn').style.display = D.state.closed ? '' : 'none';
   if (!D.running) $('runbar').style.display='none';
   if (D.running) watchRun('resume');
 }
 
-function rlabel(r){ const n = (D.state.roundNames||{})[r]; return n ? esc(n) : 'Round ' + r; }
+function rlabel(r){ const n = (D.state.roundNames||{})[r]; return n ? esc(n) : '第 ' + r + ' 輪'; }
 function renderRoundbar(){
   const st = D.state;
   let h = '';
@@ -612,13 +635,13 @@ function renderRoundbar(){
   if (st.closed) h += `<button class="rpill done${viewRound===st.round?' viewing':''}" data-r="${st.round}" title="單擊回看｜雙擊改名" onclick="viewHistory(Number(this.dataset.r))" ondblclick="renameRound(Number(this.dataset.r))">${rlabel(st.round)} ✓</button><span class="rpill">已結案</span>`;
   else {
     h += `<button class="rpill cur" data-r="${st.round}" title="目前輪次｜雙擊改名" onclick="viewHistory(null)" ondblclick="renameRound(Number(this.dataset.r))">${rlabel(st.round)} ●</button>`;
-    h += `<button class="rpill ghost" onclick="advance()">＋ Round ${st.round+1}</button>`;
+    h += `<button class="rpill ghost" onclick="advance()">新增第 ${st.round+1} 輪</button>`;
   }
   $('roundbar').innerHTML = h;
 }
 async function renameRound(r){
   const curName = (D.state.roundNames||{})[r] || '';
-  const n = window.prompt(`Round ${r} 的顯示名稱（留空恢復預設）`, curName);
+  const n = await workspaceInput({title:'重新命名輪次',label:'第 '+r+' 輪名稱',hint:'可使用「初步審查」或「補件追蹤」等名稱。留空可恢復預設。',value:curName});
   if (n === null) return;
   const res = await api('/api/roundname',{method:'POST',body:JSON.stringify({deal:cur, round:r, name:n})});
   D.state.roundNames = res.state.roundNames || {};
@@ -639,22 +662,22 @@ function renderOverview(){
   const nConf = (FACTS.facts||[]).filter(f=>f.status==='conflict').length;
   const nIss = (FACTS.facts||[]).filter(f=>['conflict','basis_mismatch','single_source'].includes(f.status)).length;
   $('ovCards').innerHTML = [
-    ['文件', D.docs.length + `<small>（字卡 ${D.docs.filter(d=>d.card).length}／索引 ${D.docs.filter(d=>d.index).length}）</small>`],
+    ['文件', D.docs.length + `<small>（文件摘要 ${D.docs.filter(d=>d.card).length}／索引 ${D.docs.filter(d=>d.index).length}）</small>`],
     ['已索引頁數', pages ? String(pages) : '—'],
-    ['矛盾 / 疑點', (FACTS.facts||[]).length ? `<span style="color:var(--danger)">${nConf}</span><small> / ${nIss}（共 ${FACTS.facts.length} 事實）</small>` : (D.facts ? '<span style="font-size:15px">對帳表已產生</span>' : '<span style="font-size:15px;color:var(--ink-3)">未產生</span>')],
-    ['草稿題數', draft.length ? String(draft.length) : '—'],
+    ['不一致 / 待確認', (FACTS.facts||[]).length ? `<span style="color:var(--danger)">${nConf}</span><small> / ${nIss}（共 ${FACTS.facts.length} 事實）</small>` : (D.facts ? '<span style="font-size:15px">對帳表已產生</span>' : '<span style="font-size:15px;color:var(--ink-3)">未產生</span>')],
+    ['待審核問題', draft.length ? String(draft.length) : '—'],
     ['狀態', `<span style="font-size:15px">${esc(LIFE[D.state.lifecycle]||D.state.lifecycle)}</span>`],
   ].map(c => `<div class="card"><div class="k">${c[0]}</div><div class="v num">${c[1]}</div></div>`).join('');
   $('ovQlists').innerHTML = D.qlists.length
     ? D.qlists.map(f => `<div class="mline"><span class="chip ok">已發出</span><span class="file" style="font-size:12px">${esc(f)}</span>
         <button data-f="${esc(f)}" onclick="location.href='/api/download?'+enc({deal:cur,from:'qlist',file:this.dataset.f})">下載</button></div>`).join('')
-    : '<div style="color:var(--ink-3);font-size:13px">尚未發出任何 Q-list。</div>';
+    : '<div style="color:var(--ink-3);font-size:13px">尚無正式發出版本。完成問題審核後，即可上傳定稿清單。</div>';
   refreshLog();
 }
 async function refreshLog(){
   try {
     const {log} = await api('/api/runlog?' + enc({deal:cur}));
-    $('ovLog').textContent = log || '（尚無執行紀錄）';
+    $('ovLog').textContent = log || '尚無分析紀錄';
     const ev = await api('/api/runevents?' + enc({deal:cur, since:0}));
     renderTimeline($('ovTl'), ev.events, false);
     $('ovStats').innerHTML = statsLine(ev);
@@ -662,7 +685,7 @@ async function refreshLog(){
 }
 function fmtT(ts){ const d=new Date(ts); return d.toTimeString().slice(0,8); }
 function renderTimeline(el, events, append){
-  if(!events || !events.length){ if(!append) el.innerHTML='（尚無執行紀錄）'; return; }
+  if(!events || !events.length){ if(!append) el.innerHTML='尚無分析紀錄'; return; }
   const h = events.map(e=>`<div class="k-${esc(e.kind)}"><span class="t">${fmtT(e.ts)}</span><span class="a${e.agent==='main'?' main':''}" title="${esc(e.agent)}">${esc(e.agent)}</span><span>${esc(e.text)}</span></div>`).join('');
   if(append){ el.insertAdjacentHTML('beforeend', h); } else el.innerHTML = h;
   el.scrollTop = el.scrollHeight;
@@ -676,21 +699,23 @@ function statsLine(ev){
   return `<span>代理 <b>${c.agents}</b></span><span>讀取 <b>${c.reads}</b></span><span>寫入 <b>${c.writes}</b></span><span>耗時 <b>${secs}s</b></span>${done&&done.cost!=null?`<span>成本 <b>$${Number(done.cost).toFixed(2)}</b></span>`:''}${ev.running?'<span class="chip run">執行中</span>':''}`;
 }
 function humanSize(n){ return n>1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB'; }
+const CAT_LABELS={'Company & strategy':'公司與經營策略','Products & technology':'產品與技術','Commercial & traction':'業務與營運','Financials':'財務資料','Corporate & legal':'股權與法務','Reference & media':'其他參考資料'};
 function catSel(f){
-  return `<select data-f="${esc(f.name)}" onchange="setCat(this.dataset.f,this.value)" style="font-size:11.5px;padding:3px 6px">`+
-    CATS.map(c=>`<option${c===f.cat?' selected':''}>${c}</option>`).join('')+'</select>';
+  return `<select aria-label="${esc(f.name)} 文件分類" data-f="${esc(f.name)}" onchange="setCat(this.dataset.f,this.value)" style="font-size:11.5px;padding:3px 6px">`+
+    CATS.map(c=>`<option value="${esc(c)}"${c===f.cat?' selected':''}>${esc(CAT_LABELS[c]||c)}</option>`).join('')+'</select>';
 }
 function idxCell(f){
   if (f.indexing) return '<span class="chip run">索引中…</span>';
   if (!f.index) return `<button class="idxcell" style="padding:2px 8px" data-f="${esc(f.name)}" onclick="reindexOne(this.dataset.f)" title="建立逐頁 / 逐格索引">建索引</button>`;
   const i=f.index; const unit = i.kind==='xlsx' ? 'tab' : '頁';
-  return `<span class="idxcell" title="${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
+  if(i.error)return `<span class="chip warn" title="${esc(i.error)}">抽取失敗</span>`;
+  return `<span class="idxcell" title="${esc((i.summary||'')+' '+(i.warnings||[]).join('；'))} ${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.status==='ready'?' · 中文索引就緒':i.status==='partial'?' · <span class="chip warn">部分完成</span>':''}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
 }
 function docRow(f, withRound){
   return `<tr>
-    <td class="file">${esc(f.name)}</td>${withRound?`<td>${esc(f.round)}</td>`:''}<td>${catSel(f)}</td><td class="num">${humanSize(f.size)}</td>
+    <td class="file">${esc(f.name)}${f.index?.summary?`<details style="font-size:11px;max-width:360px;white-space:normal"><summary>中文文件說明</summary>${esc(f.index.summary)}</details>`:''}</td>${withRound?`<td>${esc(f.round)}</td>`:''}<td>${catSel(f)}</td><td class="num">${humanSize(f.size)}</td>
     <td>${idxCell(f)}</td>
-    <td>${f.card ? `<button class="ibtn" title="開啟字卡" aria-label="開啟字卡" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">未消化</span> <button class="ibtn" title="只消化這份：字卡 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="只消化這份" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">⚡</button>`}</td>
+    <td>${f.card ? `<button class="ibtn" title="開啟文件摘要" aria-label="開啟文件摘要" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">待分析</span> <button class="ibtn" title="分析單一文件：文件摘要 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="分析單一文件" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">分析</button>`}</td>
     <td style="white-space:nowrap"><button class="ibtn" title="開證據檢視器（翻頁＋索引文字）" aria-label="證據" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openEvidence(this.dataset.f,this.dataset.r,'p.1')">${ICO.eye}</button>
     <button class="ibtn" title="下載/開啟檔案" aria-label="下載" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openDoc(this.dataset.f,this.dataset.r)">${ICO.dl}</button>
     <button class="ibtn delbtn" title="刪除（歸檔至 _archive/）" aria-label="刪除" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="archiveDoc(this)">${ICO.trash}</button></td></tr>`;
@@ -710,8 +735,8 @@ function renderDocs(){
   if (view==='cat'){
     $('docsCatWrap').innerHTML = CATS.map(c=>{
       const fs2 = rows.filter(f=>f.cat===c);
-      return `<div class="catgroup"><h3>${c} <span class="n">${fs2.length} 檔</span></h3>`+
-        (fs2.length ? `<div class="scroll-x"><table><thead><tr><th>檔案</th><th>輪次</th><th>類別</th><th>大小</th><th>索引</th><th>字卡</th><th></th></tr></thead><tbody>`+
+      return `<div class="catgroup"><h3>${esc(CAT_LABELS[c]||c)} <span class="n">${fs2.length} 檔</span></h3>`+
+        (fs2.length ? `<div class="scroll-x"><table><thead><tr><th>檔案</th><th>輪次</th><th>類別</th><th>大小</th><th>資料處理</th><th>文件摘要</th><th></th></tr></thead><tbody>`+
           fs2.map(f=>docRow(f,true)).join('')+'</tbody></table></div>' : '<div style="color:var(--ink-3);font-size:12.5px">（無）</div>')+'</div>';
     }).join('');
   } else {
@@ -775,17 +800,17 @@ async function setCat(file,cat){
   renderDocs(); toast('已改分類：'+cat);
 }
 let docsPoll = null;
-async function reindexAll(){ toast('重建索引中…'); try{ const r=await api('/api/reindex',{method:'POST',body:JSON.stringify({deal:cur,force:true})}); const n=(r.result&&r.result.results||[]).length; toast(`索引完成：${n} 份文件`); await pickDeal(cur); pickTab('docs'); }catch(e){ toast('索引失敗：'+e.message); } }
+async function reindexAll(){ toast('重建索引中…'); try{ const r=await api('/api/reindex',{method:'POST',body:JSON.stringify({deal:cur,force:true})}); const results=r.result?.results||[];const failed=results.filter(x=>x.error).length;toast(`處理 ${results.length} 份文件${failed?'，其中 '+failed+' 份失敗，請查看文件狀態':''}`); await pickDeal(cur); pickTab('docs'); }catch(e){ toast('索引失敗：'+e.message); } }
 async function reindexOne(file){ toast('索引中：'+file); try{ await api('/api/reindex',{method:'POST',body:JSON.stringify({deal:cur,file,force:true})}); await pickDeal(cur); pickTab('docs'); }catch(e){ toast('索引失敗：'+e.message); } }
 async function ingestOne(file, round){
-  try { await api('/api/ingest-one',{method:'POST',body:JSON.stringify({deal:cur,file,round,model:curModel()})}); toast(`只消化「${file}」：字卡 → 增量對帳 → 新題`); watchRun('ingest'); }
+  try { await api('/api/ingest-one',{method:'POST',body:JSON.stringify({deal:cur,file,round,model:curModel()})}); toast(`只消化「${file}」：文件摘要 → 增量對帳 → 新題`); watchRun('ingest'); }
   catch(e){ toast('無法啟動：'+e.message); }
 }
 function renderRecon(){
-  $('factsView').innerHTML = D.facts ? citeLinks(mdToHtml(D.facts)) : '（尚未產生，跑流程後出現）';
+  $('factsView').innerHTML = D.facts ? citeLinks(mdToHtml(D.facts)) : '完成盡調分析後，這裡會顯示查核結果。';
   renderConflictMap();
 }
-const ST_LABEL = {conflict:'矛盾', basis_mismatch:'口徑不同', single_source:'單一來源', consistent:'一致', unverified:'未驗證'};
+const ST_LABEL = {conflict:'矛盾', basis_mismatch:'計算基礎不同', single_source:'單一來源', consistent:'一致', unverified:'未驗證'};
 function fmtVal(v, unit){
   if (v==null) return '';
   if (typeof v==='number'){ if(unit==='pct'||(Math.abs(v)<=1&&unit!=='count'&&unit!=='days'&&unit!=='months'&&unit!=='shares'&&String(v).includes('.'))) return (v*100).toFixed(1).replace(/\.0$/,'')+'%'; return v.toLocaleString(undefined,{maximumFractionDigits:2}); }
@@ -793,7 +818,7 @@ function fmtVal(v, unit){
 }
 function renderConflictMap(){
   const el=$('cmap'); const facts=FACTS.facts||[]; const docs=FACTS.docs||{};
-  if(!facts.length){ el.innerHTML='（尚未產生 facts.json，跑流程後出現）'; $('cmStats').textContent=''; return; }
+  if(!facts.length){ el.innerHTML='尚無查核結果。請先上傳資料，再開始盡調分析。'; $('cmStats').textContent=''; return; }
   const filt=$('cmFilter').value;
   const keep=f=>!filt||(filt==='conflict'?f.status==='conflict':['conflict','basis_mismatch','single_source'].includes(f.status));
   const rows=facts.filter(keep);
@@ -810,17 +835,18 @@ function renderConflictMap(){
       const vs=byDoc[c];
       if(!vs){ h+='<td class="v">—</td>'; continue; }
       const file=(docs[c]&&docs[c].file)||''; const round=(docs[c]&&docs[c].round)||'';
-      h+=`<td class="v has" data-f="${esc(file)}" data-r="${esc(round)}" data-l="${esc(vs[0].loc||'')}" title="${esc(file)} ${esc(vs[0].loc||'')}${vs[0].basis?' · 口徑：'+esc(vs[0].basis):''}" onclick="if(this.dataset.f)openEvidence(this.dataset.f,this.dataset.r,this.dataset.l)">${vs.map(v=>`${esc(fmtVal(v.value,v.unit))}<div style="font-size:10.5px;color:var(--ink-3)">${esc(v.loc||'')}</div>`).join('')}</td>`;
+      h+=`<td class="v has" data-f="${esc(file)}" data-r="${esc(round)}" data-l="${esc(vs[0].loc||'')}" title="${esc(file)} ${esc(vs[0].loc||'')}${vs[0].basis?' · 計算基礎：'+esc(vs[0].basis):''}" onclick="if(this.dataset.f)openEvidence(this.dataset.f,this.dataset.r,this.dataset.l)">${vs.map(v=>`${esc(fmtVal(v.value,v.unit))}<div style="font-size:10.5px;color:var(--ink-3)">${esc(v.loc||'')}</div>`).join('')}</td>`;
     }
     h+='</tr>';
   }
   el.innerHTML=h+'</tbody></table>';
   const n=s=>facts.filter(f=>f.status===s).length;
-  $('cmStats').textContent=`顯示 ${rows.length}／${facts.length} · 矛盾 ${n('conflict')} · 口徑 ${n('basis_mismatch')} · 單一來源 ${n('single_source')} · 一致 ${n('consistent')}${FACTS.recomputed_at?` · recompute ${FACTS.recomputed_at.slice(0,16)}`:''}`;
+  $('cmStats').textContent=`顯示 ${rows.length}／${facts.length} · 矛盾 ${n('conflict')} · 計算基礎 ${n('basis_mismatch')} · 單一來源 ${n('single_source')} · 一致 ${n('consistent')}${FACTS.recomputed_at?` · recompute ${FACTS.recomputed_at.slice(0,16)}`:''}`;
 }
-function renderNotes(){ $('notesTa').value = D.notes || ''; }
+function renderNotes(){ $('notesTa').value = D.notes || ''; $('notesStatus').textContent='修改後請儲存'; }
 
 function pickTab(t){
+  const title=document.querySelector('.tab[data-t="'+t+'"]');if(title&&$('workspaceLocation'))$('workspaceLocation').textContent=title.childNodes.length?title.textContent.replace(/\d+|—/g,'').trim():t;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   document.querySelectorAll('main > section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
 }
@@ -857,10 +883,10 @@ function archiveDoc(btn){
 async function openCard(file){
   try {
     const c = await api('/api/card?' + enc({deal:cur, file}));
-    $('cardTitle').textContent = '字卡：' + file;
+    $('cardTitle').textContent = '文件摘要：' + file;
     $('cardBody').innerHTML = mdToHtml(c.content);
     show('cardOverlay');
-  } catch(e){ toast('讀取字卡失敗：'+e.message); }
+  } catch(e){ toast('讀取文件摘要失敗：'+e.message); }
 }
 async function createCase(){
   const name = $('ncName').value.trim();
@@ -873,17 +899,18 @@ async function createCase(){
   } catch(e){ toast('失敗：'+e.message); }
 }
 async function setToken(){
-  const t = window.prompt('貼上 OpenAI API key（只存本機 _workbench/token，不會加入 Git；也可在 server 環境設定 OPENAI_API_KEY）：');
+  const t = await workspaceInput({title:'連接 OpenAI',label:'API key',hint:'金鑰僅儲存在本機，供文件辨識與專案對話使用。API 費用依實際用量計算。',secret:true});
   if (!t || !t.trim()) return;
   try {
     await api('/api/token',{method:'POST',body:JSON.stringify({token:t.trim()})});
-    toast('token 已儲存，之後的引擎呼叫都會使用它');
+    toast('連線設定已儲存');
     loadDeals(cur);
   } catch(e){ toast('儲存失敗：'+e.message); }
 }
 async function saveNotes(){
-  await api('/api/notes',{method:'POST',body:JSON.stringify({deal:cur,content:$('notesTa').value})});
-  toast('備註已存檔，下次跑流程會讀');
+ const deal=cur,content=$('notesTa').value,button=$('notesSave');button.disabled=true;$('notesStatus').textContent='儲存中…';
+ try{await api('/api/notes',{method:'POST',body:JSON.stringify({deal,content})});if(cur===deal){D.notes=content;$('notesStatus').textContent=$('notesTa').value===content?'已儲存':'仍有未儲存的修改';}toast('筆記已儲存');}
+ catch(e){if(cur===deal)$('notesStatus').textContent='儲存失敗，內容仍保留在編輯區';toast(e.message)}finally{button.disabled=false;}
 }
 
 function curModel(){ return $('modelSel').value; }
@@ -897,11 +924,11 @@ async function runDistill(){
   try {
     await api('/api/distill',{method:'POST',body:JSON.stringify({deal:cur,model:curModel()})});
     watchRun('distill');
-    toast('蒸餾啟動，完成後結果寫回 knowledge/question-bank.md');
+    toast('題庫經驗整理啟動，完成後結果寫回 knowledge/question-bank.md');
   } catch(e){ toast('無法啟動：'+e.message); }
 }
 const RUN_EST = {pipeline: 12*60e3, merge: 6*60e3, distill: 6*60e3, ingest: 3*60e3, resume: 10*60e3};
-const RUN_LABEL = {pipeline: '流程', merge: '合併', distill: '蒸餾', ingest: '單檔增量', resume: '流程'};
+const RUN_LABEL = {pipeline: '流程', merge: '合併', distill: '題庫經驗整理', ingest: '單檔增量', resume: '流程'};
 let runStart = 0, evSince = 0;
 function watchRun(kind){
   kind = kind || 'resume';
@@ -973,7 +1000,7 @@ async function loadDraft(){
   if (!draft.length){
     $('qlist').innerHTML = hist
       ? `<div class="emptynote">Round ${viewRound} 沒有留存草稿檔。</div>`
-      : '<div class="emptynote">尚未有本輪草稿：上傳文件後按「▶ 跑流程」，或引擎仍在執行中。</div>';
+      : '<div class="emptynote">尚未有本輪草稿：上傳文件後按「開始盡調分析」，或引擎仍在執行中。</div>';
     $('reviewFoot').style.display='none'; $('mergedBar').style.display='none';
     $('mergeSetup').style.display='none'; $('revFilters').style.display='none';
     $('finalBlock').style.display = (!hist && ['merged','sent'].includes(D.state.lifecycle)) ? 'flex' : 'none';
@@ -994,11 +1021,11 @@ async function loadDraft(){
           <span class="chip ${SRC_CHIP[src]||'run'}">${esc(src)}</span>
           <span class="cat">${esc(x.cat)}</span>
           ${x.wave?`<span class="cat">波次${esc(x.wave)}</span>`:''}
-          <button class="qedit" onclick="editQ(${i})">✎ 編輯</button></div>
+          <button class="qedit" onclick="editQ(${i})">修改問法</button></div>
         <p class="qtext" id="qt${i}">${esc(x.q)}</p>
         ${x.why?`<details class="why"><summary>出處與動機${evidenceChips(x.evidence)?'':''}</summary><div>${citeLinks(esc(x.why))}</div></details>`:''}
         ${evidenceChips(x.evidence)}
-        <div class="reasons"><span style="font-size:12px;color:var(--ink-3)">砍題原因：</span>
+        <div class="reasons"><span style="font-size:12px;color:var(--ink-3)">不採用原因：</span>
           ${['太早問','改口頭','不適用','重複','其他'].map(r=>`<button class="rchip" onclick="pickReason(this,${i})">${r}</button>`).join('')}
           <input type="text" class="otherbox" id="ob${i}" placeholder="自己寫一句原因…" oninput="saveRevState()">
         </div>
@@ -1064,7 +1091,7 @@ async function uploadMine(fl){
   myFile=d.saved;
   $('mineName').textContent=myFile+' ✓';
   $('mergeBtn').disabled=false;
-  toast('已收到你的版本，按「跑合併」啟動三類 diff');
+  toast('已收到你的版本，按「比對並合併問題」啟動問題差異比對');
 }
 async function runMerge(){
   try{
@@ -1156,7 +1183,7 @@ async function uploadFinal(fl){
   const d=await r.json();
   $('finalMsg').textContent = fl[0].name+' ✓ 已存檔 qlist/，本輪已發出，可開下一輪或結案';
   if(d.distill){
-    toast('最終版已存檔，本輪蒸餾自動啟動（同事補題→盲區學習）');
+    toast('最終版已存檔，本輪題庫經驗整理自動啟動（同事補題→盲區學習）');
     watchRun('distill');
   } else {
     toast('最終版已存檔，＋ Round '+(D.state.round+1)+' 已解鎖');
@@ -1171,27 +1198,32 @@ async function advance(){
   } catch(e){ toast(e.message); }
 }
 function closeDeal(btn){
-  if(!btn.dataset.armed){btn.dataset.armed='1';btn.textContent='確認結案？';setTimeout(()=>{if(btn.isConnected){btn.dataset.armed='';btn.textContent='✓ 結案';}},3000);return;}
+  if(!btn.dataset.armed){btn.dataset.armed='1';btn.textContent='確認結案？';setTimeout(()=>{if(btn.isConnected){btn.dataset.armed='';btn.textContent='結案';}},3000);return;}
   api('/api/close',{method:'POST',body:JSON.stringify({deal:cur})})
     .then(async()=>{
-      toast('已結案，自動啟動蒸餾');
+      toast('已結案，自動啟動題庫經驗整理');
       await loadDeals(cur);await pickDeal(cur);
       await runDistill();
     })
     .catch(e=>toast(e.message));
 }
 
-let kbT=null;
+let kbT=null,kbVersion=0;
 function kbSearch(){
-  clearTimeout(kbT);
+  clearTimeout(kbT);const version=++kbVersion,deal=cur;
   kbT=setTimeout(async()=>{
     const qv=$('kbQ').value.trim();
-    if(!qv){$('kbHits').innerHTML='輸入關鍵字開始搜尋。';return;}
-    const {hits}=await api('/api/search?'+enc({deal:cur,q:qv}));
+    if(!qv){$('kbHits').innerHTML='';$('searchStatus').textContent='可用中文搜尋文件主題、公司名稱或條款。';return;}
+    $('searchStatus').textContent='正在搜尋本案資料…';$('kbHits').setAttribute('aria-busy','true');
+    try {
+    const {hits,warnings=[]}=await api('/api/search?'+enc({deal,q:qv}));
+    if(version!==kbVersion||deal!==cur)return;
+    $('searchStatus').textContent=hits.length?'找到 '+hits.length+' 個相關片段':'未找到符合的內容';
     const safeEsc=esc(qv).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const mk=s=>esc(s).replace(new RegExp('('+safeEsc+')','gi'),'<mark>$1</mark>');
     $('kbHits').innerHTML=hits.length
       ? hits.map(h=>{
+          if(h.evidenceId)return `<div class="hitrow"><div class="hitsrc">${esc(h.src)}</div><div>${mk(h.text)}</div><button data-id="${esc(h.evidenceId)}" onclick="chatEvidence(this.dataset.id)">檢視內容與來源</button></div>`;
           if(h.page||h.ref){
             const loc=h.page?('p.'+h.page):(h.sheet+'!'+h.ref);
             return `<div class="hitrow"><div class="hitsrc">${esc(h.src)}</div><div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap"><span style="flex:1;min-width:200px">${mk(h.text)}</span>
@@ -1201,83 +1233,34 @@ function kbSearch(){
           ? `<div class="hitrow"><div class="hitsrc">${esc(h.src)}</div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${mk(h.text)}
              <button data-f="${esc(h.doc.name)}" data-r="${esc(h.doc.round)}" onclick="openEvidence(this.dataset.f,this.dataset.r,'p.1')">開啟</button></div></div>`
           : `<div class="hitrow"><div class="hitsrc">${esc(h.src)} · L${h.line}</div><div>${citeLinks(mk(h.text))}</div></div>`;}).join('')
-      : '<div style="color:var(--ink-3)">沒有結果。</div>';
+      : '<div style="color:var(--ink-3)">沒有結果。可改用文件用途、主題或原文關鍵字。</div>';
+    if(warnings.length)$('kbHits').innerHTML+='<p class="chat-error">'+warnings.map(esc).join('<br>')+'</p>';
+    }catch(e){if(version===kbVersion&&deal===cur){$('searchStatus').textContent='搜尋暫時無法完成，請重試';$('kbHits').textContent=e.message;}}finally{if(version===kbVersion)$('kbHits').removeAttribute('aria-busy');}
   },250);
 }
-async function askAI(){
-  const qv=$('aiQ').value.trim(); if(!qv)return;
-  $('aiBtn').disabled=true;$('aiBtn').textContent='思考中…';
-  $('aiA').style.display='block';$('aiA').textContent='（組 context 中…）';
-  $('aiMeta').textContent='';
-  const t0=Date.now(); let text='', firstAt=0, meta=null;
-  const render=()=>{ $('aiA').innerHTML=citeLinks(mdToHtml(text))+(firstAt?'':''); };
-  try{
-    const r=await fetch('/api/ask',{method:'POST',body:JSON.stringify({deal:cur,question:qv,model:curModel()})});
-    if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||r.status); }
-    const reader=r.body.getReader(); const dec=new TextDecoder(); let buf='';
-    while(true){
-      const {value,done}=await reader.read(); if(done) break;
-      buf+=dec.decode(value,{stream:true});
-      let i; while((i=buf.indexOf('\n\n'))>=0){
-        const chunk=buf.slice(0,i); buf=buf.slice(i+2);
-        const line=chunk.split('\n').find(l=>l.startsWith('data: ')); if(!line) continue;
-        let ev; try{ ev=JSON.parse(line.slice(6)); }catch{ continue; }
-        if(ev.meta){ meta=ev.meta; $('aiMeta').textContent=`${meta.mode==='api'?'直連 API · '+meta.model:meta.mode==='cli'?'Codex CLI':'假引擎'} · ${meta.docs} 份文件 · ${meta.pages} 頁 · 約 ${((meta.tokens||0)/1000).toFixed(0)}K tokens${meta.whole?'（整份 Data Room 進 context）':`（全案約 ${((meta.totalTokens||0)/1000).toFixed(0)}K 超過預算 ${((meta.budget||0)/1000).toFixed(0)}K，依頁碼與關鍵字挑頁）`}`; }
-        if(ev.delta){ if(!firstAt) firstAt=Date.now(); text+=ev.delta; render(); }
-        if(ev.error){ text+=`\n\n**錯誤：**${ev.error}`; render(); }
-        if(ev.usage){ const u=ev.usage; const cr=u.cache_read_input_tokens||0, cw=u.cache_creation_input_tokens||0; $('aiMeta').textContent += ` · 首字 ${firstAt?((firstAt-t0)/1000).toFixed(1):'—'}s · 總 ${((Date.now()-t0)/1000).toFixed(1)}s · in ${(u.input_tokens||0).toLocaleString()} / cache 讀 ${cr.toLocaleString()} 寫 ${cw.toLocaleString()} / out ${(u.output_tokens||0).toLocaleString()}`; }
-      }
-    }
-    if(!text) $('aiA').textContent='（沒有回答）';
-  }catch(e){$('aiA').textContent='失敗：'+e.message;}
-  $('aiBtn').disabled=false;$('aiBtn').textContent='問 Codex';
-}
 
-const HELP = `## 一個案子的完整流程
+const HELP = `## 開始一個盡調案件
+1. **整理資料室**：上傳財報、股權表、簡報或合約。系統會抽取內容並建立中文搜尋索引；可在文件清單查看處理狀態。
+2. **補充訪談筆記**：記錄管理團隊訪談與文件外資訊，供後續分析使用。
+3. **查資料或開始分析**：個別問題可直接使用「專案對話」；要整理全案差異與問題草稿，按上方「開始盡調分析」。
+4. **資料查核**：先檢視數字不一致、計算基礎不同與缺少佐證的項目，點選來源核對。
+5. **問題審核**：匯入團隊既有清單，合併並修改問題；保留採用項目，註記不採用原因，再匯出。
+6. **定稿與追問**：上傳正式發出版；收到公司回覆後，新增下一輪並上傳回覆與補件。
 
-1. **＋ 新增案件**：自動建立資料夾骨架（round1–3、_analysis、qlist、_notes.md）
-2. **備註頁先寫兩句背景**：怎麼認識的、聊過什麼、文件外的實體（例：某轉投資公司）。這是引擎唯一看不到的資訊，寫了才問得到
-3. **文件頁拖入 Data Room**：自動存進當前 round 資料夾並分類；對方給新版本時先「刪除」舊檔（＝歸檔，引擎會做版本 diff）再上傳新版
-4. **▶ 跑流程**：引擎讀文件做字卡、對帳、四視角出題，產出草稿（可關視窗背景跑，總覽頁看進度）
-5. **審核頁：上傳我的 Q-list → 跑合併**：三類 diff 後每題標來源（共識／Codex／你）；用篩選器切來源、分類、波次；勾選＝保留、砍題選原因、✎ 改問法
-6. **送出決定 → 下載合併版**：拿去與同事定稿
-7. **上傳最終發出版**：存檔為本輪正式版＋自動觸發本輪蒸餾（同事補的題＝盲區學習）
-8. **＋ Round N＋1** 收對方回覆與新文件，重複 3–7；資料拿夠了按 **✓ 結案**（自動全案蒸餾）
+## 專案對話與搜尋的差別
+- **專案對話**：釐清問題、比較資料、接續追問；回答附來源，並保留本案討論紀錄。
+- **搜尋資料**：以中文關鍵字或用途找文件，直接查閱原文。
+- AI 文件說明協助找資料，不等同原文證據；重要數字與條款仍應核對來源。
 
-## 需要手動碰資料夾嗎？
+## 文件處理狀態
+- **中文索引就緒**：可搜尋抽取文字與中文文件說明。
+- **部分完成**：部分文字、圖片或摘要尚未完整處理，查看原因後再決定是否重試。
+- **抽取失敗**：可能是不支援、損毀或加密的檔案，請確認原件。
+- 需要重試時，展開資料室的「資料處理工具」。
 
-**不需要。** 上傳、刪除、備註、最終版全部從工作台操作。手動把檔案丟進 round 資料夾也完全相容（兩個入口等價），但不是必要的。引擎認證需設定 OpenAI API key，或先在執行 server 的主機完成 codex login。
-
-## 引擎認證
-
-可設定 server 環境變數 OPENAI_API_KEY（問答與 headless 共用），或用側欄儲存 OpenAI API key。只跑 headless 時也可使用 CODEX_API_KEY，或在執行主機完成 codex login。金鑰不會回傳到頁面；請使用 OpenAI API key。
-
-## 常見問題
-
-- **公司回覆的 Q-list 檔案放哪？** 放進「下一輪」：例如對方回覆 Round 1 的 xlsx＋新文件，全部上傳到 Round 2（先按「＋ Round 2」開輪再上傳）。跑 Round 2 流程時引擎會逐題判定回覆（完整／部分／迴避／矛盾），沒答好的自動變追問
-- **波次（wave）是什麼？** 出題的發送順序：wave 1＝業務優先題（第一波就問）、wave 2＝治理股權類（第二波）、wave 3＝交易文件類。「wave 1/3」表示這題第一波可先要、最遲第三波要拿到
-- **回看舊輪次？** 文件頁本來就列出每一輪；Q-list 部分點上方的「Round N ✓」膠囊即可回看該輪草稿（唯讀），點「回到目前輪次」返回
-- **案件管理**：側欄星號＝置頂；「刪除案件」實際是移到 _trash/ 資料夾（可手動救回）；已結案的案件可按「重新開啟」
-- **進度條**：跑流程時按鈕下方顯示估計進度（依歷史耗時估算，非精確值），詳細即時紀錄在總覽頁
-- **蒸餾什麼時候發生？** 兩層：每輪上傳最終版後自動跑「本輪蒸餾」；結案時跑「全案蒸餾」。成果都寫回 knowledge/question-bank.md
-- **模型怎麼選？** 標題列下拉控制引擎主 session；子代理預設繼承主 session 的模型與 effort
-- **工作台需要保持開著嗎？** 頁面可關閉，但執行 server 的主機與程序必須持續運作
-- **想跟 Codex 討論案子？** 在專案根目錄開 Codex 對話，它讀寫的是同一批資料夾
-
-## 可定位層、矛盾圖、問 AI（黑客松版新增）
-
-- **索引**：上傳即自動抽每頁文字（PDF／pptx）與每格值＋公式（xlsx）到 _analysis/index/。文件頁的「索引」欄看得到頁數與掃描頁數；「⟳ 重建索引」全案重跑。字卡代理讀索引而不是原檔，掃描頁才回頭視覺讀。
-- **證據檢視器**：任何出處（[檔名 p.N]、[檔名 工作表!B4]）都可以點：左邊原檔翻到該頁／表格標出格子，右邊是該頁索引文字。
-- **矛盾圖**（對帳分頁）：facts.json 的事實 × 文件矩陣。紅＝矛盾、黃＝口徑不同、藍＝單一來源。有公式的事實會顯示程式重算結果（recompute.py），不靠模型心算。點格子開兩邊原文。
-- **問 AI**：整份 Data Room 帶頁碼放進 context 並快取，串流回答、每個事實標出處。設 OPENAI_API_KEY 走直連 API（快）；沒設就走 Codex CLI（慢一點）。可問「第 486 頁寫了什麼」「有沒有提到質押」「Vertex 持股各文件對得上嗎」。
-- **只消化這份 ⚡**（文件頁）：對單一新文件跑字卡 → 增量對帳 → 3–6 題新題（審核頁標「新增」），幾分鐘完成，適合現場拖入新文件。
-- **引擎活動**（總覽）：真實事件流，看得到主 session 派工給哪個代理、誰在讀哪份文件第幾頁、成本與耗時。
-
-## 環境變數
-
-- CODEX_BIN：Codex CLI 路徑（沒設就找專案安裝與 PATH）
-- OPENAI_API_KEY：OpenAI Responses API；QLIST_ASK_MODEL（預設 gpt-6-astra）、QLIST_ASK_EFFORT（low）、QLIST_ASK_BUDGET_TOKENS（450000，超過就挑頁）；QLIST_CODEX_MODEL（gpt-6-astra）、QLIST_CODEX_EFFORT（medium）控制 headless。
-- QLIST_MOCK=1：假引擎；PYTHON_BIN：python3 路徑`;
+## 案件管理
+模型、結案與重新開啟收在右上角「案件選項」。結案會同步整理題庫經驗。連線設定在左側「連線與設定」。
+刪除文件會保留封存副本；案件刪除請謹慎操作。技術紀錄可在案件總覽展開。`;
 $('helpBody').innerHTML = mdToHtml(HELP);
 const savedModel = localStorage.getItem('qlist_model') || 'default';
 $('modelSel').value = [...$('modelSel').options].some(o => o.value === savedModel) ? savedModel : 'default';

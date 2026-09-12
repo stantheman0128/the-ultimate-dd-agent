@@ -28,10 +28,10 @@ QLIST_MOCK=1 PORT=8765 node _workbench/server.js
 | `QLIST_CODEX_EFFORT` | `medium`；需使用所選模型支援的值 |
 | `QLIST_ASK_MODEL` | `gpt-6-astra`，與主代理下拉選單分開 |
 | `QLIST_ASK_EFFORT` | `low` |
-| `QLIST_ASK_BUDGET_TOKENS` | `450000`，沿用原 context 選頁政策 |
+| 對話讀取預算 | 每次模型請求的序列化輸入上限 48,000 UTF-8 bytes；每輪最多 6 次工具呼叫。舊 `QLIST_ASK_BUDGET_TOKENS` 不再使用 |
 | `CODEX_BIN` | 可選 Codex 可執行檔路徑 |
 
-沒有 API key 時，headless 可使用執行主機已有的 Codex 登入；用 `_workbench/node_modules/.bin/codex login` 登入。不要把 auth.json、OAuth token 或 API key 提交到 repo。Responses API 不會使用 ChatGPT 登入憑證；沒有 API key 時「問 AI」改走 CLI。
+沒有 API key 時，headless 可使用執行主機已有的 Codex 登入；用 `_workbench/node_modules/.bin/codex login` 登入。不要把 auth.json、OAuth token 或 API key 提交到 repo。Responses API 不會使用 ChatGPT 登入憑證；專案對話需要 API key，沒有時顯示設定提示；批次 DD 仍可使用 CLI 登入。
 
 Responses 請求設 `store: false`，快取依 provider 支援，不承諾固定 TTL 或延遲。
 
@@ -44,9 +44,9 @@ Responses 請求設 `store: false`，快取依 provider 支援，不承諾固定
 - PDF 掃描頁先用 PyMuPDF 渲染，再用可用圖片工具讀取，一次最多 20 頁；無法讀取須回報未覆蓋。
 - 新生成來源為「共識／Codex／你」。未標記作者的草稿顯示「AI」。
 
-批次允許 `workspace-write`；問答使用 `read-only`。不關閉 sandbox、不跳過審批。若宿主限制阻擋執行，應回報錯誤，不宣稱流程完成。
+批次允許 `workspace-write`；專案對話的文件檢索僅限本案，另可唯讀使用者勾選的跨案記憶；背景整理器將記憶寫入 Git 忽略的私有目錄。不關閉 sandbox、不跳過審批。若宿主限制阻擋執行，應回報錯誤，不宣稱流程完成。
 
-Codex 的 JSONL 不一定提供每個讀檔動作及精確頁碼，時間軸只呈現實際收到的事件，不能捏造與舊 provider 相同的完整 trace。CLI 問答沿用既有 220,000 字元上限；若需要完整大文件問答，使用 Responses API 或調整後另行驗證。
+Codex 的 JSONL 不一定提供每個讀檔動作及精確頁碼，時間軸只呈現實際收到的事件，不能捏造與舊 provider 相同的完整 trace。專案對話不使用 CLI fallback，避免繞過片段讀取與輸入預算。設計與限制見 [_workbench/CHAT_DESIGN.md](_workbench/CHAT_DESIGN.md)。
 
 ## 驗證
 
@@ -62,3 +62,5 @@ python3 _workbench/recompute.py 演練資料_AcmeRobotics --dry
 - https://learn.chatgpt.com/docs/agent-configuration/subagents
 - https://learn.chatgpt.com/docs/build-skills
 - https://developers.openai.com/api/docs/guides/text
+
+對話長期記憶、來源追溯、作用範圍及整理用量見 [_workbench/MEMORY_DESIGN.md](_workbench/MEMORY_DESIGN.md)。

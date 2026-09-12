@@ -6,17 +6,21 @@ const path = require('path');
 const { spawn } = require('child_process');
 const OpenAI = require('openai');
 const provider = require('./codex-provider');
+const chat = require('./project-chat');
+const {MemoryStore}=require('./memory-store');
 
 const ROOT = path.resolve(__dirname, '..');
+const memory=new MemoryStore(ROOT,dealPath);
+function runMemoryJobs(){const apiKey=process.env.OPENAI_API_KEY||readToken();if(!MOCK&&apiKey)memory.drain(new OpenAI({apiKey,maxRetries:0,timeout:90000}),ASK_MODEL,chat).catch(e=>console.error('Memory job failed:',e.message));}
 const PUB = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT || 8765);
 const MOCK = process.env.QLIST_MOCK === '1';
 const EXCLUDE = new Set(['knowledge']);
 const PY = process.env.PYTHON_BIN || 'python3';
-// 問 AI（互動層）設定：整份文件帶頁碼進 context，用 prompt caching 固定住；超過預算才挑頁
+// Project chat uses bounded, local retrieval and explicit evidence tool calls.
 const ASK_MODEL = process.env.QLIST_ASK_MODEL || provider.DEFAULT_MODEL;
 const ASK_EFFORT = process.env.QLIST_ASK_EFFORT || 'low';
-const ASK_BUDGET = Number(process.env.QLIST_ASK_BUDGET_TOKENS || 450000); // 估算 token（拉丁字元 /4、CJK ×1.2）；1M context 留餘裕
+const ASK_BUDGET = 12000; // Compatibility metadata; the enforced per-request byte limit is in project-chat.js.
 const ASK_SYSTEM = [
   '你是 VC 盡職調查助理，正在協助分析師閱讀一間新創的 Data Room。只依據下方 <documents> 內提供的內容回答，不得用文件以外的知識補數字。',
   '回答規則：',
@@ -72,7 +76,7 @@ function listDocs(dp) {
       name: f, round, size: st.size, mtime: st.mtimeMs,
       cat: catMap[f] || guessCat(f),
       card: !!findCard(dp, f),
-      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
+      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
       indexing: INDEXING.has(path.join(dir, f)),
     });
   };
@@ -182,6 +186,7 @@ function readCats(dp) {
 }
 
 // ---------- 可定位層：_analysis/index/<檔名>.index.json ----------
+const INDEX_META_CACHE = new Map();
 const INDEX_CACHE = new Map(); // indexPath -> { mtimeMs, data }
 const INDEXING = new Set();    // 正在索引的原始檔絕對路徑
 function indexDir(dp) { return path.join(dp, '_analysis', 'index'); }
@@ -192,7 +197,9 @@ function loadIndex(dp, file) {
   if (c && c.mtimeMs === st.mtimeMs) return c.data;
   try {
     const data = JSON.parse(fs.readFileSync(ip, 'utf8'));
-    INDEX_CACHE.set(ip, { mtimeMs: st.mtimeMs, data });
+    // Keep at most 8 source files / 32 MB; metadata has a separate lightweight cache.
+    if (st.size <= 32*1024*1024) INDEX_CACHE.set(ip, { mtimeMs: st.mtimeMs, data, bytes: st.size });
+    while (INDEX_CACHE.size > 8 || [...INDEX_CACHE.values()].reduce((n,c)=>n+c.bytes,0)>32*1024*1024) INDEX_CACHE.delete(INDEX_CACHE.keys().next().value);
     return data;
   } catch { return null; }
 }
@@ -203,8 +210,13 @@ function indexMeta(dp) {
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.index.json')) continue;
     const name = f.slice(0, -'.index.json'.length);
-    const d = loadIndex(dp, name);
-    if (d) out[name] = { kind: d.kind, page_count: d.page_count, sheet_count: d.sheet_count, needs_ocr_pages: d.needs_ocr_pages, total_chars: d.total_chars, mtime: d.mtime };
+    const ip=path.join(dir,f),st=fs.statSync(ip),cached=INDEX_META_CACHE.get(ip);
+    if(cached?.mtime===st.mtimeMs){out[name]=cached.meta;continue;}
+    let d;
+    try {const m=JSON.parse(fs.readFileSync(ip+'.meta','utf8'));if(m.indexSize===st.size&&Math.abs(m.indexMtime-st.mtimeMs/1000)<.001)d=m;}catch{}
+    if(!d)d=loadIndex(dp,name);
+    if(d){const meta={kind:d.kind,page_count:d.page_count,sheet_count:d.sheet_count,needs_ocr_pages:d.needs_ocr_pages,total_chars:d.total_chars,mtime:d.mtime,preprocess_status:d.preprocess_status,warnings:d.warnings,error:d.error,enrichment:d.enrichment};out[name]=meta;INDEX_META_CACHE.set(ip,{mtime:st.mtimeMs,meta});}
+    if(INDEX_META_CACHE.size>5000)INDEX_META_CACHE.delete(INDEX_META_CACHE.keys().next().value);
   }
   return out;
 }
@@ -212,11 +224,18 @@ function loadAllIndex(dp) {
   return Object.keys(indexMeta(dp)).map(n => loadIndex(dp, n)).filter(Boolean);
 }
 // 跑 index_doc.py（單檔或全案）。非同步、不阻塞 HTTP；回傳 promise 供需要等待的路由使用。
-function runIndexer(dp, file, force) {
+const INDEX_QUEUE=new Map();
+function runIndexer(dp,file,force){
+  const prior=INDEX_QUEUE.get(dp)||Promise.resolve();
+  const job=prior.catch(()=>{}).then(()=>runIndexerNow(dp,file,force));
+  INDEX_QUEUE.set(dp,job);job.finally(()=>{if(INDEX_QUEUE.get(dp)===job)INDEX_QUEUE.delete(dp)});return job;
+}
+function runIndexerNow(dp, file, force) {
   const args = [path.join(__dirname, 'index_doc.py'), dp];
   if (file) args.push('--file', file);
   if (force) args.push('--force');
-  if (file) INDEXING.add(path.isAbsolute(file) ? file : path.join(dp, file));
+  const targets=file?[path.isAbsolute(file)?file:path.join(dp,file)]:listDocs(dp).map(d=>path.join(dp,/^R\d+$/.test(d.round)?'round'+d.round.slice(1):'',d.name));
+  targets.forEach(f=>INDEXING.add(f));
   return new Promise(resolve => {
     const py = spawn(PY, args, { cwd: ROOT });
     let out = '', err = '';
@@ -224,8 +243,9 @@ function runIndexer(dp, file, force) {
     py.stderr.on('data', d => err += d);
     py.on('error', e => { err += String(e); });
     py.on('close', code => {
-      if (file) INDEXING.delete(path.isAbsolute(file) ? file : path.join(dp, file));
+      targets.forEach(f=>INDEXING.delete(f));
       let parsed = null; try { parsed = JSON.parse(out.trim().split('\n').pop()); } catch {}
+      if (code === 0) chat.retrieval(dp, {op:'catalog'}).catch(e => console.error('Retrieval index:', e.message));
       resolve({ code, result: parsed, error: code === 0 ? '' : err.slice(-600) });
     });
   });
@@ -235,19 +255,6 @@ function readFactsJson(dp) {
 }
 
 // ---------- 問 AI 的 context 組裝 ----------
-function docBlock(d, pageSet) {
-  if (d.kind === 'xlsx') {
-    const sheets = (d.sheets || []).map(s => {
-      const lines = (s.cells || []).map(c => `${c.ref}\t${c.value == null ? '' : c.value}${c.formula ? '\t' + c.formula : ''}`);
-      return `<sheet name="${s.name}" dims="${s.dims || ''}"${s.truncated ? ' truncated="true"' : ''}>\n${lines.join('\n')}\n</sheet>`;
-    });
-    return `<doc file="${d.file}" kind="xlsx" sheets="${(d.sheets || []).length}">\n${sheets.join('\n')}\n</doc>`;
-  }
-  const pages = (d.pages || []).filter(p => !pageSet || pageSet.has(p.n)).map(p =>
-    (p.needs_ocr && !(p.text || '').trim()) ? `<page n="${p.n}" scanned="true"/>` : `<page n="${p.n}">\n${p.text}\n</page>`);
-  const note = pageSet ? ` selected="${pages.length}"` : '';
-  return `<doc file="${d.file}" kind="${d.kind}" pages="${d.page_count || 0}"${note}>\n${pages.join('\n')}\n</doc>`;
-}
 function estTokens(s) {
   if (!s) return 0;
   let cjk = 0; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); if (c >= 0x3400 && c <= 0x9fff) cjk++; }
@@ -258,74 +265,6 @@ function docText(d) {
   return (d.pages || []).map(p => p.text || '').join('\n');
 }
 function docChars(d) { return estTokens(docText(d)); } // 以「估算 token」為預算單位
-function questionTerms(q) {
-  const terms = new Set();
-  for (const m of (q.toLowerCase().match(/[a-z][a-z0-9&\-\.]{1,}/g) || [])) if (m.length >= 2) terms.add(m);
-  for (const m of (q.match(/\d[\d,\.]{1,}/g) || [])) terms.add(m.replace(/,/g, ''));
-  for (const run of (q.match(/[㐀-鿿]{2,}/g) || [])) for (let i = 0; i + 1 < run.length; i++) terms.add(run.slice(i, i + 2));
-  return [...terms];
-}
-function explicitPages(q) {
-  const out = new Set();
-  const re = /(?:第\s*(\d{1,4})\s*頁|p\.?\s*(\d{1,4})\b|page\s*(\d{1,4})\b|(\d{1,4})\s*頁)/gi;
-  let m; while ((m = re.exec(q))) out.add(Number(m[1] || m[2] || m[3] || m[4]));
-  return out;
-}
-function buildAskContext(dp, question) {
-  const docs = loadAllIndex(dp);
-  const read = f => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
-  const notes = read(path.join(dp, '_notes.md')).trim();
-  const facts = read(path.join(dp, '_analysis', 'facts.md')).trim();
-  const parts = [];
-  if (notes) parts.push(`<notes file="_notes.md">\n${notes}\n</notes>`);
-  if (facts) parts.push(`<facts file="_analysis/facts.md">\n${facts.slice(0, 60000)}\n</facts>`);
-  const total = docs.reduce((s, d) => s + docChars(d), 0) + estTokens(notes) + estTokens(facts.slice(0, 60000));
-  const whole = total <= ASK_BUDGET;
-  let pagesUsed = 0;
-  if (whole) {
-    for (const d of docs) { parts.push(docBlock(d, null)); pagesUsed += (d.pages || []).length || (d.sheets || []).length; }
-  } else {
-    // 超過預算：先放明確指到的頁（±1），再依關鍵字命中分數填到預算為止；xlsx 整份放（通常小）
-    const q = question || '';
-    const terms = questionTerms(q);
-    const wantPages = explicitPages(q);
-    const mentioned = docs.filter(d => q.includes(d.file.replace(/\.[^.]+$/, '')) || q.includes(d.file));
-    let budget = ASK_BUDGET - estTokens(parts.join('\n'));
-    const chosen = new Map(); // file -> Set(page)
-    const pcost = p => estTokens(p.text || '') + 12;
-    const add = (d, n, cost) => { if (!chosen.has(d.file)) chosen.set(d.file, new Set()); if (!chosen.get(d.file).has(n)) { chosen.get(d.file).add(n); budget -= cost; } };
-    for (const d of docs) {
-      if (d.kind === 'xlsx') { const c = docChars(d); if (c < budget) { parts.push(docBlock(d, null)); budget -= c; pagesUsed += (d.sheets || []).length; } continue; }
-      const scope = mentioned.length ? mentioned.includes(d) : true;
-      if (!scope) continue;
-      for (const n of wantPages) for (const k of [n - 1, n, n + 1]) { const p = (d.pages || [])[k - 1]; if (p) add(d, k, pcost(p)); }
-    }
-    const cands = [];
-    for (const d of docs) {
-      if (d.kind === 'xlsx') continue;
-      if (mentioned.length && !mentioned.includes(d)) continue;
-      for (const p of d.pages || []) {
-        const low = (p.text || '').toLowerCase();
-        let score = 0;
-        for (const t of terms) { let i = 0, c = 0; while (c < 5 && (i = low.indexOf(t, i)) >= 0) { c++; i += t.length; } score += c * Math.min(t.length, 6); }
-        if (score > 0) cands.push({ d, p, score });
-      }
-    }
-    cands.sort((a, b) => b.score - a.score);
-    for (const c of cands) { if (budget <= 0) break; const cost = pcost(c.p); if (cost <= budget) add(c.d, c.p.n, cost); }
-    for (const d of docs) { const set = chosen.get(d.file); if (set && set.size) { parts.push(docBlock(d, set)); pagesUsed += set.size; } }
-  }
-  const text = `<documents whole_corpus="${whole}">\n${parts.join('\n')}\n</documents>`;
-  return { text, docs: docs.length, pages: pagesUsed, whole, totalTokens: total, tokens: estTokens(text) };
-}
-async function askViaApi(ctx, question, send) {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || readToken() });
-  return provider.askViaApi({ client, ctx, question, send, system: ASK_SYSTEM, model: ASK_MODEL, effort: ASK_EFFORT });
-}
-function askViaCli(ctx, question, send, model) {
-  return provider.askViaCli({ cli: CLI, cwd: ROOT, env: engineEnv(), ctx, question, send, model, system: HEADLESS_SYS + '\n' + ASK_SYSTEM });
-}
-
 // Codex JSONL events are adapted to the existing workbench timeline contract.
 const parseStreamLine = provider.parseStreamLine;
 function mockRun(run, emit, dp, finish) {
@@ -466,6 +405,12 @@ const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   const q = u.searchParams;
   try {
+    // Local APIs may be called by the workbench or a local CLI, never by a foreign web origin.
+    if(u.pathname.startsWith('/api/')) {
+      const host=req.headers.host;
+      if(![`127.0.0.1:${PORT}`,`localhost:${PORT}`].includes(host))throw httpErr(403,'不接受此工作台網址');
+      if((req.headers.origin && req.headers.origin!==`http://${host}`)||req.headers['sec-fetch-site']==='cross-site')throw httpErr(403,'不接受其他網站存取本機工作台');
+    }
     // ---- API ----
     if (u.pathname === '/api/deals') {
       const deals = fs.readdirSync(ROOT).filter(isDealName).map(dealSummary);
@@ -484,7 +429,7 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/engine') {
       return json(res, 200, {
         cli: CLI ? CLI.version : null, cliPath: CLI ? CLI.bin : null, mock: MOCK, token: !!readToken(),
-        api: !!(process.env.OPENAI_API_KEY || readToken()), askModel: ASK_MODEL, askEffort: ASK_EFFORT, askBudget: ASK_BUDGET, sdk: true,
+        api: !!(process.env.OPENAI_API_KEY || readToken()), askModel: ASK_MODEL, askEffort: ASK_EFFORT, askBudget: ASK_BUDGET, askMaxInputBytes: chat.MAX_INPUT_BYTES, retrieval: 'local-fts5', sdk: true,
       });
     }
     if (u.pathname === '/api/token' && req.method === 'POST') {
@@ -588,8 +533,8 @@ const server = http.createServer(async (req, res) => {
       const dp = dealPath(q.get('deal'));
       const meta = indexMeta(dp);
       const docs = listDocs(dp).map(d => ({ name: d.name, round: d.round, index: d.index, indexing: d.indexing }));
-      const total = loadAllIndex(dp).reduce((s, d) => s + docChars(d), 0);
-      return json(res, 200, { docs, totalTokens: total, budget: ASK_BUDGET, wholeCorpus: total <= ASK_BUDGET });
+      const total = Object.values(meta).reduce((s,d)=>s+Math.ceil((d.total_chars||0)/3),0);
+      return json(res, 200, { docs, totalTokens: total, budget: ASK_BUDGET, wholeCorpus: false });
     }
     if (u.pathname === '/api/page') {
       const dp = dealPath(q.get('deal'));
@@ -760,7 +705,7 @@ const server = http.createServer(async (req, res) => {
       } else where = path.join(dp, '_analysis', 'drafts');
       const f = safeJoin(where, path.basename(q.get('file') || ''));
       if (!fs.existsSync(f)) throw httpErr(404, 'file not found');
-      const INLINE = { '.pdf': 'application/pdf', '.png': 'image/png', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
+      const INLINE = { '.pdf': 'application/pdf', '.png': 'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.gif':'image/gif', '.bmp':'image/bmp', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
       const ct = INLINE[path.extname(f).toLowerCase()];
       res.writeHead(200, {
         'Content-Type': ct || 'application/octet-stream',
@@ -832,84 +777,55 @@ const server = http.createServer(async (req, res) => {
       const dp = dealPath(q.get('deal'));
       const needle = (q.get('q') || '').toLowerCase();
       if (!needle) return json(res, 200, { hits: [] });
-      // 同義詞放寬：搜「財報」也命中年報/資產負債表/損益表等
-      const SYN = [
-        ['財報', '年報', '財簽', '財務報表', '資產負債表', '損益表', '現金流量', '自結', 'financial', 'audited', 'balance', 'income'],
-        ['股權', 'cap table', 'captable', '股東名簿', '股東', '持股', 'shareholder', 'equity', 'registry'],
-        ['章程', '登記', 'incorporation', 'articles'],
-        ['合約', 'contract', 'agreement', 'spa', 'sha', 'term sheet'],
-        ['簡報', 'deck', 'pitch', '介紹', 'onepager', 'one page'],
-        ['財測', 'forecast', '模型', '預估'],
-      ];
-      let terms = [needle];
-      for (const g of SYN) if (g.some(w => needle.includes(w) || w.includes(needle))) terms.push(...g);
-      terms = [...new Set(terms.map(s => s.toLowerCase()))];
-      const matches = s => { const low = s.toLowerCase(); return terms.some(t => low.includes(t)); };
-      const firstIdx = s => { const low = s.toLowerCase(); let best = -1; for (const t of terms) { const i = low.indexOf(t); if (i >= 0 && (best < 0 || i < best)) best = i; } return best; };
-      const hits = [];
-      for (const doc of listDocs(dp)) {
-        if (matches(doc.name))
-          hits.push({ src: '文件 · ' + doc.round, line: 0, text: doc.name, doc: { name: doc.name, round: doc.round } });
+      const found=await chat.retrieval(dp,{op:'search',query:needle});
+      const hits=found.matches.map(m=>({src:`${m.kind==='metadata'?'AI 導覽／描述':'內容'} · ${m.file} · ${m.location}`,text:m.snippet,evidenceId:m.id}));
+      return json(res, 200, { hits, warnings: found.warnings });
+    }
+    if(u.pathname==='/api/memory/status'){const deal=q.get('deal');dealPath(deal);const id=q.get('conversation');const job=memory.jobs(deal).filter(j=>j.conversationId===id).at(-1);return json(res,200,{status:job?.status||'none'});}
+    if (u.pathname === '/api/memory') {
+      if(req.method==='GET') {const scope=q.get('scope');memory.dir(scope);return json(res,200,{entries:memory.list(scope),jobs:memory.jobs(scope).map(j=>({id:j.id,status:j.status,error:j.error}))});}
+      const b=JSON.parse(await readBody(req,16000));memory.dir(b.scope);
+      if(req.method==='DELETE'){memory.remove(b.scope,b.id,b.revision);return json(res,200,{ok:true});}
+      if(req.method!=='POST')throw httpErr(405,'method not allowed');
+      return json(res,200,memory.save(b.scope,{title:b.title,content:b.content,status:b.status,kind:b.scope==='global'?'rule':'note'},{id:b.id,revision:b.revision}));
+    }
+    if (u.pathname === '/api/memory/retry' && req.method==='POST') {const b=JSON.parse(await readBody(req,16000));dealPath(b.deal);memory.retry(b.deal);runMemoryJobs();return json(res,200,{ok:true});}
+    if (u.pathname === '/api/conversation/memory' && req.method==='POST') {
+      const b=JSON.parse(await readBody(req,16000)),dp=dealPath(b.deal),c=chat.read(dp,b.id);
+      if(chat.locks.has(chat.fileFor(dp,c.id)))throw httpErr(409,'請等這輪回答完成再調整記憶');
+      const selected=memory.scopes(b.deal,b.projects).filter(s=>s!=='global'&&s!==b.deal);
+      if(JSON.stringify(selected.slice().sort())!==JSON.stringify((c.memoryProjects||[]).slice().sort()))c.memoryVersion=(c.memoryVersion||0)+1;
+      c.memoryProjects=selected;chat.save(dp,c);return json(res,200,c);
+    }
+    if (u.pathname === '/api/conversations') {
+      if (req.method === 'POST') {
+        const body=JSON.parse(await readBody(req, 16000));
+        const dp=dealPath(body.deal),projects=memory.scopes(body.deal,body.memoryProjects||[]).filter(s=>s!=='global'&&s!==body.deal),c=chat.create(dp);c.memoryProjects=projects;chat.save(dp,c);return json(res,200,c);
       }
-      // 原文（索引層）：逐頁 / 逐格命中，附頁碼或儲存格，前端可直接開到該處
-      let rawHits = 0;
-      for (const d of loadAllIndex(dp)) {
-        if (rawHits >= 60) break;
-        const docRef = { name: d.file, round: d.round };
-        if (d.kind === 'xlsx') {
-          for (const s of d.sheets || []) for (const c of s.cells || []) {
-            if (rawHits >= 60) break;
-            const cellText = `${c.value == null ? '' : c.value}${c.formula ? ' ' + c.formula : ''}`;
-            if (matches(cellText)) { rawHits++; hits.push({ src: `原文 · ${d.file} · ${s.name}!${c.ref}`, line: 0, text: `${c.ref} = ${cellText}`.slice(0, 300), doc: docRef, sheet: s.name, ref: c.ref }); }
-          }
-        } else {
-          for (const p of d.pages || []) {
-            if (rawHits >= 60) break;
-            const i = firstIdx(p.text || '');
-            if (i < 0) continue;
-            rawHits++;
-            const snippet = (p.text || '').slice(Math.max(0, i - 110), i + 190).replace(/\s+/g, ' ');
-            hits.push({ src: `原文 · ${d.file} · p.${p.n}`, line: 0, text: snippet, doc: docRef, page: p.n });
-          }
-        }
-      }
-      const scanFile = (fp, label) => {
-        let txt; try { txt = fs.readFileSync(fp, 'utf8'); } catch { return; }
-        const lines = txt.split('\n');
-        for (let i = 0; i < lines.length && hits.length < 50; i++) {
-          if (matches(lines[i])) hits.push({ src: label, line: i + 1, text: lines[i].trim().slice(0, 300) });
-        }
-      };
-      const an = path.join(dp, '_analysis');
-      const cardsDir = path.join(an, 'cards');
-      if (fs.existsSync(cardsDir)) for (const f of fs.readdirSync(cardsDir)) scanFile(path.join(cardsDir, f), '字卡 · ' + f.replace(/\.md$/, ''));
-      for (const f of ['facts.md']) scanFile(path.join(an, f), '對帳表');
-      const dr = path.join(an, 'drafts');
-      if (fs.existsSync(dr)) for (const f of fs.readdirSync(dr)) if (f.endsWith('.md')) scanFile(path.join(dr, f), '草稿 · ' + f);
-      scanFile(path.join(dp, '_notes.md'), '背景備註');
-      return json(res, 200, { hits });
+      return json(res,200,{conversations:chat.list(dealPath(q.get('deal')))});
+    }
+    if (u.pathname === '/api/conversation') return json(res,200,chat.read(dealPath(q.get('deal')),q.get('id')));
+    if (u.pathname === '/api/evidence') {
+      const result=await chat.retrieval(dealPath(q.get('deal')),{op:'read',id:q.get('id')});
+      return json(res,result.error?404:200,result);
     }
     if (u.pathname === '/api/ask' && req.method === 'POST') {
-      // SSE 串流：{meta} → {delta}* → {usage} → {done}
-      const { deal, question, model } = JSON.parse(await readBody(req));
-      const dp = dealPath(deal);
-      if (!question || !String(question).trim()) throw httpErr(400, '問題不可為空');
-      res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
-      const send = o => { try { res.write(`data: ${JSON.stringify(o)}\n\n`); } catch {} };
-      try {
-        const ctx = buildAskContext(dp, question);
-        const mode = MOCK ? 'mock' : (process.env.OPENAI_API_KEY || readToken()) ? 'api' : (CLI ? 'cli' : 'none');
-        send({ meta: { mode, model: mode === 'api' ? ASK_MODEL : (model || 'CLI 預設'), docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, totalTokens: ctx.totalTokens, budget: ASK_BUDGET } });
-        if (mode === 'mock') {
-          const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已依關鍵字挑頁）'}。正式版會由模型依此回答並標出處，例如：Vertex Growth Fund LP 持股在 Cap Table 為 1,200,000 股 [Acme_CapTable_202606.xlsx Cap Table!B4]，股東名簿為 1,500,000 股 [Acme_Robotics_Shareholder_Registry_20260315.pdf p.1]。`;
-          for (const ch of fake.match(/.{1,12}/g)) { send({ delta: ch }); await new Promise(r => setTimeout(r, 25)); }
-          send({ mode: 'mock' });
-        } else if (mode === 'api') await askViaApi(ctx, question, send);
-        else if (mode === 'cli') await askViaCli(ctx, question, send, model);
-        else send({ error: '沒有 OPENAI_API_KEY，也找不到 Codex CLI（執行 npm install 或設 CODEX_BIN）' });
-      } catch (e) { send({ error: String(e && e.message || e) }); }
-      send({ done: true });
-      return res.end();
+      const body=JSON.parse(await readBody(req, 16000));
+      const dp=dealPath(body.deal);
+      const question=typeof body.question==='string'?body.question.trim():'';
+      if (!question || Buffer.byteLength(question)>6000) throw httpErr(400,'問題不可空白，且不得超過 6000 bytes');
+      const conversation=body.conversationId?chat.read(dp,body.conversationId):chat.create(dp);
+      if (chat.locks.has(chat.fileFor(dp,conversation.id))) throw httpErr(409,'此對話仍在回覆中');
+      const abort=new AbortController();res.on('close',()=>{if(!res.writableEnded)abort.abort()});
+      res.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-cache','Connection':'keep-alive','X-Accel-Buffering':'no'});
+      const send=e=>{if(!res.destroyed)res.write('data: '+JSON.stringify(e)+'\n\n')};
+      const apiKey=process.env.OPENAI_API_KEY||readToken();
+      await chat.run({dp,conversation,question,model:ASK_MODEL,effort:ASK_EFFORT,
+        client:apiKey?new OpenAI({apiKey,maxRetries:0,timeout:90000}):null,
+        mock:MOCK,memory,send,signal:abort.signal});
+      res.end();
+      if(!MOCK&&conversation.messages.at(-1)?.status==='completed'){memory.enqueue(body.deal,conversation);setImmediate(runMemoryJobs);}
+      return;
     }
     // ---- 靜態 ----
     let p = u.pathname === '/' ? '/index.html' : u.pathname;
@@ -924,3 +840,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${PORT}  root=${ROOT}  mock=${MOCK}`));
+
+setImmediate(runMemoryJobs);

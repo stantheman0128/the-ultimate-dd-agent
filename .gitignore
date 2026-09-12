@@ -9,6 +9,7 @@
 !/ROADMAP.md
 !/.codex/
 !/.agents/
+!/.github/
 !/_workbench/
 !/knowledge/
 !/演練資料_AcmeRobotics/
@@ -38,3 +39,14 @@ _workbench/token
 /HANDOFF.md
 /*.xlsx
 /*.pptx
+
+# Private project conversations and disposable search databases
+**/_analysis/conversations/
+**/_analysis/retrieval/
+**/_analysis/index/*.meta
+**/_analysis/index/*.tmp
+
+_workbench/.tessdata/
+
+# Private learned memory, summaries, background jobs, rebuildable FTS index
+/_private_memory/

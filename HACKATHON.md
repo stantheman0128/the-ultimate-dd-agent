@@ -26,9 +26,9 @@
 
 PDF／簡報逐頁索引、試算表逐格值與公式 → card-extractor → reconciler 與程式重算 → QC → 四 persona 獨立出題 → 人工匯整。共七個 Codex 自訂代理，定義在 `.codex/agents/`。
 
-即時問答用 OpenAI Responses API 串流；沒有 API key 時走 `codex exec --json`。批次流程使用 headless Codex。時間軸只顯示實際收到的事件，CLI 不保證逐頁讀取事件。問答 context 仍有原引擎預算與 CLI 字元上限。
+專案對話用 OpenAI Responses API 串流與多輪工具檢索，需 API key。文件先建本地 SQLite 片段索引，模型按需讀取，詳見 [_workbench/CHAT_DESIGN.md](_workbench/CHAT_DESIGN.md)。批次流程使用 headless Codex；時間軸只顯示實際收到的事件。
 
-本環境 mock 與確定性整合測試通過；真實 Codex 呼叫逾時，真實 Responses API 因缺 key 未驗證。沒有實測的延遲、費用、覆蓋率或成功率不得當成結果展示。附帶預先準備的合成分析可供操作示範；真實模型執行狀態以測試結果為準。
+初始匯入時的驗證僅含 mock 與確定性整合測試。後續對話與記憶的實測範圍見 [_workbench/MEMORY_DESIGN.md](_workbench/MEMORY_DESIGN.md)。沒有實測的延遲、費用、覆蓋率或成功率不得當成結果展示。附帶預先準備的合成分析可供操作示範；真實模型執行狀態以測試結果為準。
 
 ## 匯出
 
