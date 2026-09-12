@@ -72,6 +72,9 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 
 匯整（去重＋覆蓋檢查）時的**基線定式檢查**（校準教訓）：題庫中標記 any＋wave 1 的定式（Top-N 客戶 roster＋合約狀態、營收區域分布、全年度營收/成本拆分表）不得因 number-anchored 題優先而被排擠 — 沒有錨定版本就用定式原樣補上。
 
+### 階段 1c：獨立審題
+主 session 匯整後必派 question-reviewer（fresh context，不讀 persona 推理）；追問輪必讀上輪最終版與公司回覆。逐題拆 facets、搜證含同義詞、記錄覆蓋、區分公司陳述與文件支持、重驗可比性、評價決策價值、給 verdict。寫 review_RN.json；suppress 與 merge 只標记，不刪除。rewrite 保留原句與新版；defer 降波次；needs_human_check 交人。來源「你」只給建議，不能自行改寫或刪除。
+
 ### 階段 2：統整校對
 - 使用者交出他的版本（工作台上傳至 `_analysis/inbox/`）後做三類 diff：共識（語意相同即算，措辭合併取較佳）／只有 Codex（使用者勾選決定，砍題附原因）／只有使用者（**自動進最終版＋記錄為盲區訓練資料**）。合併輸出 `draft_RN_merged.md`，含「來源」欄（共識／Codex／你）。
 - 使用者對題目的編輯：原句 vs 修改版**成對記錄**（措辭學習）。

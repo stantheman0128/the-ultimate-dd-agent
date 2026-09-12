@@ -1,0 +1,57 @@
+{
+  "round": 1,
+  "reviewed_at": null,
+  "provenance": {
+    "kind": "handwritten",
+    "note": "UI fixture; verdicts have not been independently verified."
+  },
+  "rules_applied": [],
+  "items": [
+    {
+      "question_id": "q-r1-021",
+      "verdict": "suppress_already_answered",
+      "reason": "手寫 UI 示範判定（尚未核實）；用於檢查審題卡、引用與人工恢復操作，不代表整題已被回答。",
+      "requested_facets": [
+        "統計口徑與支持文件"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "待獨立 Reviewer 查驗"
+      ],
+      "answered_at": [
+        {
+          "doc": "FIN",
+          "loc": "p.1"
+        }
+      ],
+      "counter_evidence": [],
+      "source_support": "company_assertion_only",
+      "revised_question": null,
+      "merge_with": null,
+      "decision_relevance": "測試審核操作，非事實結論"
+    },
+    {
+      "question_id": "q-r1-016",
+      "verdict": "rewrite",
+      "reason": "手寫 UI 示範判定（尚未核實）；用於檢查審題卡、引用與人工恢復操作，不代表整題已被回答。",
+      "requested_facets": [
+        "統計口徑與支持文件"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "待獨立 Reviewer 查驗"
+      ],
+      "answered_at": [
+        {
+          "doc": "FIN",
+          "loc": "p.1"
+        }
+      ],
+      "counter_evidence": [],
+      "source_support": "company_assertion_only",
+      "revised_question": "請依各份文件分別列示統計期間與計算口徑，並提供差異調節明細。",
+      "merge_with": null,
+      "decision_relevance": "測試審核操作，非事實結論"
+    }
+  ]
+}

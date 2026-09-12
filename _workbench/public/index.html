@@ -93,6 +93,7 @@ td.file{font-family:var(--font-data);font-size:12px}
 .catgroup h3{font-size:13px;font-weight:600;margin:16px 0 6px;color:var(--ink)}
 .catgroup h3 .n{font-weight:400;color:var(--ink-3);font-size:12px}
 .qrow{display:flex;gap:12px;padding:14px 2px;border-top:1px solid var(--line);align-items:flex-start}
+.qrow.suppressed .qtext,.qrow.suppressed .why,.qrow.suppressed .reviewdetail,.qrow.suppressed .reasons{display:none}
 .qrow:first-of-type{border-top:none}
 .qrow input[type=checkbox]{width:16px;height:16px;margin-top:4px;accent-color:var(--accent)}
 .qrow .qb{flex:1;min-width:0}
@@ -288,6 +289,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
         <select id="fSrc" onchange="applyRevFilters()"></select>
         <select id="fCat" onchange="applyRevFilters()"></select>
         <select id="fWave" onchange="applyRevFilters()"></select>
+        <select id="fVerdict" onchange="applyRevFilters()"><option value="">Reviewer：全部</option><option value="keep">keep</option><option value="rewrite">rewrite</option><option value="suppress_already_answered">suppress_already_answered</option><option value="merge_duplicate">merge_duplicate</option><option value="defer">defer</option><option value="needs_human_check">needs_human_check</option></select><button onclick="rerunReviewer()">重跑 Reviewer</button>
         <button onclick="toggleAll()" id="selAllBtn">全選／取消全選</button>
         <span style="font-size:12px;color:var(--ink-3)" id="fCount"></span>
       </div>
@@ -998,10 +1000,26 @@ function evidenceChips(ev){
   });
   return `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:11.5px;color:var(--ink-3)">證據</span>${chips.join('')}</div>`;
 }
+const VERDICT_STYLE={keep:'ok',rewrite:'warn',suppress_already_answered:'bad',merge_duplicate:'todo',defer:'todo',needs_human_check:'run'};
+function reviewMarkup(x,i){
+  const r=x.review;if(!r)return '';
+  return `<div style="margin-top:8px"><span class="chip ${VERDICT_STYLE[r.verdict]}">${esc(r.verdict)}</span>${x.review_advisory?' <span class="chip todo">僅建議，由你確認</span>':''}<span style="font-size:12px"> ${esc(r.reason)}</span>${r.verdict==='suppress_already_answered'?` <button onclick="$('qr${i}').classList.remove('suppressed')">展開</button> <button onclick="overrideReview(${i})">恢復原題</button>`:` <button onclick="overrideReview(${i})">推翻建議</button>`}
+  ${evidenceChips(r.answered_at)}
+  <div class="reviewdetail">${r.verdict==='rewrite'?`<details open><summary>原句／改寫對照</summary><p><b>原句：</b>${esc(x.original_text)}</p><p><b>建議：</b>${citeLinks(esc(r.revised_question))}</p></details>`:''}</div></div>`;
+}
+function overrideReview(i){
+  const reason=window.prompt('請說明推翻 Reviewer 的理由：');if(!reason?.trim())return;
+  const x=draft[i];x.override_review=true;x.override_reason=reason.trim();
+  const row=$('qr'+i);row.classList.remove('suppressed','cut');row.querySelector('input[type=checkbox]').checked=true;
+  if(x.original_text){EDITS[i]=x.original_text;$('qt'+i).textContent=x.original_text;}
+  saveRevState();updateCnt();toast('已記錄，送出決定時儲存回饋');
+}
+async function rerunReviewer(){try{await api('/api/review-run',{method:'POST',body:JSON.stringify({deal:cur})});watchRun('review');}catch(e){toast(e.message);}}
 async function loadDraft(){
   const hist = viewRound != null;
   const d = await api('/api/draft?' + enc(hist ? {deal:cur, round:viewRound} : {deal:cur}));
   draft = d.questions; draftMerged = d.merged;
+  if(d.review_provenance?.kind==='handwritten')toast('Reviewer 結果為手寫 UI 示範，尚未經模型驗證');
   $('histBanner').style.display = hist ? 'flex' : 'none';
   if (hist) $('histLabel').textContent = `歷史檢視：Round ${viewRound}（已發出輪次，唯讀）`;
   if (draftMerged) {
@@ -1024,9 +1042,10 @@ async function loadDraft(){
   $('mergeHint').textContent = draftMerged ? '已合併（含來源標記），可重傳新版再合併' : '未合併：未標記作者的題目顯示為 AI';
   $('qlist').innerHTML = draft.map((x,i)=>{
     const src = x.source || 'AI';
+    const suppressed=x.review?.verdict==='suppress_already_answered'&&!x.review_advisory;
     return `
-    <div class="qrow" id="qr${i}" data-src="${esc(src)}" data-cat="${esc(x.cat)}" data-wave="${esc(x.wave)}" data-ch="${esc(x.channel)}">
-      <input type="checkbox" checked onchange="rowToggle(this,${i})" aria-label="保留第 ${i+1} 題">
+    <div class="qrow${suppressed?' suppressed cut':''}" data-verdict="${esc(x.review?.verdict||'')}" id="qr${i}" data-src="${esc(src)}" data-cat="${esc(x.cat)}" data-wave="${esc(x.wave)}" data-ch="${esc(x.channel)}">
+      <input type="checkbox" ${suppressed?'':'checked'} onchange="rowToggle(this,${i})" aria-label="保留第 ${i+1} 題">
       <div class="qb">
         <div class="qmeta"><span class="chip run">Q${x.no}</span>
           ${x.delta?'<span class="chip delta">新增（單檔增量）</span>':''}
@@ -1034,6 +1053,7 @@ async function loadDraft(){
           <span class="cat">${esc(x.cat)}</span>
           ${x.wave?`<span class="cat">波次${esc(x.wave)}</span>`:''}
           <button class="qedit" onclick="editQ(${i})">✎ 編輯</button></div>
+        ${reviewMarkup(x,i)}
         <p class="qtext" id="qt${i}">${esc(x.q)}</p>
         ${x.why?`<details class="why"><summary>出處與動機${evidenceChips(x.evidence)?'':''}</summary><div>${citeLinks(esc(x.why))}</div></details>`:''}
         ${evidenceChips(x.evidence)}
@@ -1077,10 +1097,10 @@ async function loadDraft(){
   updateCnt();
 }
 function applyRevFilters(){
-  const fs2={src:$('fSrc').value,cat:$('fCat').value,wave:$('fWave').value};
+  const fs2={src:$('fSrc').value,cat:$('fCat').value,wave:$('fWave').value,verdict:$('fVerdict').value};
   let shown=0;
   document.querySelectorAll('.qrow').forEach(r=>{
-    const ok=(!fs2.src||r.dataset.src===fs2.src)&&(!fs2.cat||r.dataset.cat===fs2.cat)&&(!fs2.wave||r.dataset.wave===fs2.wave);
+    const ok=(!fs2.src||r.dataset.src===fs2.src)&&(!fs2.cat||r.dataset.cat===fs2.cat)&&(!fs2.wave||r.dataset.wave===fs2.wave)&&(!fs2.verdict||r.dataset.verdict===fs2.verdict);
     r.style.display=ok?'':'none'; if(ok)shown++;
   });
   $('fCount').textContent=`顯示 ${shown}／${draft.length} 題`;
@@ -1175,7 +1195,7 @@ async function submitReview(){
     let reason='';
     if(!keep){const s=row.querySelector('.rchip.sel');reason=s?s.textContent:'';
       if(reason==='其他')reason='其他：'+($('ob'+i).value.trim()||'（未填）');}
-    return {question_id:x.question_id,no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||''};
+    return {question_id:x.question_id,no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||'',override_review:x.override_review||false,override_reason:x.override_reason||''};
   });
   try {
     const r = await api('/api/review',{method:'POST',body:JSON.stringify({deal:cur,decisions})});

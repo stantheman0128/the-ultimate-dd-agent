@@ -9,6 +9,7 @@ const providers = {codex:require('./codex-provider'),claude:require('./claude-pr
 const provider=providers.codex;
 const settings=require('./settings');
 const questions=require('./questions');
+const reviewer=require('./review');
 const {randomUUID}=require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -429,7 +430,7 @@ function mockRun(run, emit, dp, finish) {
     ['spawn', 'main', '派工 reconciler：跨文件對帳', 'reconciler'], ['read', 'reconciler', '讀 knowledge/metrics.json'], ['bash', 'reconciler', '$ python3 _workbench/recompute.py …'], ['write', 'reconciler', '寫 facts.json'], ['agent_done', 'main', '✅ reconciler 回報：事實 27 列 · conflict 7'],
     ['spawn', 'main', '派工 persona-fin', 'persona-fin'], ['spawn', 'main', '派工 persona-ops', 'persona-ops'], ['spawn', 'main', '派工 persona-ind', 'persona-ind'], ['spawn', 'main', '派工 persona-ic', 'persona-ic'],
     ['agent_done', 'main', '✅ persona-fin 回報：12 題'], ['agent_done', 'main', '✅ persona-ops 回報：11 題'], ['agent_done', 'main', '✅ persona-ind 回報：8 題'], ['agent_done', 'main', '✅ persona-ic 回報：13 題'],
-    ['text', 'main', '匯整去重與 staple sweep…'], ['write', 'main', '寫 draft_R1.md'], ['done', 'main', '結束 · 12s · $0.00 · mock'],
+    ['text', 'main', '匯整去重與 staple sweep…'], ['spawn','main','派工 question-reviewer：獨立回原文審題','question-reviewer'], ['write', 'main', '寫 draft_R1.md'], ['done', 'main', '結束 · 12s · $0.00 · mock'],
   ];
   let i = 0;
   run.timer = setInterval(() => {
@@ -811,7 +812,7 @@ const server = http.createServer(async (req, res) => {
       const st = readState(dp);
       if (st.closed) throw httpErr(400, '案件已結案');
       const followup = st.round <= 1 ? '' : `這是第 ${st.round} 輪追問，多兩件必做的事：(A) 上輪回覆判定：讀「${deal}/qlist/」內上一輪最終發出版，以及「${deal}/round${st.round}/」內對方回覆的 Q-list xlsx（檔名通常含「回覆」或「Qlist」，用 python3＋openpyxl 讀回答欄），逐題判定：完整回答／部分回答／迴避／與其他資料矛盾，判定表寫入「${deal}/_analysis/reply-judgment-r${st.round - 1}.md」；後三種進本輪追問，題目中要引用對方的原回覆再往下追。(B) 新文件做增量消化並更新 facts.md，新舊矛盾（含版本 diff）為最高優先出題來源。`;
-      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（四 persona 出題、匯整），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——本團隊一律書面詢問，敏感題以波次 2 表達即可。完成後即結束。`;
+      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（設定名單的 persona 出題、匯整）及階段 1c（獨立 question-reviewer 回原文審題），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——本團隊一律書面詢問，敏感題以波次 2 表達即可。完成後即結束。`;
       startRun(deal, 'pipeline', prompt, () => {
         const s = readState(dp);
         if (fs.existsSync(path.join(dp, '_analysis', 'drafts', `draft_R${s.round}.md`))) {
@@ -829,11 +830,17 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ---- 審核 ----
+    if(u.pathname==='/api/review-run'&&req.method==='POST'){
+      const {deal,provider:selectedProvider,model}=JSON.parse(await readBody(req));const dp=dealPath(deal),round=readState(dp).round;
+      const prompt=`只派 question-reviewer，以 fresh context 審核 ${deal}/_analysis/drafts/questions_R${round}.json，不讀 persona 推理；原文索引、對帳、上輪回覆依規範查驗。輸出 ${deal}/_analysis/drafts/review_R${round}.json；不得刪題。`;
+      startRun(deal,'review',prompt,()=>reviewer.attach(dp,round,questions.load(dp,round,parseDraftTable)),model,selectedProvider);
+      return json(res,200,{started:true});
+    }
     if (u.pathname === '/api/draft') {
       const dp = dealPath(q.get('deal'));
       const st = readState(dp);
       const round = Number(q.get('round')) || st.round;
-      return json(res,200,questions.load(dp,round,parseDraftTable));
+      return json(res,200,reviewer.attach(dp,round,questions.load(dp,round,parseDraftTable)));
     }
     if (u.pathname === '/api/review' && req.method === 'POST') {
       const { deal, decisions } = JSON.parse(await readBody(req));
