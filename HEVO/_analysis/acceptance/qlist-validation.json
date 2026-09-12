@@ -1,0 +1,21 @@
+{
+  "pass": true,
+  "questions": 41,
+  "first_wave_questions": 20,
+  "errors": [],
+  "warnings": [
+    {
+      "line": 19,
+      "message": "XML: Non-PDF location requires manual validation (offeringInformation/deadlineDate)"
+    },
+    {
+      "line": 36,
+      "message": "XML: Non-PDF location requires manual validation (annualReportDisclosureRequirements/currentEmployees)"
+    }
+  ],
+  "limits": [
+    "Checks exact normalized duplicates only; semantic overlap requires review.",
+    "A valid page reference is not proof that the page supports the question.",
+    "Missing-document claims must cite a real inventory/notes source; unknown document IDs fail."
+  ]
+}

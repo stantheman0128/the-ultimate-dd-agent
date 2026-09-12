@@ -1,0 +1,44 @@
+{
+  "kind": "pdf",
+  "pages": [
+    {
+      "n": 1,
+      "text": "                        SCHEDULE B\n\n                WARRANT TERMS SUMMARY\n\n          (To Subscription Agreement for Series A-2 Preferred Stock of HEVO Inc.)\n\n\nThis Schedule B provides a summary of the principal terms of the stock warrants (the “Warrants”)\nthat may be issucd to cligible investors in connection with their purchase of Scrics A-2 Preferred\nStock of HEVO  Inc. (the “Company”) pursuant to the accompanying Subscription Agreement and\nSchedule A.\n\n\nCapitalized terms not otherwise defined in this Schedule B shall have the meanings ascribed to\nthem in the Subscription Agreement or Schedule A.\n\n1. Warrant Stock. Each Warrant entitles the holder to purchase shares of the Company’s Scrics\nA-2 Preferred Stock (the “Warrant Stock”).\n\n\n2. Exercise Price. The exercise  price of cach Warrant  shall be $0.01  per  share.  subject  to\nadjustment as described below.\n\n3. Term. The Warrants shall be exercisable at any time from the date of issuance until the five-\nyear anniversary of the Issue Date. unless carlier terminated pursuant to the terms of the Warrant\nAgreement.\n\n4. Vesting and Eligibility. All Warrants shall vest and become exercisable immediately upon\nissuance, subject to the Investor having met the applicable cligibility criteria described in Schedule\nA.\n\n\n5. Adjustments. The number of shares of Warrant Stock issuable upon exercise of each Warrant\nand the exercise price thercof shall be subject to appropriate adjustments in the event of any stock\nsplit,  reverse stock  split, recapitalization,  combination.  reclassification,  or similar transaction\naffecting the Company's capital stock.\n\n6. Transferability. The Warrants shall not be transferable without the prior written consent of the\nCompany, except to Affiliates of the Investor who are not Competitors, and in accordance with\napplicable securities laws.\n\n7. Governing Document. The full terms of the Warrants shall be set forth in a separate Warrant\nAgreement to be delivered to the Investor following the closing of the Series A-2 financing. In the\neventof any conflict between this Schedule B and the Warrant Agreement. the Warrant Agreement\nshall control. This summary  is intended solcly as a gencral outline of expected warrant terms and\nshall not be binding on the Company unless and until a definitive Warrant Agreement is executed\nby the parties.",
+      "chars": 2344,
+      "needs_ocr": false,
+      "extraction": "tesseract",
+      "warnings": [
+        "Recovery: English OCR; visual QC coverage recorded in document card"
+      ],
+      "summary_zh": "",
+      "keywords": []
+    }
+  ],
+  "page_count": 1,
+  "needs_ocr_pages": 0,
+  "file": "document_14.pdf",
+  "round": "R1",
+  "size": 1031522,
+  "mtime": 1789202831.1108756,
+  "indexed_at": "2026-09-12T16:07:17.782166",
+  "total_chars": 2344,
+  "schema_version": 2,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "Recovered with English OCR; Chinese AI metadata unavailable; see card for visual coverage"
+  ],
+  "preprocess_status": "partial",
+  "source_path": "round1/SEC-2025-07-07/document_14.pdf"
+}

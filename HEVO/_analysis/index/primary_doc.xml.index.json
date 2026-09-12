@@ -1,0 +1,45 @@
+{
+  "kind": "text",
+  "pages": [
+    {
+      "n": 1,
+      "text": "submissionType: C\nfilerCik: 0001587317\nfilerCcc: XXXXXXXX\nliveTestFlag: LIVE\nconfirmingCopyFlag: false\nreturnCopyFlag: false\noverrideInternetFlag: true\nnameOfIssuer: HEVO Inc.\nlegalStatusForm: Corporation\njurisdictionOrganization: DE\ndateIncorporation: 11-01-2011\nstreet1: 117 8th St\ncity: Brooklyn\nstateOrCountry: NY\nzipCode: 11215-3115\nissuerWebsite: https://www.hevo.com\nisCoIssuer: Y\nnameOfCoIssuer: HEVO III, a series of Wefunder SPV, LLC\nlegalStatusForm: Limited Liability Company\njurisdictionOrganization: DE\ndateIncorporation: 05-29-2025\nstreet1: 1887 Whitney Mesa Dr\nstreet2: NUM 8885\ncity: Henderson\nstateOrCountry: NV\nzipCode: 89014\ncoIssuerWebsite: https://wefunder.com/\ncompanyName: Wefunder Portal LLC\ncommissionCik: 0001670254\ncommissionFileNumber: 007-00033\ncrdNumber: 283503\ncompensationAmount: 7.9% of the offering amount upon a successful fundraise, and be entitled to reimbursement for out-of-pocket third party expenses it pays or incurs on behalf of the Issuer in connection with the offering.\nfinancialInterest: No\nsecurityOfferedType: Preferred Stock\nnoOfSecurityOffered: 25012\nprice: 1.99910\npriceDeterminationMethod: Dividing pre-money valuation $60,000,000.00 by number of shares outstanding on fully diluted basis.\nofferingAmount: 50000.00\noverSubscriptionAccepted: Y\noverSubscriptionAllocationType: Other\ndescOverSubscription: As determined by the issuer\nmaximumOfferingAmount: 5000000.00\ndeadlineDate: 04-30-2026\ncurrentEmployees: 5\ntotalAssetMostRecentFiscalYear: 1173662.00\ntotalAssetPriorFiscalYear: 1741084.00\ncashEquiMostRecentFiscalYear: 27940.00\ncashEquiPriorFiscalYear: 26474.00\nactReceivedMostRecentFiscalYear: 108430.00\nactReceivedPriorFiscalYear: 249650.00\nshortTermDebtMostRecentFiscalYear: 3583011.00\nshortTermDebtPriorFiscalYear: 3396417.00\nlongTermDebtMostRecentFiscalYear: 1500000.00\nlongTermDebtPriorFiscalYear: 1620844.00\nrevenueMostRecentFiscalYear: 325291.00\nrevenuePriorFiscalYear: 409595.00\ncostGoodsSoldMostRecentFiscalYear: 551608.00\ncostGoodsSoldPriorFiscalYear: 94899.00\ntaxPaidMostRecentFiscalYear: 0.00\ntaxPaidPriorFiscalYear: 0.00\nnetIncomeMostRecentFiscalYear: -3029332.00\nnetIncomePriorFiscalYear: -4943329.00\nissueJurisdictionSecuritiesOffering: AL\nissueJurisdictionSecuritiesOffering: AK\nissueJurisdictionSecuritiesOffering: AZ\nissueJurisdictionSecuritiesOffering: AR\nissueJurisdictionSecuritiesOffering: CA\nissueJurisdictionSecuritiesOffering: CO\nissueJurisdictionSecuritiesOffering: CT\nissueJurisdictionSecuritiesOffering: DE\nissueJurisdictionSecuritiesOffering: DC\nissueJurisdictionSecuritiesOffering: FL\nissueJurisdictionSecuritiesOffering: GA\nissueJurisdictionSecuritiesOffering: HI\nissueJurisdictionSecuritiesOffering: ID\nissueJurisdictionSecuritiesOffering: IL\nissueJurisdictionSecuritiesOffering: IN\nissueJurisdictionSecuritiesOffering: IA\nissueJurisdictionSecuritiesOffering: KS\nissueJurisdictionSecuritiesOffering: KY\nissueJurisdictionSecuritiesOffering: LA\nissueJurisdictionSecuritiesOffering: ME\nissueJurisdictionSecuritiesOf",
+      "chars": 3000,
+      "needs_ocr": false
+    },
+    {
+      "n": 2,
+      "text": "fering: MD\nissueJurisdictionSecuritiesOffering: MA\nissueJurisdictionSecuritiesOffering: MI\nissueJurisdictionSecuritiesOffering: MN\nissueJurisdictionSecuritiesOffering: MS\nissueJurisdictionSecuritiesOffering: MO\nissueJurisdictionSecuritiesOffering: MT\nissueJurisdictionSecuritiesOffering: NE\nissueJurisdictionSecuritiesOffering: NV\nissueJurisdictionSecuritiesOffering: NH\nissueJurisdictionSecuritiesOffering: NJ\nissueJurisdictionSecuritiesOffering: NM\nissueJurisdictionSecuritiesOffering: NY\nissueJurisdictionSecuritiesOffering: NC\nissueJurisdictionSecuritiesOffering: ND\nissueJurisdictionSecuritiesOffering: OH\nissueJurisdictionSecuritiesOffering: OK\nissueJurisdictionSecuritiesOffering: OR\nissueJurisdictionSecuritiesOffering: PA\nissueJurisdictionSecuritiesOffering: RI\nissueJurisdictionSecuritiesOffering: SC\nissueJurisdictionSecuritiesOffering: SD\nissueJurisdictionSecuritiesOffering: TN\nissueJurisdictionSecuritiesOffering: TX\nissueJurisdictionSecuritiesOffering: UT\nissueJurisdictionSecuritiesOffering: VT\nissueJurisdictionSecuritiesOffering: VA\nissueJurisdictionSecuritiesOffering: WA\nissueJurisdictionSecuritiesOffering: WV\nissueJurisdictionSecuritiesOffering: WI\nissueJurisdictionSecuritiesOffering: WY\nissueJurisdictionSecuritiesOffering: B5\nissueJurisdictionSecuritiesOffering: GU\nissueJurisdictionSecuritiesOffering: PR\nissueJurisdictionSecuritiesOffering: VI\nissueJurisdictionSecuritiesOffering: 1V\nissuer: HEVO Inc.\nissuerSignature: Jeremy McCool\nissuerTitle: CEO and Chairman\npersonSignature: Yifan Tang\npersonTitle: Director\nsignatureDate: 07-03-2025\npersonSignature: Robert J Remenar\npersonTitle: Director\nsignatureDate: 07-03-2025\npersonSignature: Jeremy McCool\npersonTitle: CEO and Chairman\nsignatureDate: 07-03-2025",
+      "chars": 1734,
+      "needs_ocr": false
+    }
+  ],
+  "page_count": 2,
+  "note": "結構化文字段落，非實體頁碼",
+  "file": "primary_doc.xml",
+  "round": "R1",
+  "size": 10648,
+  "mtime": 1789202831.565966,
+  "indexed_at": "2026-09-12T16:09:10",
+  "seconds": 0.0,
+  "total_chars": 4734,
+  "schema_version": 3,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1",
+      "p.2"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "中文 AI 摘要尚未完成，原文仍可搜尋；可重建索引重試"
+  ],
+  "preprocess_status": "partial"
+}

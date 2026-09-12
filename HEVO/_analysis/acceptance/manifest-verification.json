@@ -1,0 +1,134 @@
+[
+  {
+    "path": "README.md",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/HEVO-Investor-Deck.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/0001670254-25-000685.txt.gz",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_1.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_10.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_11.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_12.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_13.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_14.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_2.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_3.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_4.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_5.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_6.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_7.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_8.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/document_9.pdf",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/documents_list.htm",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/primary_doc.html",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-2025-07-07/primary_doc.xml",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "round1/SEC-Form-C-2025-07-07-index.html",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  },
+  {
+    "path": "sec-sources.json",
+    "exists": true,
+    "bytes_match": true,
+    "sha256_match": true
+  }
+]

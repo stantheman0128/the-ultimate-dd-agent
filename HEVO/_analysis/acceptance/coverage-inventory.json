@@ -1,0 +1,1412 @@
+{
+  "method": "Native text coverage counts pages with >=30 extracted characters; exact duplicate pages compare rendered pixels at 36dpi. This is not semantic-duplicate detection or OCR accuracy validation.",
+  "pdf_files": 15,
+  "total_pages": 209,
+  "files": [
+    {
+      "file": "round1/HEVO-Investor-Deck.pdf",
+      "bytes": 7036423,
+      "sha256": "a944d3ebb75f4483021eb0ff8b6b6d43f4570c33f3b5ca731dacc5604945b4a7",
+      "pages": 37,
+      "native_text_pages_at_least_30_chars": 35,
+      "native_text_page_ratio": 0.9459,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 69,
+          "images": 4,
+          "render_sha256_36dpi": "15936a4608a8298811e1d7185ade5b31f39f08b61b6bcdc7e187f281da3e2117"
+        },
+        {
+          "page": 2,
+          "native_chars": 610,
+          "images": 0,
+          "render_sha256_36dpi": "dd355447ff15ea772fb670b8e790cfa92a245a308beeeed87cc467ef0cec3a35"
+        },
+        {
+          "page": 3,
+          "native_chars": 697,
+          "images": 5,
+          "render_sha256_36dpi": "09ff6d3e20a03e7e094d278c0ea271b2a9e8ac3cd4c2c2d0a97cdcb6dfe57ee9"
+        },
+        {
+          "page": 4,
+          "native_chars": 452,
+          "images": 4,
+          "render_sha256_36dpi": "00a833dbb265d01507aee1acb314d4ed23f6f0d7f5969c34343ae90295c3ca8b"
+        },
+        {
+          "page": 5,
+          "native_chars": 293,
+          "images": 1,
+          "render_sha256_36dpi": "a5f5081682234707d1d138b113181fb0824829c2e9559c2ef5d30b52a287c52b"
+        },
+        {
+          "page": 6,
+          "native_chars": 694,
+          "images": 2,
+          "render_sha256_36dpi": "4f831f570b8cae84d0e4a6d57695cbbe61eb1d369fc2abb5a3553d18332987a5"
+        },
+        {
+          "page": 7,
+          "native_chars": 363,
+          "images": 0,
+          "render_sha256_36dpi": "95656309bea0c4c316e79e90813add764756de20c07aad664fe6d7803b03d277"
+        },
+        {
+          "page": 8,
+          "native_chars": 297,
+          "images": 4,
+          "render_sha256_36dpi": "9dd0ab08ea2cb7be344562bc8e719272268b4e36602916a2d069dee59757f330"
+        },
+        {
+          "page": 9,
+          "native_chars": 236,
+          "images": 2,
+          "render_sha256_36dpi": "a6ca371b14f28cb588dc0f63b4eb4d390a2370decd0bf167015c92b387107214"
+        },
+        {
+          "page": 10,
+          "native_chars": 296,
+          "images": 0,
+          "render_sha256_36dpi": "0f3e28aefaf84164def5f32aa3b19de0de800a67348d1c75f810b02c3cc17758"
+        },
+        {
+          "page": 11,
+          "native_chars": 49,
+          "images": 3,
+          "render_sha256_36dpi": "6d7cf4e1c29b66478726cd6d115975a8515633860ccf29af9ec33fb81547a7f9"
+        },
+        {
+          "page": 12,
+          "native_chars": 493,
+          "images": 5,
+          "render_sha256_36dpi": "d6181d3a6b48a59f842d5e777904ffc0059c6b06e0a752f8e1a1e3ef789b80f1"
+        },
+        {
+          "page": 13,
+          "native_chars": 877,
+          "images": 4,
+          "render_sha256_36dpi": "8c71ef081b58166ce4ecb9af05a75d9356a8f3edffd234f8592e9c6bff1d9082"
+        },
+        {
+          "page": 14,
+          "native_chars": 737,
+          "images": 4,
+          "render_sha256_36dpi": "bf9afba3e616c7031862c9921d6b2ca999be6b04d35d73049d2fcd7114452882"
+        },
+        {
+          "page": 15,
+          "native_chars": 665,
+          "images": 1,
+          "render_sha256_36dpi": "08b98333ffc1f5322d5e1a4c0e455c200a64663e5111c450e2beef9430b85df0"
+        },
+        {
+          "page": 16,
+          "native_chars": 131,
+          "images": 1,
+          "render_sha256_36dpi": "cbdb46b56a971a8bf0d740d38745d0c09fd367834abc51c2351a631ab64223f5"
+        },
+        {
+          "page": 17,
+          "native_chars": 469,
+          "images": 4,
+          "render_sha256_36dpi": "681640df826931c3c54ceb83dddec0ac65c195511d9a615324548374fcfb6558"
+        },
+        {
+          "page": 18,
+          "native_chars": 671,
+          "images": 0,
+          "render_sha256_36dpi": "4b5c58375934372ca7b4665e7f973ae623391d38c9ee4511f76bc74c8498586d"
+        },
+        {
+          "page": 19,
+          "native_chars": 1265,
+          "images": 5,
+          "render_sha256_36dpi": "fa5806e305589d3a2f2da8209430237a5c78b79b0299add376ca50eee5ba3dab"
+        },
+        {
+          "page": 20,
+          "native_chars": 57,
+          "images": 3,
+          "render_sha256_36dpi": "4a683c26f56dd4972c9e3c334d0a74e960d4b178ebafa85977e73f736c1a6b7d"
+        },
+        {
+          "page": 21,
+          "native_chars": 1325,
+          "images": 0,
+          "render_sha256_36dpi": "938d530fd0e24c90696a6c7df66308549da0526352ac002f6dfbb1421e6a0e5f"
+        },
+        {
+          "page": 22,
+          "native_chars": 639,
+          "images": 3,
+          "render_sha256_36dpi": "5e0f050348817f63fbd4fe82cd29a562429de57c827fd2da3d6f7af9f7f06215"
+        },
+        {
+          "page": 23,
+          "native_chars": 61,
+          "images": 3,
+          "render_sha256_36dpi": "ba5c34214c7bbb9a54b35583512e0ede02fc7b3b4bc75e40bf8feb423a3f68ff"
+        },
+        {
+          "page": 24,
+          "native_chars": 1001,
+          "images": 6,
+          "render_sha256_36dpi": "9321636c8abf49d91bd044339ceeafb9fd6127e23247269e1d210600301aac5d"
+        },
+        {
+          "page": 25,
+          "native_chars": 1569,
+          "images": 5,
+          "render_sha256_36dpi": "92dc598b55de20b08fec96d344a0fd304d3ef5015ecfb59c27602b897dae92d5"
+        },
+        {
+          "page": 26,
+          "native_chars": 45,
+          "images": 3,
+          "render_sha256_36dpi": "30c34e8ca17116582de5feb29df3b327fa7001582aa9b0353987ba21cbd58860"
+        },
+        {
+          "page": 27,
+          "native_chars": 373,
+          "images": 3,
+          "render_sha256_36dpi": "56af77973c49179e331ef4bc7764aabe19c50f53c836b3104af8015a0f01e7e6"
+        },
+        {
+          "page": 28,
+          "native_chars": 214,
+          "images": 2,
+          "render_sha256_36dpi": "04affbe04716232c4e12b191374878f1570646b93e55c3d2c05846c499ced3b8"
+        },
+        {
+          "page": 29,
+          "native_chars": 149,
+          "images": 2,
+          "render_sha256_36dpi": "5aa49912b508b5b5678528bbb453b0b930a4c4622f0d71d121f9142a738236ab"
+        },
+        {
+          "page": 30,
+          "native_chars": 530,
+          "images": 0,
+          "render_sha256_36dpi": "102c55a4902135fee6701fec4708ff6136fa57e9236d36590905a55d025881fb"
+        },
+        {
+          "page": 31,
+          "native_chars": 10,
+          "images": 3,
+          "render_sha256_36dpi": "d644c7d83166d5055c7573a2fc9acf530c25e6df58697b137f790abf7548373d"
+        },
+        {
+          "page": 32,
+          "native_chars": 224,
+          "images": 1,
+          "render_sha256_36dpi": "60dc3446b7d2e797963d2226c14f924cfa81092f9edb45655b3a3e3ebdd6c160"
+        },
+        {
+          "page": 33,
+          "native_chars": 445,
+          "images": 4,
+          "render_sha256_36dpi": "f7cf74f5bd748768a053864a1eef1ad866b96f5d68fde2eb8805bbf6e753d798"
+        },
+        {
+          "page": 34,
+          "native_chars": 577,
+          "images": 1,
+          "render_sha256_36dpi": "0af95473b4d330c82973b3d4b84f75af393a07845ad1d4b3c37602d3a6741c15"
+        },
+        {
+          "page": 35,
+          "native_chars": 233,
+          "images": 1,
+          "render_sha256_36dpi": "111284ff496ed042789b8e8c5f14401874de18f030cb9235aad910d640c0c8b3"
+        },
+        {
+          "page": 36,
+          "native_chars": 430,
+          "images": 3,
+          "render_sha256_36dpi": "80603c92d6214a26edb5afdf4a8d3637db61431fd70381ffa034d233815725d4"
+        },
+        {
+          "page": 37,
+          "native_chars": 25,
+          "images": 3,
+          "render_sha256_36dpi": "2ce6e9a5d8037dd6b9cedc88aae97e80e6081093caab8d4b6daaf2d10c92fbe6"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_1.pdf",
+      "bytes": 10691248,
+      "sha256": "798147a4df355b17d81fb152540612e6969c76d3f6eca8930e4b820af7b617ae",
+      "pages": 24,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "f32b54f839e69aaffd4a8735a91a8282015bb73db53a42942876c3f4cc32d423"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a890b78b066749ac9dd3e83aa493e3068cb0de8ff4da651c5aecb4e159f6cc5d"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1041e703b22a94695d569b9385d074dbb431d8846cf02a4bde707f3426524220"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "3ea04abddfff9d4317a6417ad7f6d4f5a14a2ef04841a76d5602769a17a4c46b"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c870470a37fd4076030d22d6ba697e88cb8f008ed99dd74ad9194ce20b3e3327"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "63e85d8821fcfcba1d3c946e00452686e51c1b0bf345a6931286d48e5d981baa"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "945921f5879185f003188529e07775e1f67a4f4fddcabb57b2a30ad9a14efb3e"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c810c2d609f99ef0cb6fa9be64e60c9349d162e2906036637fdecfcf5e715458"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c83b11ecfc0a4f80439e416f1e11e8fab16fd657c25f891389c1364dc6ba8390"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ba80c68611210e57062596eebb8ba2527f156b0f018ae91fd2a33143113b3baf"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5f3e5c606829b514f6773753921d6389f48284617a2069ca9dbc7e4d2accbe2d"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ea51602d6683f69403dfcc562ebd28c5ea3ab82feb32253ecdb2aa0ee68cd43c"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a475e0b20d286afa8be5a17244aadb71d8c41deec11a46a07cc823b5b870df81"
+        },
+        {
+          "page": 14,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ec8a0a0640fcf06e6d93986330905bc791c20f5269c182ea431773bf7156fdae"
+        },
+        {
+          "page": 15,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "b14363089214aaf571cdf96ed37a93769e3c552c066a846ad15947c4bda63e62"
+        },
+        {
+          "page": 16,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "45b96164309383947b8e1d3b0db279ca0b1cac3d03d92e6c740aa646b571875e"
+        },
+        {
+          "page": 17,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "eec218688223a258aa96df34ad42a12f9ac4c4beab4b38f78364e55417aa4a5d"
+        },
+        {
+          "page": 18,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "4189cb7910ad9cd070a6cd468cdf9365a9a3179f54d164b26d44087d45725b72"
+        },
+        {
+          "page": 19,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "53e0f768aa62a0d74174a6e9d20c22ff8c43d63289d867dd47757fc76b6430d2"
+        },
+        {
+          "page": 20,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "fcf2d4c6328039fa69084ea66a03550f8876cb21fd83c1f8cc7a7ecf1a37ede8"
+        },
+        {
+          "page": 21,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ea40fc09067dadb8c04dd150a2dd8ade9fc47c57f227597d8e2c05acc4fd1886"
+        },
+        {
+          "page": 22,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "29aec8098a847ac1d61336dfd7983581ab5164dc6e211680bd539d47ea728337"
+        },
+        {
+          "page": 23,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "adfb5066eca3a5d430faf763c23c5d7aa5195d24bb312cfee7c4725767b9724d"
+        },
+        {
+          "page": 24,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "2a61c8c2536ef193cf0d440d9e91f8ef9b53e7b2f7b98149bb6314c45fe83ce6"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_10.pdf",
+      "bytes": 8990748,
+      "sha256": "cd335d7a81baf8ce32fee86cd3ff21cc111e5e9f5c4d530669a0c880422ec8b0",
+      "pages": 9,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "faeb5b702daec3fcf62ccf62f4bea3bace3be497831e423a5b5701b56c83c489"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "45d982a4b89b48f4f2bd66034041d0f335d5ee242ca9cd2da408ba75f8739e04"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "fe5803c54c372d16d53112bb9d43d0296f98123dddb49a645e983c5761029667"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5160de93614c20532d681700dd5a016e3579e585cc9920644e2eff0744f5c98b"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "075f342615df2073d10eab129a55e53738f68c65490f3b177829449aca4c81f8"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5c089eacaa443bf452b94ef36f258346d3ee320b6da5a9d70cc0a45d6ea5c91e"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "01d33a368c6ac6fd64452ff0dedcf3786e917fb83d5c7c4ca33cf214f307b588"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c5cf649ee6794870d0bc0eee6c81a8b8965886976ddcd650321647e5a20b308b"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1b1712eb762e4704e9857847e8b5eb382f5e3bdfb8b4536122e1fbd96bc66bad"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_11.pdf",
+      "bytes": 18489068,
+      "sha256": "33d64c07030f8eb748946e9065dc08aaacd2ea8ad9096442cca6bf1634decc61",
+      "pages": 17,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e66e956f4363f8ddf1229f21cbf7594e5c46e410b64255589f3cdac420f959f9"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "645190e23c95d1ada82fb757770acc8ecc9020beefdd336d421f25ab7d13b7fa"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "284403a7a39f8a58f8fd6a7eac333d7a852affd181e5e22ad657af8b6e0121ab"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "71ae06c9bf939a9e283bb15f89ccba47c31d1298d82a0279d58c7bdbd5f364cf"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "b000eef93b3425552d8b58b797fa845a32df0272d9b003e4b4358205eba6368c"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "309d065652cdc9304ac6c3908960f38123bbe7e06cb1beabeebe232c27a0c98a"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "7f14159c6557a592f50438904ce7fec131600127755531c54889c593bf968fe8"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c6e94035e5e187c9c6a9c0a2aad605270c9586cd9c0fe1ac9bac3998475acd55"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "7eeaed6989182d4a44e735e67d09dec9d68e03109802ca17d3d0119da02e37b6"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5da53d1fd55f6996a1e4367230c33c3509419b9c6265ff7d79cfa5324e223080"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "9c9962d31874a3c3f62da54d336e89f597bc95d00d408f92f8dbfc73d06c552f"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "0eaf46acbc6f9bc667abb9f1b1407a8a17a9adab1a9467d914e170cd32e5e89c"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "0bdd492a4b455124a3d304e135b84801a8df6fa9203529ce1cc663a9979ff21a"
+        },
+        {
+          "page": 14,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c1eff0f9837ba58eca15e47c3e9d85d31093f367ed8e41fb0ccf93a7c1976eb2"
+        },
+        {
+          "page": 15,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1bc64e79d8019cd64af15cb42c270d04bb52aafb7e3e20b8d41917faf89f3a6e"
+        },
+        {
+          "page": 16,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e871d37724627bc912ada3be8ce2916385dc7f8727727f9838068c32f03d36db"
+        },
+        {
+          "page": 17,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c336933b8de975b8a4842a035d5a80573d17a6254ab5ac9d7b1c003a106d874a"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_12.pdf",
+      "bytes": 15329563,
+      "sha256": "94bcc99809f38d8576c9e74419bb0e8ae3205cddbbbf70f95b682c793dc8e9b3",
+      "pages": 15,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "7bb5f566ecbeb65c52cacbaa0f13988c40da3f23d58829b5f73f205c705b8ef7"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e3e1e4446ccf9fd86077b9c43fe0dfd164d1212b61d3ca51b88149753098bb96"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c7e467558fc7b823b2119e1a8f1139cc741efae2921070f30946157df5efc06e"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "312ae2225d9fdc6582cf25fdf6674685bdd1e34b30f2a3ce28c2c230727602c8"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e3a268354663cdfd6709244b49dde0cce272b59c85ec54abc65994653d6cc209"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "209ffc89a38f17281bf14f1cdb94222fcdf185c11c8d503942fc745199c13956"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "8fba2fbf0ededa580a6d9fa0a0e6dc8a60beb37ad9c722f9cb566516d6650340"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a91dfda3e14db715d862ea9ef66728762ba5902ad9512e03fa1d39a71142fc85"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "fc6fa0c8a7cf3b4f1ac3656af93cbdaa97eb1bcdc105befb0b13b52d951792ba"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e48f46d273132aa56dd719d70dba8a20a03fc436b83fa7b1ab883b0a7f5fe0e1"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "79514e6abfdcfd60de1ccd155b1baea825a1a94ba211b6260cd6944fd74fb3da"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "fa44fce9704f7d875801abc7a64e63251c2d22d75c5d6f3e8fcb8f2298539aaf"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e446f2537a761504dd59f8d91053416348fa3d58f2048cd56450caf5954b0340"
+        },
+        {
+          "page": 14,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "06505a650278d222307ae36298e99dc2cd575a1191157a029c0536cdc7d9ba3f"
+        },
+        {
+          "page": 15,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "cb08747d13c79ecc42ad48a0e114ebfafe000e947156930ce94b9adf46ce3e68"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_13.pdf",
+      "bytes": 1674623,
+      "sha256": "93290521466b1b46446461af39c52b5985a8af2cb5690c04f3b8bbc5a48fa36c",
+      "pages": 2,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ebbbf2d211b45732f76c38df53b693917bc26f742becd59c8b3ec56d36d03589"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ad300d0b045a81f010c96909e791a264d1e92b46ba9b9f6e7c3ddb11b02241c8"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_14.pdf",
+      "bytes": 1031522,
+      "sha256": "d4806e9a71dda1c2d2c385b1554eef2bb0daa6088155a4fb29c469ddf04b78c2",
+      "pages": 1,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "43bf9b5c0486914a2a0e331678906ba45dd79b441a4599a39e3c161d90a1cc1d"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_2.pdf",
+      "bytes": 11347292,
+      "sha256": "8e3a5eb1969b4ea7ddef7ce5e06ed945131fe1417cdcebe56b9bb74f2977b2d5",
+      "pages": 28,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "3400786958e8e3c297714a6dcee82cc2ae35833cd1ae11b7ea5c29f5a4f7b31f"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "b1df4dda707eb10d57f35e73b9d8c12b8694f61116f4a790860b675a82635436"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "cf3d4d5ea9820faa91c3c63ef0881176a827c95aca2b6c3053cf5eee4237d9ca"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "8b6e00d628d8f17d6958d04b15ef457daff66d6b247982918c7576929ebc5bf3"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "71cb6be2bc0d56a672df74dae36d94bbd1f9cf227bb749ec2d6ddeb2e9186244"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "56b3691f87ab696601e962288bb887f8b07f7391e8927ebc3dc0ef0977d699b5"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "95bc64f08bdd7a90ac67dd789ecfaec4a6e57fede9461d4b981f6f44d3dcb26e"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "984b88d890d5621a6d4983ec51be510c96a22d591f3ed4bb04bd08dbfd171554"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ccbb4e4535b61ff38aabfae3d0b11a58ee81412ad7524e0f5af3c92efcac60dd"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5303cab40bfc55b53089f7a13503322930561b16bd35950ac0cf89ebc5ba907e"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c4192adb80d91c1c04da236240c641ed4917f785b6517eb3180a389f1333a4bb"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "2860d5a2b633d7391e6de97bbfdcc1cc54d242be701f3ed0a8144cabf4744503"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "21f8d30094009d0630d234474f8b9fba7952354467dc016101c8ffe2472537ae"
+        },
+        {
+          "page": 14,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "baf5b7f582002bd6b051dd07cb4c58b77de00ed95b28e3b0e69ca2fbd40dcbb9"
+        },
+        {
+          "page": 15,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "f4f951085b45e2936de39c62bfc952d67369db3543757452954114b34b18e48a"
+        },
+        {
+          "page": 16,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a01f0a77b730ad66b111e4f38fc7eaba497c08776848db17652ccb159387cabf"
+        },
+        {
+          "page": 17,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "9981ef58223dfb14204a954e4d3e1429260f1f1231c0a52df12e7041fbfd0c52"
+        },
+        {
+          "page": 18,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "db23a7402eb533b8cf3d35f8a0bd85c512604c66bcc03fa5c86abcebbe1b8ccc"
+        },
+        {
+          "page": 19,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e5b8dca47ec0ce63f65932f01b379616fe22848fce8e9e859976ddda1edd147b"
+        },
+        {
+          "page": 20,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "543c2facd8d82d1e524816f675833678d4aca7b3201697ecb5a8bddd9a2cb6c4"
+        },
+        {
+          "page": 21,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ab4edc811164fd015ded7a1476a6728833f0c78012ac33e05b58486a078714bc"
+        },
+        {
+          "page": 22,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "00adfe2e5fd9023a245b0fb4971c286e65524bd0d4b515fe7a76711b58e38efc"
+        },
+        {
+          "page": 23,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "b6293708b217c7f897fde2562df8aca4c6c76bc3d9422759090f8aa66c949b7b"
+        },
+        {
+          "page": 24,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "d8cce13ef3943fff31e2fde573fe733c10ef3a3b9afa61acadc1fd98dee8b51a"
+        },
+        {
+          "page": 25,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "81a397d6f4ed86cdc8d2054463f7a11d7f75d63a7c9be57a2175fe923bdb3a99"
+        },
+        {
+          "page": 26,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "32d230b354f36bd30374b12089004018bb8654eb4d5209509275151ad306d348"
+        },
+        {
+          "page": 27,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "26fd0c998468ca481f8b5eed455118bf469a27b8071ed2b49526b69710481c78"
+        },
+        {
+          "page": 28,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "02ce2214efe7c13c7d28c9f050af77f5845294c215f9303a4c47c4ce043a77a1"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_3.pdf",
+      "bytes": 12471903,
+      "sha256": "52119a47478daef1db202aed96e68eef453bf12bdd3d7fb7c5c6ad6f05ac7689",
+      "pages": 11,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "9309734c8222fae77858ae776f3e211540092fc5646bcad2cf125b3b6b09daf8"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "36702eb6c45a5d9f986af397952eab75bd1e132568c9899ee3f0347568ce4eeb"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "03534e9fc365c8243004e68e349ea9acec6b02f7dbeeb9f70e897d27bc31aebc"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "690b7a785a333a2d4f57dffa84d5a2679918223d22cd343e9f7116eb26091577"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "8600de1d77db156047eccfd11ae3584b064b7ff2bac5a316973b99a6b3a6b962"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c9caefb3e6800b83eb89349bcf4eed9d09c2f6176279c4a19c8771aa1e99217e"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "6fac93da8ed8b1a4feed6ab172b551d9cfd471b5e6ba6bd772246f2db90e95f4"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "76f2fa8a8ed4e390f327f8396e8f0ca2425012461a281399d8aaf54d04503d5f"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1577adbd364233552eeedfaf8591ee0773a3ecd2637b272c18d4f5079958cbb1"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1389312396a1f3650d53123f81a69c1d2798afff251e88d5fcc48a7b51053e75"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c089de089c637ebb5e283e54b02fc130b483fc0e423fea48a10ad8a52845a74d"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_4.pdf",
+      "bytes": 10124338,
+      "sha256": "22b7ec44d7d05e14427169ff33c18c8db1a3343d010686c847a6f7c0ad49c36b",
+      "pages": 13,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1a49eca5fa8ba0769b4b4a965013310f3ac81ac3feeef3f8ed4c19341a053ed9"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "0e3568d37fcbf0be627e9e28d0bcf4f824a6ac63780492d99c7a9ece7ca9a8ad"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a5b2f07f75de660e70125159cb8253460beffdafcdfd285debc676c130924256"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "3a7c3164b0c5028ae36876cd19522d390b9fd6f974e981d821d77d7518c91073"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e979e23bfdf3ca7fbc28e8696bdcf1ce621b9055ac75c8747461a8d4d4ea150f"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "0993cdfda3764bd100d1029a8ac5a2afaac3bbe6ea4946f210901f50b530483a"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "26ca6eb7e3d0b3c8bd7d4905504620eb29cc8f2c9f9d0f633c0ff45402b37f2d"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c281aad2fc8149fb914ae308996a14f7003b402ccdc0d7217b842b0e6b54841e"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "f02667bb971f238810fdf85f7dd2106e61f4f433928d829b7870da1f52fa16fe"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "2a7a92c45a3e5e798ceb6b7a419953462e2594df2799c304cc4485f2be04274d"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "8805fc481f6aa44f98a3cf397b1c2e04d0bb8ad75e8aec0fe56117f3cbf923e1"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "595e91c1c929fbbfc2b08896c32dfdf7e1a7fca5f1e60c6c801bc06756b67e03"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "41aba65c4db55927318a0b0eb540c08816dfe76f343f90508002879988f47dfe"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_5.pdf",
+      "bytes": 28416956,
+      "sha256": "ef815b593a30241ce8088e37b317023690e37ecec45d0c7fae9870e5f331c04a",
+      "pages": 25,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ed803e0cb55cc3bb4561cb7470365474caa6ee8012f9aabe3d2e8b15edc1b060"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "7fd1bcdf9bc45659e74f8e8b258cc65ad3d43f59e54bbeede7e54b4d62722c18"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "b989d4d5c5de3ebca1e5e4a8b6a28fbeef451fdb4749ffc2b05519b3a232a001"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "6855425501619e15bc298a02eec6d1f985320d803856cdfd0f3ed482d123164d"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "d9e308ff1e0d38b79a34b0d7b3f1f6a975003169adccbd97f2f987bac762a080"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "0cdefd89de91249b5a1a3ec1f9297e6a6c7fba830f4f3a9628719139dd1caeba"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "99fc64889e47ebcd23e8d226b9802099500588f88113c503c38886f4dc83498b"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "4cd576e3994dab01aa52b87af62eea4388f69509134edd4d13fd8b17aa5f3832"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "3b290d95aa6a357809573aeb4c348a157ded87f8f33d18139405ce6360c007f0"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c6dc66d5e8efc2f622ef4771341d1b4315add7d097f903b01a1cc7139c1783fc"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "f78b830ab0c5458c6fed09b81b782e57b8e9d2a7e320bed6935b24c5ca9de06e"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "32f692306be7837ea0dc0deaac0c5fd3866665a2a2928fe7c1a6f311168df8cf"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "6364437627fe1252de7c01743e3d62ff216f7ee6e15a40133193a4b691667499"
+        },
+        {
+          "page": 14,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "288e587d5cef15950ca9d9726080182d1fe54a8f2aafa7f09a479db4d85f5f98"
+        },
+        {
+          "page": 15,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e44d7c093555d941fa840b6efa09370b747ac0383ae534c3351b2e77b036c508"
+        },
+        {
+          "page": 16,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "3d8214c84f61e5ad5df209fdfebb3dc5f33a361ae7a2446e72709b9109da209c"
+        },
+        {
+          "page": 17,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5b465e1f49e3fe9686ed3dbba5f07753765622ab21ac84430bdf9b2377b62cd2"
+        },
+        {
+          "page": 18,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "5c873c50e3291c7056b2441bbb736ad9926984c8620da49cb1f0cba6f420f519"
+        },
+        {
+          "page": 19,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "fd0afe39ef7ee50296a99296f0eaaf84a406faf2aae0f298a2223c49b88311ba"
+        },
+        {
+          "page": 20,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "27e87c0adace90af6edc07353051ec000694f7832537a86b4cfa316338913685"
+        },
+        {
+          "page": 21,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "376194657410154e944a96712162e9e329fdab7e43b5167d39c4a82580a86d1a"
+        },
+        {
+          "page": 22,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "0372bd5ccbecde1aa0d0afd49b0b000f3139a7675b29be5edd53878bd19433e3"
+        },
+        {
+          "page": 23,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "d8e81ef88783d800a794cd8d2345712cb4a99b39a2a84a35bf1074c3412d9ee2"
+        },
+        {
+          "page": 24,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1ea0412672a6612aa2a78cdf419e8601e6032b07958fbb160ba85ca7051639e6"
+        },
+        {
+          "page": 25,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "bf9b033376c67dee9b266bf011e6af8ae6767a7fbcb52e20d37a517a0f136aef"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_6.pdf",
+      "bytes": 1624237,
+      "sha256": "c4db2d7eab1f3f1c6d58d0c7e327bd1e46aff2e5994371d02a87d431e901b3e3",
+      "pages": 2,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "15085b75d283beec9e684db0b98d6f27a73956d3fd135577cbb01530b195bc2b"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "88830e0aff41c6437ee3a400497ccb9ba29169096352ffc3dbd5365addaa6dee"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_7.pdf",
+      "bytes": 1375644,
+      "sha256": "3b164afec972746bfb867ab16a0db8f35cccdd13dca69c624cc57003d7292fdd",
+      "pages": 3,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "07c60b30e3f37f79b0510e811e35e4fffe792815f3565441634092757a96b7c3"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a3a312ff34027fe475ac1b0158b3ca412c093c6852b74bef04c069d770b68a59"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "cfac887debec6e821eb3b0b622c68034e4c5b061a345cb3b578757833efc5c1e"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_8.pdf",
+      "bytes": 2702945,
+      "sha256": "11d22e0f3be679b7e9f33d2afac3c421a9dd06bd64b44c541358b14de9b521a1",
+      "pages": 5,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "7f3e99720f8f623f2a3b7e62ef427ca34d0863c677ea4deccd99929b1d114e14"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a924c48be8e393cc2c928f43f67c19de584be7cbeb737ba945cf1e28b90f6808"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c3443e930af420e82ece109d00ce04e5977ae8071ceca4ef0c8b388fc6887eeb"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "f51e6d473961ec7971a9a85a4bf3a91338b86c98ec894560fd7490d3c3849a15"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "3d3bdf2758ada5f854b6f1441e29dae6b9489ad50f12ce2cbd37263bf792d075"
+        }
+      ]
+    },
+    {
+      "file": "round1/SEC-2025-07-07/document_9.pdf",
+      "bytes": 22929480,
+      "sha256": "d2488821929c6a5fea2750482d54ed0cc7152851fc4371726c8ff34702c59207",
+      "pages": 17,
+      "native_text_pages_at_least_30_chars": 0,
+      "native_text_page_ratio": 0.0,
+      "page_details": [
+        {
+          "page": 1,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "a7f8ac70217e36d6aed426bc45b54ff92d15c2725e39c99936a85b69f9ea5253"
+        },
+        {
+          "page": 2,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1b58ee526a98644b381dc8fd8e6549a62850d01f52f9c6ccd8f9fb3489de7180"
+        },
+        {
+          "page": 3,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "ebf91234d90e358b1b7f626884725beada579ed7442247bdbbc803b4566e4eb0"
+        },
+        {
+          "page": 4,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "73438653dd8b22baaf6b2793531137e07f2ec6b7c2dc1f8f1ac8ea8cfeaa3e83"
+        },
+        {
+          "page": 5,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "b4c8d7048f771589636beb00cb36f65b5fd6c99f0e63164200b7f0b555dd4fa8"
+        },
+        {
+          "page": 6,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "1b660d92e8813f2e7670c350aaa6075c7c782833816464a0485433eba4f97aeb"
+        },
+        {
+          "page": 7,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "78102bde2b4dd840dbfe1bafebc65f29fe407244e550afbdfa01f5ff71ab8d7b"
+        },
+        {
+          "page": 8,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "189fa50abea76ba7b76801f225114f3182ac06c3ef70bf7d868e83f3655907fa"
+        },
+        {
+          "page": 9,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e8d0299bf43564c1a0f6b85708c10e933a1ec04282b6fe04f66106c7134b2d7a"
+        },
+        {
+          "page": 10,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "9289acc35f9c2bbddc0072e898895406580ed9029b9ebc4b374782e5e9dc294a"
+        },
+        {
+          "page": 11,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "f342d3d616b5c80978fbdcf6363d4b8a5864b9181e3cce6b60c8eb61412f3d14"
+        },
+        {
+          "page": 12,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "163b584000c63d12dae9fac21962d037c90ff619aba27b8d7f56bec184e8a334"
+        },
+        {
+          "page": 13,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "c83987a3416404b4c865299cacbc167907d7d406d413c3efe8c474b15c93852a"
+        },
+        {
+          "page": 14,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e74c81234f6a1b928d30970d9fd92edfaa4e74ee13685f7ee3ae0f9ee0bdeaf3"
+        },
+        {
+          "page": 15,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "7041187aa25e5832b7cc6360f156c1bdbbfe52a219ab900c34c6c85b253952a5"
+        },
+        {
+          "page": 16,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "4cdd1391e5b71b5e3fa0a885b9eab269b277588f6e1a012c6b87731ca49b8fb4"
+        },
+        {
+          "page": 17,
+          "native_chars": 0,
+          "images": 1,
+          "render_sha256_36dpi": "e4dd2bdf7332efa5e9fe0d8919791e3c4cbc7f1648d7bd6638806e593cc89f58"
+        }
+      ]
+    }
+  ],
+  "exact_render_duplicate_groups": []
+}

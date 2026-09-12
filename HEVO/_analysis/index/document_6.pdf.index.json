@@ -1,0 +1,60 @@
+{
+  "kind": "pdf",
+  "pages": [
+    {
+      "n": 1,
+      "text": "Contact           Jeremy McCool\nwww.linkedin.com/in/jeremy-           Founder and CEO @ HEVO| Wireless Charging\nmccool-3b846033 (LinkedIn)\n\nhevo.com (Company)\n\n     Skills                  yTop                    ;               Summa\nStrategy                             With over 13 years as Founder and CEO of HEVO, the mission has\nLeadership                          focused on accelerating electric vehicle adoption through advanced\nStrategic Planning                      wireless charging solutions. HEVO made history by becoming the\n                                                     first company to secure both UL and SAE certifications for wireless\nPublications                   EV charging, driving innovation in clean energy technologies.\nEnergy Independence: The New          Collaborations with major automakers have expanded the reach of\nAmerican Freedom                     sustainable energy initiatives, addressing critical challenges tied to\nWhy We Need to Build the                   fossil fuel reliance.\nEcosystem for Autonomous Vehicles\n\nPatents                        HEVO’s patented hardware and software systems embody a\nSystems and mobile                                                                                    |   application.        for        dedication.      to creating efficient,.       safe, and environmentally.           friendly.\nelectric wireless charging stations        charging networks. Drawing from military experience addressing\n                                         public health issues caused by non-sustainable fuels, this leadership\n\n                                    continues to shape HEVO’s mission. The team remains committed to\n\n                                    deploying cutting-edge solutions that align global clean energy goals\n\n                                       with real-world impact.\n\n\n\n                           Experience\n\n\n                         HEVO\n\n                                  Founder and CEO\n\n                                   November 2011  - Present (13 years 9 months)\n\n\n\n                             HEVO Inc. (Hybrid & Electric Vehicle Optimization) is a veteran-founded small\n\n                                        business headquartered  in New York City. Guided by the vision of establishing\n\n                                             the global standard for wireless EV charging, HEVO's mission is to accelerate\n\n                                                   electric vehicle adoption through the deployment of a seamless, wireless\n\n                                          charging network\n\n\n\n                                   HEVO's innovative solution addresses common challenges associated\n\n                                              with traditional plug-in charging—such as driver forgetfulness, faulty cable\n\n                                           connections, sidewalk clutter, and tangled loading zones. By offering a safe,\n\n\n\n\n\n                                                                           Page  1                                                                          of2",
+      "chars": 3130,
+      "needs_ocr": false,
+      "extraction": "tesseract-eng",
+      "summary_zh": "",
+      "keywords": [],
+      "warnings": [
+        "英語OCR不是全頁視覺驗收，數字/條款應核對原圖"
+      ],
+      "visually_confirmed_blank": false
+    },
+    {
+      "n": 2,
+      "text": "fast, and cost-effective wireless alternative, HEVO eliminates these barriers\n\nand enhances the EV ownership experience.\n\n\n\nAt the core of HEVO's technology is a proprietary wireless charging system,\n\nfeaturing an embeddable ground-mounted charging pad and a vehicle-\n\nmounted receiver. This system  is integrated with a user-friendly mobile app\n\nand telematics platform, enabling drivers to simply park and power up—no\n\ncables required\n\n\n\nTo learn more, visit hevo.com.\n\n\nNew York University\n\nAdjunct Professor\nOctober 2014  - June 2018 (3 years 9 months)\n\n\n\nEntrepreneurship and venture creation are key agents of innovation within the\n\ncleantech sector. This discipline examines strategies and methods that are\n\nessential for creating and sustaining start-ups, early-stage companies, and\n\nsmall-business enterprises. Topics include strategic assessment and decision-\n\nmaking; financial, human, and technology resource management; and tools\n\nand tactics for marketing specifically geared toward entrepreneurs. The course\n\nof study also includes lessons on investments, venture capital, public and\n\nprivate grant-making opportunities, and other forms of start-up capital. The\n\nskills gained in this course are not only applicable for cleantech start-ups, but\n\ncan also be leveraged for a variety careers.\n\n\nUS Army\n\nCaptain\n\nJanuary 2003  - February 2009 (6 years 2 months)\n\n\n\n\n\nEducation\n\nColumbia University - School of International and Public Affairs\n\nMPA, Urban Policy     « (2009  - 2012)\n\n\nUniversity of Central Oklahoma\n\nBA, Corporate Communications     - (2001  - 2005)\n\n\n\n\n\n                                 Page 2 of 2",
+      "chars": 1629,
+      "needs_ocr": false,
+      "extraction": "tesseract-eng",
+      "summary_zh": "",
+      "keywords": [],
+      "warnings": [
+        "英語OCR不是全頁視覺驗收，數字/條款應核對原圖"
+      ],
+      "visually_confirmed_blank": false
+    }
+  ],
+  "page_count": 2,
+  "needs_ocr_pages": 0,
+  "file": "document_6.pdf",
+  "round": "R1",
+  "size": 1624237,
+  "mtime": 1789202831.433323,
+  "indexed_at": "2026-09-12T16:07:42.665656",
+  "total_chars": 4759,
+  "schema_version": 2,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1",
+      "p.2"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "恢復抽取：全頁文字/OCR已完成；尚未全頁視覺驗證或AI中文摘要。"
+  ],
+  "preprocess_status": "partial",
+  "source_path": "round1/SEC-2025-07-07/document_6.pdf",
+  "recovery_provenance": "acceptance/recovery-index/document_6.pdf.json"
+}

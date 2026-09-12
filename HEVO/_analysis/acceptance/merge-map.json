@@ -1,0 +1,226 @@
+{
+  "candidates": 55,
+  "selected": [
+    {
+      "number": "1",
+      "source": "fin1",
+      "wave": 1
+    },
+    {
+      "number": "2",
+      "source": "fin2",
+      "wave": 1
+    },
+    {
+      "number": "3",
+      "source": "ops201",
+      "wave": 1
+    },
+    {
+      "number": "4",
+      "source": "ops202",
+      "wave": 1
+    },
+    {
+      "number": "5",
+      "source": "fin4",
+      "wave": 1
+    },
+    {
+      "number": "6",
+      "source": "fin3",
+      "wave": 1
+    },
+    {
+      "number": "7",
+      "source": "fin6",
+      "wave": 1
+    },
+    {
+      "number": "8",
+      "source": "fin7",
+      "wave": 1
+    },
+    {
+      "number": "9",
+      "source": "ic402",
+      "wave": 1
+    },
+    {
+      "number": "10",
+      "source": "fin9",
+      "wave": 1
+    },
+    {
+      "number": "11",
+      "source": "fin8",
+      "wave": 1
+    },
+    {
+      "number": "12",
+      "source": "ops204",
+      "wave": 1
+    },
+    {
+      "number": "13",
+      "source": "ops208",
+      "wave": 1
+    },
+    {
+      "number": "14",
+      "source": "ind1",
+      "wave": 1
+    },
+    {
+      "number": "15",
+      "source": "ind2",
+      "wave": 1
+    },
+    {
+      "number": "16",
+      "source": "ind3",
+      "wave": 1
+    },
+    {
+      "number": "17",
+      "source": "ind9",
+      "wave": 1
+    },
+    {
+      "number": "18",
+      "source": "ic404",
+      "wave": 1
+    },
+    {
+      "number": "19",
+      "source": "ic401",
+      "wave": 1
+    },
+    {
+      "number": "20",
+      "source": "ops212",
+      "wave": 1
+    },
+    {
+      "number": "21",
+      "source": "fin5",
+      "wave": 2
+    },
+    {
+      "number": "22",
+      "source": "fin10",
+      "wave": 2
+    },
+    {
+      "number": "23",
+      "source": "ops207",
+      "wave": 2
+    },
+    {
+      "number": "24",
+      "source": "ops209",
+      "wave": 2
+    },
+    {
+      "number": "25",
+      "source": "ops213",
+      "wave": 2
+    },
+    {
+      "number": "26",
+      "source": "ops215",
+      "wave": 2
+    },
+    {
+      "number": "27",
+      "source": "ind5",
+      "wave": 2
+    },
+    {
+      "number": "28",
+      "source": "ind6",
+      "wave": 2
+    },
+    {
+      "number": "29",
+      "source": "ind8",
+      "wave": 2
+    },
+    {
+      "number": "30",
+      "source": "ic405",
+      "wave": 2
+    },
+    {
+      "number": "31",
+      "source": "ic406",
+      "wave": 2
+    },
+    {
+      "number": "32",
+      "source": "ic407",
+      "wave": 2
+    },
+    {
+      "number": "33",
+      "source": "ic408",
+      "wave": 2
+    },
+    {
+      "number": "34",
+      "source": "ic409",
+      "wave": 2
+    },
+    {
+      "number": "35",
+      "source": "ic410",
+      "wave": 2
+    },
+    {
+      "number": "36",
+      "source": "ic413",
+      "wave": 2
+    },
+    {
+      "number": "37",
+      "source": "ind7",
+      "wave": 3
+    },
+    {
+      "number": "38",
+      "source": "ind11",
+      "wave": 3
+    },
+    {
+      "number": "39",
+      "source": "ic411",
+      "wave": 3
+    },
+    {
+      "number": "40",
+      "source": "ic412",
+      "wave": 3
+    },
+    {
+      "number": "41",
+      "source": "ic414",
+      "wave": 3
+    }
+  ],
+  "consolidated_or_deferred": [
+    "fin11",
+    "fin12",
+    "fin13",
+    "fin14",
+    "ops203",
+    "ops205",
+    "ops206",
+    "ops210",
+    "ops211",
+    "ops214",
+    "ind4",
+    "ind10",
+    "ind12",
+    "ic403"
+  ]
+}

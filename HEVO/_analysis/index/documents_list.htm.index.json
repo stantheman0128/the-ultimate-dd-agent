@@ -1,0 +1,38 @@
+{
+  "kind": "text",
+  "pages": [
+    {
+      "n": 1,
+      "text": "EX-99\n16\ndocuments_list.htm",
+      "chars": 27,
+      "needs_ocr": false
+    }
+  ],
+  "page_count": 1,
+  "note": "結構化文字段落，非實體頁碼",
+  "file": "documents_list.htm",
+  "round": "R1",
+  "size": 123,
+  "mtime": 1789202831.563408,
+  "indexed_at": "2026-09-12T16:09:10",
+  "seconds": 0.0,
+  "total_chars": 27,
+  "schema_version": 3,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "中文 AI 摘要尚未完成，原文仍可搜尋；可重建索引重試"
+  ],
+  "preprocess_status": "partial"
+}

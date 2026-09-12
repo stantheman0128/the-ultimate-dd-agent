@@ -1,0 +1,11 @@
+{
+  "round": 1,
+  "lifecycle": "merged",
+  "closed": false,
+  "sentRounds": [],
+  "recovery": {
+    "method": "root-orchestrated agents",
+    "baselinePipeline": "blocked",
+    "report": "acceptance/final-qlist-review.md"
+  }
+}

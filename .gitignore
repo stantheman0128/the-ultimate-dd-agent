@@ -65,3 +65,29 @@ _workbench/.tessdata/
 
 # Reproducible visual-page cache
 **/_analysis/index/_render/
+
+# Explicitly authorized HEVO public-source analysis snapshot (2026-09-12).
+!/HEVO/
+/HEVO/*
+!/HEVO/README.md
+!/HEVO/manifest.json
+!/HEVO/sec-sources.json
+!/HEVO/index-sources.json
+!/HEVO/prepare_indexes.py
+!/HEVO/_notes.md
+!/HEVO/round1/
+!/HEVO/_analysis/
+/HEVO/_analysis/*
+!/HEVO/_analysis/cards/
+!/HEVO/_analysis/index/
+!/HEVO/_analysis/drafts/
+!/HEVO/_analysis/diff-reports/
+!/HEVO/_analysis/acceptance/
+!/HEVO/_analysis/facts.md
+!/HEVO/_analysis/facts.json
+!/HEVO/_analysis/qc-report.md
+!/HEVO/_analysis/state.json
+/HEVO/_analysis/acceptance/*
+!/HEVO/_analysis/acceptance/*.md
+!/HEVO/_analysis/acceptance/*.json
+!/HEVO/_analysis/acceptance/validate-qlist.py

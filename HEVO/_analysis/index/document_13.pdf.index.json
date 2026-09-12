@@ -1,0 +1,57 @@
+{
+  "kind": "pdf",
+  "pages": [
+    {
+      "n": 1,
+      "text": "                        SCHEDULE A\n\n       INVESTOR-SPECIFIC TERMS AND PARTICIPATION INCENTIVES\n\n          (To Subscription Agreement for Serics A-2 Preferred Stock of HEVO Inc.)\n\n\nThis Schedule A supplements and forms an integral part of the Subscription Agreement (the\n~Agreement’) entered into by and between the undersigned investor (the “Investor”) and HEVO\nInc., a Delaware corporation (the “Company” for the purchase ofshares of theCompany’s Series\nA-2 Preferred Stock (the “Shares”).\n\n\nCapitalized terms used in this Schedule A and not defined herein shall have the meanings given to\nthem in the Agreement.\n\n1. Class Designation and Pricing. The Shares subscribed to under the Agreement represent Scrics\nA-2 Preferred Stock of the Company, issued at a price per share of      $1.9991, reflecting a pre-money\nvaluation of $60,000,000 (“Tier 01 Pricing”).\n\n2. Conversion of SAFEs (As Applicable).  If this investment constitutes  a conversion of a\npreviously  issued Simple Agreement for Future Equity (“SAFE”) held by  the Investor. such\nconversion shall occur in accordance with the terms of the SAFE. the Amended and Restated\n\nCertificate of Incorporation of the Company, and the conversion procedures adopted by  the\nCompany’s Board of Directors. Upon conversion, Investor shall receive the number of Shares\ndetermined by applying the SAFE's conversion formula to this Ticr 01 Pricing.\n\n\n3. Warrant Incentives (As Applicable). The Investor may be entitled to receive stock warrants\n(the “Warrants”) to purchase additional shares of the Company’s capital stock at an exercise price\nof $0.01 per share. The number of Warrants issued shall be determined based on the Investor's\neligibility under one of the following programs:\n\n       A. Reg CF SAFE Noteholders and Early Reg CF Participants\n\n\n          If the Investor invests $1,000 or more:\n\n\n         By May 9, 2025 — entitled to 15% warrant bonus\n\n\n          By May  15. 2025 — entitled to 10% warrant bonus\n\n\n         By May 31. 2025 — entitled to 5% warrant bonus\n\n\n        B. Conversion Option for Tier 01 Investors\n\n\n                                                                Tier 01 (Series A-2) offering may        Investors who commit $1,000 or more by the close ofthe\n        elect to receive their Shares based on a $60M pre-money valuation, rather than the $75M\n       Tier 02 valuation.\n\n\n\n\n\n                                                    1",
+      "chars": 2423,
+      "needs_ocr": false,
+      "extraction": "tesseract",
+      "warnings": [
+        "Recovery: English OCR; visual QC coverage recorded in document card"
+      ],
+      "summary_zh": "",
+      "keywords": []
+    },
+    {
+      "n": 2,
+      "text": "       C. Accredited Investors ($25,000 or more investment):\n\n\n        Commit by May 23 (wired by May 31): 15% warrant bonus\n\n\n        Commit by May 31 (wired by May 31): 10% warrant bonus\n\n            Invest between June 1—June 30 (if Series A-2 remains open): 5% warrant bonus\n\n\n      D. Syndicate Lead or Co-Lead Investors ($250,000 or more investment):\n\n\n        Commit by May 14 (wired by May 31): 25% warrant bonus\n\n\n             In addition to the above. such Investors shall receive access to enhanced  financial\n           models. investor-only briefings, and strategic updates.\n\nAll Warrant entitlements are subject to Board approval, rounding and availability of share reserves.\nand shall be documented by  a separate Warrant Agreement delivered to the Investor after the\nclosing ofthe Series A-2 round.\n\n4. No Guarantee of Incentives. Investor acknowledges that any Warrants or valuation discounts\nare offered solely at the discretion of the Company and subject to eligibility verification, final\nclosing conditions. and Board-approved allocations.  Investor further acknowledges that eligibility\nshall be determined by  the Company  in  its sole discretion based on subscription date, amount.\npayment timing, and classification\n\n5. Investor Acknowledgement. By signing the Agreement to which this Schedule A   is attached.\nthe Investor acknowledges and agrees to the terms herein.\n\n\n\n\n\n                                              2",
+      "chars": 1446,
+      "needs_ocr": false,
+      "extraction": "tesseract",
+      "warnings": [
+        "Recovery: English OCR; visual QC coverage recorded in document card"
+      ],
+      "summary_zh": "",
+      "keywords": []
+    }
+  ],
+  "page_count": 2,
+  "needs_ocr_pages": 0,
+  "file": "document_13.pdf",
+  "round": "R1",
+  "size": 1674623,
+  "mtime": 1789202831.1051154,
+  "indexed_at": "2026-09-12T16:07:17.781604",
+  "total_chars": 3869,
+  "schema_version": 2,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1",
+      "p.2"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "Recovered with English OCR; Chinese AI metadata unavailable; see card for visual coverage"
+  ],
+  "preprocess_status": "partial",
+  "source_path": "round1/SEC-2025-07-07/document_13.pdf"
+}

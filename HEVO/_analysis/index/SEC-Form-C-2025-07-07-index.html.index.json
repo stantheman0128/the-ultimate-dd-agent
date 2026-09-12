@@ -1,0 +1,38 @@
+{
+  "kind": "text",
+  "pages": [
+    {
+      "n": 1,
+      "text": "HEVO SEC Form C — 0001670254-25-000685\nArchived from\nSEC EDGAR\non 2026-09-12. Rendered filing content; scripts and site navigation omitted. All filing documents are archived locally. The complete submission is losslessly gzip-compressed.\nForm C\n- Offering Statement:\nSEC\nAccession\nNo.\n0001670254-25-000685\nFiling Date\n2025-07-07\nAccepted\n2025-07-07 17:02:17\nDocuments\n16\nDocument Format Files\nSeq\nDescription\nDocument\nType\nSize\n1\nprimary_doc.html\nC\n1\nprimary_doc.xml\nC\n10648\n2\ndocument_1.pdf\nEX-99\n10691248\n3\ndocument_2.pdf\nEX-99\n11347292\n4\ndocument_3.pdf\nEX-99\n12471903\n5\ndocument_4.pdf\nEX-99\n10124338\n6\ndocument_5.pdf\nEX-99\n28416956\n7\ndocument_6.pdf\nEX-99\n1624237\n8\ndocument_7.pdf\nEX-99\n1375644\n9\ndocument_8.pdf\nEX-99\n2702945\n10\ndocument_9.pdf\nEX-99\n22929480\n11\ndocument_10.pdf\nEX-99\n8990748\n12\ndocument_11.pdf\nEX-99\n18489068\n13\ndocument_12.pdf\nEX-99\n15329563\n14\ndocument_13.pdf\nEX-99\n1674623\n15\ndocument_14.pdf\nEX-99\n1031522\n16\ndocuments_list.htm\nEX-99\n123\nComplete submission text file\n0001670254-25-000685.txt\n199458673\nMailing Address\n117 8TH ST\nBROOKLYN\nBROOKLYN\nNY\n11215-3115\nBusiness Address\n147 PRINCE ST.\nBROOKLYN\nNY\n11201\n7182224386\nHEVO Inc. (Filer)\nCIK\n:\n0001587317 (see all company filings)\nEIN.\n:\n453988107\n| State of Incorp.:\nDE\n| Fiscal Year End:\n1231\nType:\nC\n| Act:\n33\n| File No.:\n020-36125\n| Film No.:\n251108719",
+      "chars": 1331,
+      "needs_ocr": false
+    }
+  ],
+  "page_count": 1,
+  "note": "結構化文字段落，非實體頁碼",
+  "file": "SEC-Form-C-2025-07-07-index.html",
+  "round": "R1",
+  "size": 6721,
+  "mtime": 1789202831.5665488,
+  "indexed_at": "2026-09-12T16:09:10",
+  "seconds": 0.0,
+  "total_chars": 1331,
+  "schema_version": 3,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "中文 AI 摘要尚未完成，原文仍可搜尋；可重建索引重試"
+  ],
+  "preprocess_status": "partial"
+}

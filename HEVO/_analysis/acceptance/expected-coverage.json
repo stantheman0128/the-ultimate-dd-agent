@@ -1,0 +1,178 @@
+{
+  "purpose": "Independent expected thematic coverage; no persona drafts were consulted. Mechanical keyword matching does not establish meaningful coverage.",
+  "as_of": "2026-09-12",
+  "topics": [
+    {
+      "id": "liquidity",
+      "topic": "現金、持續營運與量產前資金缺口",
+      "sources": [
+        {
+          "file": "round1/SEC-2025-07-07/document_5.pdf",
+          "pdf_pages": [
+            5,
+            25
+          ]
+        },
+        {
+          "file": "round1/HEVO-Investor-Deck.pdf",
+          "pdf_pages": [
+            33
+          ]
+        }
+      ],
+      "required_question_direction": "27,940歷史現金與持續營運疑慮；取得2025至最近月月報、現金預測、$5M/18+月假設與2029量產前資金橋接。",
+      "avoid_false_conclusion": "2024年底財務不是2026現況；不能直接用過期現金估當期runway。"
+    },
+    {
+      "id": "terminated-license-loan",
+      "topic": "終止獨家授權後轉借款",
+      "sources": [
+        {
+          "file": "round1/SEC-2025-07-07/document_5.pdf",
+          "pdf_pages": [
+            18,
+            19
+          ]
+        }
+      ],
+      "required_question_direction": "$1M獨家授權款改為無息借款：取得termination/settlement、權利回復、償還觸發及其餘義務。",
+      "avoid_false_conclusion": "終止及借款是已披露歷史事項；不能稱該獨家合作目前有效，也不能直接假定逾期。"
+    },
+    {
+      "id": "compensation-warrants",
+      "topic": "薪酬負債轉權證及稀釋",
+      "sources": [
+        {
+          "file": "round1/SEC-2025-07-07/document_5.pdf",
+          "pdf_pages": [
+            25
+          ]
+        }
+      ],
+      "required_question_direction": "核對$1,403,921應付薪酬與1,600,000 warrants、員工協議、薪酬修改、行使條件及cap table。",
+      "avoid_false_conclusion": "股份權證不等於現金償債，不應直接當已發普通股。"
+    },
+    {
+      "id": "compensation-estimate",
+      "topic": "股票報酬估計調整",
+      "sources": [
+        {
+          "file": "round1/SEC-2025-07-07/document_5.pdf",
+          "pdf_pages": [
+            24
+          ]
+        }
+      ],
+      "required_question_direction": "請提供$491,318逆轉、正常費用$382,279及淨減少$109,039橋接與查核依據。",
+      "avoid_false_conclusion": "來源稱estimate change，不直接認定舞弊或前期財報重編。"
+    },
+    {
+      "id": "funding-terms",
+      "topic": "募資口徑與優先股／SAFE／權證",
+      "sources": [
+        {
+          "file": "round1/HEVO-Investor-Deck.pdf",
+          "pdf_pages": [
+            27
+          ]
+        },
+        {
+          "file": "round1/SEC-2025-07-07/document_13.pdf",
+          "pdf_pages": [
+            1,
+            2
+          ]
+        },
+        {
+          "file": "round1/SEC-2025-07-07/document_14.pdf",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "required_question_direction": "橋接$19.2M與over$20M的資金類別/截止日；取得Tier01/02、SAFE轉換、權證、fully diluted股權表與已簽有效版本。",
+      "avoid_false_conclusion": "同頁不同數字先辨口徑；Schedule B是非約束摘要，不能假定所有投資人享同獎勵。"
+    },
+    {
+      "id": "oem-commercialization",
+      "topic": "OEM合作轉正式量產訂單",
+      "sources": [
+        {
+          "file": "round1/HEVO-Investor-Deck.pdf",
+          "pdf_pages": [
+            30,
+            33
+          ]
+        }
+      ],
+      "required_question_direction": "就4+3平台、100k units/year、$100M target與2029量產確認各合作階段、取消權、SOP條件、採購保證、機率與客戶集中度。",
+      "avoid_false_conclusion": "target/開發或供應商選定不是已簽不可撤銷收入訂單。"
+    },
+    {
+      "id": "unit-economics",
+      "topic": "價格與效率口徑、單位經濟",
+      "sources": [
+        {
+          "file": "round1/HEVO-Investor-Deck.pdf",
+          "pdf_pages": [
+            17,
+            18,
+            19,
+            22
+          ]
+        }
+      ],
+      "required_question_direction": "比對$250車端/$1,200設備/$1,500 OEM方案及$400安裝；取得BOM、售價條件、量價毛利、93%測試範圍及各功率可供貨狀态。",
+      "avoid_false_conclusion": "目標價格不是現售價格；各功率願景不可一概當已認證產品；不同組件不可硬比價。"
+    },
+    {
+      "id": "ip-dependency",
+      "topic": "IP、ORNL授權與認證",
+      "sources": [
+        {
+          "file": "round1/HEVO-Investor-Deck.pdf",
+          "pdf_pages": [
+            3,
+            12,
+            19
+          ]
+        }
+      ],
+      "required_question_direction": "核對17 patent families、所有權/授權地域/排他/royalty/終止、ORNL依賴與型號認證證據。",
+      "avoid_false_conclusion": "公司簡報主張需要外部/正式文件佐證；自研與部分授權並存不必然矛盾。"
+    },
+    {
+      "id": "current-documents",
+      "topic": "最新有效文件與基線營運資料",
+      "sources": [
+        {
+          "file": "round1/SEC-2025-07-07/document_5.pdf",
+          "pdf_pages": [
+            1,
+            25
+          ]
+        },
+        {
+          "file": "round1/SEC-2025-07-07/document_10.pdf",
+          "pdf_pages": [
+            1
+          ]
+        },
+        {
+          "file": "round1/SEC-2025-07-07/document_11.pdf",
+          "pdf_pages": [
+            1
+          ]
+        },
+        {
+          "file": "round1/SEC-2025-07-07/document_12.pdf",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "required_question_direction": "請提供最新財務/財測、已簽有效公司治理文件、當期cap table、Top-N客戶及合約狀態、全年收入成本拆分與地區營收。",
+      "avoid_false_conclusion": "不得宣稱沒有任何財簽/章程/條款；已有歷史及樣板附件，缺的是最新、完整或已簽版。"
+    }
+  ]
+}

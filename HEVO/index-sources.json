@@ -1,0 +1,112 @@
+[
+  {
+    "index": "_analysis/index/sec-sources.json.index.json",
+    "source": "sec-sources.json",
+    "sha256": "94d76f8ac86b6573827749a3111827fbf50cba78b9586629fbba4913f2c85cee"
+  },
+  {
+    "index": "_analysis/index/primary_doc.html.index.json",
+    "source": "round1/SEC-2025-07-07/primary_doc.html",
+    "sha256": "53cf5f8a931c7149fb502bc3366ce8398c0679900623e8d0543d1aba17a20f04"
+  },
+  {
+    "index": "_analysis/index/manifest.json.index.json",
+    "source": "manifest.json",
+    "sha256": "ba122aeabc79bf30fe0dddb00eae9eab0f8dd90d8e859d9ee95a2680c718bb74"
+  },
+  {
+    "index": "_analysis/index/SEC-Form-C-2025-07-07-index.html.index.json",
+    "source": "round1/SEC-Form-C-2025-07-07-index.html",
+    "sha256": "c792f9e0e7a2505efd9883b54996f14664da1deacc3e59c8feaa70f1866b3f90"
+  },
+  {
+    "index": "_analysis/index/document_1.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_1.pdf",
+    "sha256": "798147a4df355b17d81fb152540612e6969c76d3f6eca8930e4b820af7b617ae"
+  },
+  {
+    "index": "_analysis/index/0001670254-25-000685.txt.gz.index.json",
+    "source": "round1/SEC-2025-07-07/0001670254-25-000685.txt.gz",
+    "sha256": "e82c137f8f0a86b75e2965f8da0914d829f064b970382e4c3f1d6cdb12279fad"
+  },
+  {
+    "index": "_analysis/index/document_9.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_9.pdf",
+    "sha256": "d2488821929c6a5fea2750482d54ed0cc7152851fc4371726c8ff34702c59207"
+  },
+  {
+    "index": "_analysis/index/document_6.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_6.pdf",
+    "sha256": "c4db2d7eab1f3f1c6d58d0c7e327bd1e46aff2e5994371d02a87d431e901b3e3"
+  },
+  {
+    "index": "_analysis/index/HEVO-Investor-Deck.pdf.index.json",
+    "source": "round1/HEVO-Investor-Deck.pdf",
+    "sha256": "a944d3ebb75f4483021eb0ff8b6b6d43f4570c33f3b5ca731dacc5604945b4a7"
+  },
+  {
+    "index": "_analysis/index/document_12.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_12.pdf",
+    "sha256": "94bcc99809f38d8576c9e74419bb0e8ae3205cddbbbf70f95b682c793dc8e9b3"
+  },
+  {
+    "index": "_analysis/index/document_13.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_13.pdf",
+    "sha256": "93290521466b1b46446461af39c52b5985a8af2cb5690c04f3b8bbc5a48fa36c"
+  },
+  {
+    "index": "_analysis/index/documents_list.htm.index.json",
+    "source": "round1/SEC-2025-07-07/documents_list.htm",
+    "sha256": "6fbe46b950f19407284de1e15202b96d5f488f80bdbf2a0fd2dd0f4d4b87a7e2"
+  },
+  {
+    "index": "_analysis/index/document_7.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_7.pdf",
+    "sha256": "3b164afec972746bfb867ab16a0db8f35cccdd13dca69c624cc57003d7292fdd"
+  },
+  {
+    "index": "_analysis/index/document_8.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_8.pdf",
+    "sha256": "11d22e0f3be679b7e9f33d2afac3c421a9dd06bd64b44c541358b14de9b521a1"
+  },
+  {
+    "index": "_analysis/index/document_14.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_14.pdf",
+    "sha256": "d4806e9a71dda1c2d2c385b1554eef2bb0daa6088155a4fb29c469ddf04b78c2"
+  },
+  {
+    "index": "_analysis/index/document_2.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_2.pdf",
+    "sha256": "8e3a5eb1969b4ea7ddef7ce5e06ed945131fe1417cdcebe56b9bb74f2977b2d5"
+  },
+  {
+    "index": "_analysis/index/document_11.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_11.pdf",
+    "sha256": "33d64c07030f8eb748946e9065dc08aaacd2ea8ad9096442cca6bf1634decc61"
+  },
+  {
+    "index": "_analysis/index/document_5.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_5.pdf",
+    "sha256": "ef815b593a30241ce8088e37b317023690e37ecec45d0c7fae9870e5f331c04a"
+  },
+  {
+    "index": "_analysis/index/document_4.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_4.pdf",
+    "sha256": "22b7ec44d7d05e14427169ff33c18c8db1a3343d010686c847a6f7c0ad49c36b"
+  },
+  {
+    "index": "_analysis/index/document_10.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_10.pdf",
+    "sha256": "cd335d7a81baf8ce32fee86cd3ff21cc111e5e9f5c4d530669a0c880422ec8b0"
+  },
+  {
+    "index": "_analysis/index/document_3.pdf.index.json",
+    "source": "round1/SEC-2025-07-07/document_3.pdf",
+    "sha256": "52119a47478daef1db202aed96e68eef453bf12bdd3d7fb7c5c6ad6f05ac7689"
+  },
+  {
+    "index": "_analysis/index/primary_doc.xml.index.json",
+    "source": "round1/SEC-2025-07-07/primary_doc.xml",
+    "sha256": "17e67f0597f7fa1ca774f5b9eaa8d25ff6d66300e9405122337e44c1230d6b9b"
+  }
+]

@@ -1,0 +1,74 @@
+{
+  "kind": "pdf",
+  "pages": [
+    {
+      "n": 1,
+      "text": "Contact             Robert  J. Remenar\nwww .linkedin.com/in/robert-j-           Board Member at Cooper Standard Automotive, Samvardhana\nremenar-b66b0a22 (Linkedin)          Motherson, Munro & Associates and HEVO. Former CEO of Nexteer\n                                 and Chassix. Former Vice Chairman & President at Kensington\nTop Skills                             Capital Acquisition Corps  |,  Il & IV\n\nBoard Level\nManufacturing                  Experience\nLean Manufacturing                xp    ne\n\n\n                         HEVO\n\n                                   Board Member\n\n                                             July 2025  - Present (1 month)\n\n\n\n\n\n                                Munro & Associates\n\n                              Member Board of Directors\n\n                                        February 2025 - Present (6 months)\n\n\n\n                                  Motherson Sumi Systems Limited\n\n                             Member of the Board of Directors at Samvardhana Motherson\n\n                                           International  Limited (SAMIL)\n                                       January 2022  - Present (3 years 7 months)\n\n\n\n\n                               Cooper Standard\n\n                              Member Board Of Directors\n\n                                  May 2015  - Present (10 years 3 months)\n\n\n\n\n                                 Stanadyne LLC\n\n                              Member of the Board of Directors\n\n                                        February 2021  - July 2023 (2 years 6 months)\n\n\n\n                                   Kensington Capital Acquisition Corp. SPAC IV\n\n                        COO\n\n                                      March 2022 - September 2022 (7 months)\n\n\n\n                           PKC Group Ple\n\n                              Member of the Board of Directors\n\n                                                   April 2012  - May 2022 (10 years 2 months)\n\n\n\n\n\n                                                                           Page  1                                                                          of3",
+      "chars": 2106,
+      "needs_ocr": false,
+      "extraction": "tesseract-eng",
+      "summary_zh": "",
+      "keywords": [],
+      "warnings": [
+        "英語OCR不是全頁視覺驗收，數字/條款應核對原圖"
+      ],
+      "visually_confirmed_blank": false
+    },
+    {
+      "n": 2,
+      "text": "Kensington Capital Acquisition Corp.   Il (KCAC.U)\n\nVice Chairman and President\n\nFebruary 2021  - October 2021 (9 months)\n\n\n\nKensington Capital Acquisition Corp.      |\n\nVice Chairman and President\n\nJune 2020  - November 2020 (6 months)\n\n\n\nHighland Industries\n\nMember of the Board of Trustees\n\nApril 2018  - August 2019 (1 year 5 months)\n\n\n\nPurePower Technologies,  Inc.\nMember of the Board of Directors\n\nFebruary 2016 - March 2019 (3 years 2 months)\n\n\n\n\nChassix Inc.\n\nPresident and CEO\n\nJuly 2012  - June 2014 (2 years)\n\n\n\n\n\nNexteer Automotive\n\nPresident and CEO\n\nOctober 2009  - July 2012 (2 years 10 months)\n\n\n\nDelphi\n\n11 years 7 months\n\nPresident, Delphi Steering & Vice President Delphi Corporation\nApril 2002  - October 2009 (7 years 7 months)\n\n\n\n\nExecutive Director - Multiple Positions\n\nApril 1998  - April 2002 (4 years  1 month)\n\n\n\n\n\nGeneral Motors\n\nMultiple Management and Executive Positions\n\nJuly 1985  - April 1998 (12 years 10 months)\n\n\n\n\n\n                                 Page 2 of 3",
+      "chars": 999,
+      "needs_ocr": false,
+      "extraction": "tesseract-eng",
+      "summary_zh": "",
+      "keywords": [],
+      "warnings": [
+        "英語OCR不是全頁視覺驗收，數字/條款應核對原圖"
+      ],
+      "visually_confirmed_blank": false
+    },
+    {
+      "n": 3,
+      "text": "Education\n\n\nCentral Michigan University\n\nBachelor of Science in Business Administration, Finance,\n\nGeneral - (1974 - 1978)\n\n\nWalsh College\n\nMaster of Science in Professional Accountancy, Business and\n\nAccounting     - (1983 - 1988)\n\n\n\n\n\n                                 Page 3 of 3",
+      "chars": 281,
+      "needs_ocr": false,
+      "extraction": "tesseract-eng",
+      "summary_zh": "",
+      "keywords": [],
+      "warnings": [
+        "英語OCR不是全頁視覺驗收，數字/條款應核對原圖"
+      ],
+      "visually_confirmed_blank": false
+    }
+  ],
+  "page_count": 3,
+  "needs_ocr_pages": 0,
+  "file": "document_7.pdf",
+  "round": "R1",
+  "size": 1375644,
+  "mtime": 1789202831.4400935,
+  "indexed_at": "2026-09-12T16:07:42.666122",
+  "total_chars": 3386,
+  "schema_version": 2,
+  "enrichment": {
+    "version": 1,
+    "status": "unavailable",
+    "summary_zh": "",
+    "keywords": [],
+    "sampled_locations": [
+      "p.1",
+      "p.2",
+      "p.3"
+    ],
+    "coverage": "取樣導覽；原文另行完整索引，摘要不代表已覆蓋全文件",
+    "warnings": [],
+    "model": null,
+    "usage": null
+  },
+  "warnings": [
+    "恢復抽取：全頁文字/OCR已完成；尚未全頁視覺驗證或AI中文摘要。"
+  ],
+  "preprocess_status": "partial",
+  "source_path": "round1/SEC-2025-07-07/document_7.pdf",
+  "recovery_provenance": "acceptance/recovery-index/document_7.pdf.json"
+}

@@ -1,0 +1,1297 @@
+{
+  "deal": "HEVO",
+  "generated_at": "2026-09-12T08:09:10.112813+00:00",
+  "as_of": "2026-09-12",
+  "docs": {
+    "DECK": {
+      "file": "HEVO-Investor-Deck.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C1": {
+      "file": "SEC-2025-07-07/document_1.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C2": {
+      "file": "SEC-2025-07-07/document_2.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C3": {
+      "file": "SEC-2025-07-07/document_3.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C4": {
+      "file": "SEC-2025-07-07/document_4.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C5": {
+      "file": "SEC-2025-07-07/document_5.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C6": {
+      "file": "SEC-2025-07-07/document_6.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C7": {
+      "file": "SEC-2025-07-07/document_7.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C8": {
+      "file": "SEC-2025-07-07/document_8.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C9": {
+      "file": "SEC-2025-07-07/document_9.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C10": {
+      "file": "SEC-2025-07-07/document_10.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C11": {
+      "file": "SEC-2025-07-07/document_11.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C12": {
+      "file": "SEC-2025-07-07/document_12.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C13": {
+      "file": "SEC-2025-07-07/document_13.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "C14": {
+      "file": "SEC-2025-07-07/document_14.pdf",
+      "round": "R1",
+      "kind": "pdf"
+    },
+    "XML": {
+      "file": "SEC-2025-07-07/primary_doc.xml",
+      "round": "R1",
+      "kind": "xml"
+    },
+    "HTML": {
+      "file": "SEC-2025-07-07/primary_doc.html",
+      "round": "R1",
+      "kind": "html"
+    },
+    "LIST": {
+      "file": "SEC-2025-07-07/documents_list.htm",
+      "round": "R1",
+      "kind": "htm"
+    }
+  },
+  "facts": [
+    {
+      "id": "F01",
+      "metric": "custom:1",
+      "label": "2024資產：Form C敘述與財簽/表格不同",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024資產：Form C敘述與財簽/表格不同"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.5",
+          "value": 1173662,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C1",
+          "loc": "p.2",
+          "value": 1173662,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C1",
+          "loc": "p.16",
+          "value": 1179913,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "同2024年截點資產差6,251；請橋接版本。差額小不等於口徑已一致。",
+      "derived": null,
+      "tolerance_pct": 0.001
+    },
+    {
+      "id": "F02",
+      "metric": "custom:2",
+      "label": "2024淨損：Form C敘述與主表不同",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024淨損：Form C敘述與主表不同"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": -3029332,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C1",
+          "loc": "p.2",
+          "value": -3029332,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C1",
+          "loc": "p.16",
+          "value": -3023081,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "虧損絕對額差6,251，與資產差額相同是待確認關聯，不自行認定原因。",
+      "derived": null,
+      "tolerance_pct": 0.001
+    },
+    {
+      "id": "F03",
+      "metric": "custom:3",
+      "label": "簡報同頁已募資金額不同",
+      "entity": "HEVO",
+      "period": "簡報版次未註",
+      "aliases_seen": [
+        "簡報同頁已募資金額不同"
+      ],
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.27",
+          "value": "19.2M",
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "deck",
+          "as_of": "簡報版次未註"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.27",
+          "value": "over $20M",
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "deck",
+          "as_of": "簡報版次未註"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "同頁不同文字，截止日/補助/債權/股權尚未分清；不把over當精確20M。",
+      "derived": null
+    },
+    {
+      "id": "F04",
+      "metric": "custom:4",
+      "label": "ROFR Key Holder百分比文字不一致",
+      "entity": "HEVO",
+      "period": "2025範本",
+      "aliases_seen": [
+        "ROFR Key Holder百分比文字不一致"
+      ],
+      "values": [
+        {
+          "doc": "C12",
+          "loc": "p.1",
+          "value": 0.03,
+          "basis": "Key Holder threshold",
+          "unit": "ratio",
+          "source_kind": "management",
+          "as_of": "2025範本"
+        },
+        {
+          "doc": "C12",
+          "loc": "p.1",
+          "value": 0.04,
+          "basis": "Key Holder threshold",
+          "unit": "ratio",
+          "source_kind": "management",
+          "as_of": "2025範本"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "three percent (4%)字面矛盾；請修正已簽版本。",
+      "derived": null
+    },
+    {
+      "id": "F05",
+      "metric": "custom:5",
+      "label": "章程面額字面不一致",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "章程面額字面不一致"
+      ],
+      "values": [
+        {
+          "doc": "C9",
+          "loc": "p.1",
+          "value": 0.0001,
+          "basis": "par value",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C9",
+          "loc": "p.2",
+          "value": 1e-05,
+          "basis": "par value",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "依股類核對並提供Delaware有效申報版；範本簽名/日期未填。",
+      "derived": null
+    },
+    {
+      "id": "F06",
+      "metric": "custom:6",
+      "label": "2024財簽淨損主表與附註概數不同",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024財簽淨損主表與附註概數不同"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": -3029332,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C5",
+          "loc": "p.25",
+          "value": "approximately $3.5M loss",
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "附註概數與主表不吻合，需說明是否舊版本殘留；不得把概數当精確值。",
+      "derived": null
+    },
+    {
+      "id": "F07",
+      "metric": "cash",
+      "label": "2024現金",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024現金"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.5",
+          "value": 27940,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C1",
+          "loc": "p.2",
+          "value": 27940,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "consistent",
+      "severity": "high",
+      "note": "目視已確認；舊OCR 27,960是誤讀，XML同源不另算獨立驗證。",
+      "derived": null
+    },
+    {
+      "id": "F08",
+      "metric": "custom:8",
+      "label": "2024租賃負債",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024租賃負債"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.6",
+          "value": 111517,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C5",
+          "loc": "p.24",
+          "value": 111517,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "consistent",
+      "severity": "high",
+      "note": "p6/p24均已目視；114,517與4,883是OCR錯數。",
+      "derived": {
+        "formula": "payments - interest",
+        "inputs": {
+          "payments": 113400,
+          "interest": 1883
+        },
+        "input_locs": {
+          "payments": "C5:p.24",
+          "interest": "C5:p.24"
+        },
+        "computed": 111517.0,
+        "delta_pct": 0.0,
+        "match": true
+      }
+    },
+    {
+      "id": "F09",
+      "metric": "custom:9",
+      "label": "2024應付帳款",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024應付帳款"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.6",
+          "value": 414331,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "目視414,331，非OCR416,331；現況需更新。",
+      "derived": null
+    },
+    {
+      "id": "F10",
+      "metric": "revenue",
+      "label": "2024營收",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024營收"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": 325291,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C1",
+          "loc": "p.2",
+          "value": 325291,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "consistent",
+      "severity": "high",
+      "note": "",
+      "derived": null
+    },
+    {
+      "id": "F11",
+      "metric": "revenue",
+      "label": "2023營收",
+      "entity": "HEVO",
+      "period": "2023-12-31",
+      "aliases_seen": [
+        "2023營收"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": 409595,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2023-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "",
+      "derived": null
+    },
+    {
+      "id": "F12",
+      "metric": "cost_of_goods_sold",
+      "label": "2024成本",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024成本"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": 551608,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "",
+      "derived": null
+    },
+    {
+      "id": "F13",
+      "metric": "custom:13",
+      "label": "2024毛損",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024毛損"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": -226317,
+          "basis": "unspecified",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "同主表收入减成本；負毛利需按業務/專案拆分。",
+      "derived": {
+        "formula": "revenue - cost",
+        "inputs": {
+          "revenue": 325291,
+          "cost": 551608
+        },
+        "input_locs": {
+          "revenue": "C5:p.7",
+          "cost": "C5:p.7"
+        },
+        "computed": -226317.0,
+        "delta_pct": 0.0,
+        "match": true
+      }
+    },
+    {
+      "id": "F14",
+      "metric": "custom:14",
+      "label": "2024營運資金缺口",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "2024營運資金缺口"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.25",
+          "value": -3200000,
+          "basis": "approximate disclosed negative working capital",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "推算值與概數近似，非最新現金需求。",
+      "derived": {
+        "formula": "assets - liabilities",
+        "inputs": {
+          "assets": 369145,
+          "liabilities": 3583011
+        },
+        "input_locs": {
+          "assets": "C5:p.5",
+          "liabilities": "C5:p.6"
+        },
+        "computed": -3213866.0,
+        "delta_pct": 0.43,
+        "match": true
+      }
+    },
+    {
+      "id": "F15",
+      "metric": "custom:15",
+      "label": "已披露持續營運疑慮",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "已披露持續營運疑慮"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.25",
+          "value": "substantial doubt about going concern",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "不重問是否存在；問2025至最近月的實際現金橋接、融資及達成條件。",
+      "derived": null
+    },
+    {
+      "id": "F16",
+      "metric": "custom:16",
+      "label": "2025五月現金/費用快照",
+      "entity": "HEVO",
+      "period": "2025-05",
+      "aliases_seen": [
+        "2025五月現金/費用快照"
+      ],
+      "values": [
+        {
+          "doc": "C1",
+          "loc": "p.16",
+          "value": "cash $15,500; last 3 months revenue $0; monthly expenses $65,000",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2025-05"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "已有歷史快照，不能用來判2026現況；後續約325k回款亦須確認是否實收。",
+      "derived": null
+    },
+    {
+      "id": "F17",
+      "metric": "custom:17",
+      "label": "2029量產與募資18+月之間資金安排",
+      "entity": "HEVO",
+      "period": "2026-2029",
+      "aliases_seen": [
+        "2029量產與募資18+月之間資金安排"
+      ],
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.33",
+          "value": "$5M funds 18+ months; production starts 2029",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "簡報版次未註"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "未提供按月財測，需後續融資/里程碑/營收路徑。",
+      "derived": null
+    },
+    {
+      "id": "F18",
+      "metric": "custom:18",
+      "label": "獨家授權終止後改為借款",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "獨家授權終止後改為借款"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.18",
+          "value": "$1M exclusive Eurasia license payment; relationship severed",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C5",
+          "loc": "p.19",
+          "value": "$1M non-interest loan, repay when financially able",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "同一財報連續頁非獨立來源；需解約/權利返還/償還約定及現況。",
+      "derived": null,
+      "check_note": "recompute 判定 consistent，人工標 single_source"
+    },
+    {
+      "id": "F19",
+      "metric": "custom:19",
+      "label": "員工薪酬轉common warrants",
+      "entity": "HEVO",
+      "period": "2025-01-31",
+      "aliases_seen": [
+        "員工薪酬轉common warrants"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.25",
+          "value": "$1,403,921 accrued compensation; 1,600,000 common warrants issued",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2025-01-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "核已簽員工協議、修改薪資與行使稀釋；不能當現金還款。",
+      "derived": null
+    },
+    {
+      "id": "F20",
+      "metric": "custom:20",
+      "label": "股酬估計調整",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "股酬估計調整"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.24",
+          "value": -109039,
+          "basis": "net expense",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C5",
+          "loc": "p.7",
+          "value": -109040,
+          "basis": "net expense",
+          "unit": "USD",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "conflict",
+      "severity": "low",
+      "note": "差1元低優先；主要核$491,318逆轉及估計變更依據，不逕稱舞弊。",
+      "derived": {
+        "formula": "normal - reversal",
+        "inputs": {
+          "normal": 382279,
+          "reversal": 491318
+        },
+        "input_locs": {
+          "normal": "C5:p.24",
+          "reversal": "C5:p.24"
+        },
+        "computed": -109039.0,
+        "delta_pct": 0.0,
+        "match": true
+      },
+      "tolerance_pct": 1e-05
+    },
+    {
+      "id": "F21",
+      "metric": "custom:21",
+      "label": "A1清算權歷史與2025範本",
+      "entity": "HEVO",
+      "period": "2024-2025",
+      "aliases_seen": [
+        "A1清算權歷史與2025範本"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.19",
+          "value": 1.5,
+          "basis": "2024 A1 effective disclosure",
+          "unit": "multiple",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C9",
+          "loc": "p.3",
+          "value": 1,
+          "basis": "2025 proposed A1 terms",
+          "unit": "multiple",
+          "source_kind": "management",
+          "as_of": "2025範本"
+        },
+        {
+          "doc": "C11",
+          "loc": "p.7",
+          "value": 1,
+          "basis": "2025 proposed A1 terms",
+          "unit": "multiple",
+          "source_kind": "management",
+          "as_of": "2025範本"
+        }
+      ],
+      "status": "basis_mismatch",
+      "severity": "high",
+      "note": "不同版本/待生效修訂，不直接認定違約；提供生效章程/同意文件。",
+      "derived": null
+    },
+    {
+      "id": "F22",
+      "metric": "custom:22",
+      "label": "OEM量產時程版本變更",
+      "entity": "HEVO",
+      "period": "2028-2029",
+      "aliases_seen": [
+        "OEM量產時程版本變更"
+      ],
+      "values": [
+        {
+          "doc": "C2",
+          "loc": "p.19",
+          "value": 2028,
+          "basis": "2025 historical plan",
+          "unit": "year",
+          "source_kind": "management",
+          "as_of": "2025-07"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.30",
+          "value": 2029,
+          "basis": "later plan",
+          "unit": "year",
+          "source_kind": "deck",
+          "as_of": "簡報版次未註"
+        }
+      ],
+      "status": "basis_mismatch",
+      "severity": "high",
+      "note": "歷史2028到新版2029是版本更新，問原因/風險/新里程碑，不宣告當期自相矛盾。",
+      "derived": null,
+      "check_note": "recompute 判定 consistent，人工標 basis_mismatch"
+    },
+    {
+      "id": "F23",
+      "metric": "custom:23",
+      "label": "OEM目標尚非不可撤銷訂單",
+      "entity": "HEVO",
+      "period": "2029 forecast",
+      "aliases_seen": [
+        "OEM目標尚非不可撤銷訂單"
+      ],
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.30",
+          "value": "4 and 3 platforms; 100k units/year; $100M annual target; preferred developer",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "forecast"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.33",
+          "value": "securing production agreements",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "forecast"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "需各OEM合約狀態、最低採購、取消權、開發責任及2029SOP門檻。",
+      "derived": null
+    },
+    {
+      "id": "F24",
+      "metric": "custom:24",
+      "label": "OEM報價與其他單元報價口徑",
+      "entity": "HEVO",
+      "period": "簡報版次未註",
+      "aliases_seen": [
+        "OEM報價與其他單元報價口徑"
+      ],
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.17",
+          "value": 1200,
+          "basis": "charger",
+          "unit": "USD",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.19",
+          "value": 1500,
+          "basis": "OEM volume 11kW package",
+          "unit": "USD",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.22",
+          "value": 1200,
+          "basis": "target charger",
+          "unit": "USD",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "basis_mismatch",
+      "severity": "high",
+      "note": "不同組件/量級/target不可硬比；問BOM、毛利、包含範圍與規模前提。",
+      "derived": null
+    },
+    {
+      "id": "F25",
+      "metric": "custom:25",
+      "label": "效率與認證主張",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "效率與認證主張"
+      ],
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.12",
+          "value": "peak 93% grid-to-battery; bi-directional ready; SAE/UL labels",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.18",
+          "value": "11/50/100/350kW comparison",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "確認各功率實測、負載、對位、正式型號認證與可供貨狀態；未獨立查證。",
+      "derived": null,
+      "check_note": "recompute 判定 conflict，人工標 single_source"
+    },
+    {
+      "id": "F26",
+      "metric": "custom:26",
+      "label": "專利與ORNL授權",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "專利與ORNL授權"
+      ],
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.3",
+          "value": "17 patent families; co-developed with ORNL",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.19",
+          "value": "full IP control and additional ORNL licensing",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "需清冊、歸屬、授權範圍/終止/royalty；不可把Yifan個人專利算公司。",
+      "derived": null
+    },
+    {
+      "id": "F27",
+      "metric": "custom:27",
+      "label": "Tier01與條件性權證方案",
+      "entity": "HEVO",
+      "period": "2025條款",
+      "aliases_seen": [
+        "Tier01與條件性權證方案"
+      ],
+      "values": [
+        {
+          "doc": "C13",
+          "loc": "p.1",
+          "value": "$1.9991; $60M pre-money; SAFE conversion; investor-specific bonus",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2025條款"
+        },
+        {
+          "doc": "C14",
+          "loc": "p.1",
+          "value": "$0.01; 5 years; definitive agreement required",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2025條款"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "同一套附件，不證明發行；按各投資人條件核實際配置與fully diluted cap table。",
+      "derived": null,
+      "check_note": "recompute 判定 conflict，人工標 single_source"
+    },
+    {
+      "id": "F28",
+      "metric": "custom:28",
+      "label": "募資截止日已過",
+      "entity": "HEVO",
+      "period": "2026-09-12",
+      "aliases_seen": [
+        "募資截止日已過"
+      ],
+      "values": [
+        {
+          "doc": "XML",
+          "loc": "/edgarSubmission/formData/offeringInformation/deadlineDate",
+          "value": "04-30-2026",
+          "basis": "unspecified",
+          "unit": "date",
+          "source_kind": "management",
+          "as_of": "2025-07-07"
+        }
+      ],
+      "status": "unverified",
+      "severity": "high",
+      "note": "截至2026-09-12已過歷史截止日；需後續申報/延期/結束證據，不直接認定仍募或已違法。",
+      "derived": null,
+      "check_note": "recompute 判定 single_source，人工標 unverified"
+    },
+    {
+      "id": "F29",
+      "metric": "custom:29",
+      "label": "投資人權利協議交叉引用與適用範圍",
+      "entity": "HEVO",
+      "period": "2025範本",
+      "aliases_seen": [
+        "投資人權利協議交叉引用與適用範圍"
+      ],
+      "values": [
+        {
+          "doc": "C10",
+          "loc": "p.2",
+          "value": "Error! Reference source not found; incomplete clause",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2025範本"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "原件已視覺確認；需修正有效文本及A2資訊/登記權適用。",
+      "derived": null
+    },
+    {
+      "id": "F30",
+      "metric": "custom:30",
+      "label": "投票代理與超級表決權",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "投票代理與超級表決權"
+      ],
+      "values": [
+        {
+          "doc": "C1",
+          "loc": "p.9",
+          "value": "Voting rights No checkbox",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C4",
+          "loc": "p.6",
+          "value": "SPV dissolution/distribution if issuer fees not paid",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C9",
+          "loc": "p.2",
+          "value": "super voting 10 votes per share",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "unverified",
+      "severity": "high",
+      "note": "分SPV持有人及公司股權層級，不把不同層級硬判衝突；核delegation/manager/創辦人控制權。",
+      "derived": null,
+      "check_note": "recompute 判定 single_source，人工標 unverified"
+    },
+    {
+      "id": "F31",
+      "metric": "coverage_gap",
+      "label": "法律文件已收但有效版本待補",
+      "entity": "HEVO",
+      "period": "2026-09-12",
+      "aliases_seen": [
+        "法律文件已收但有效版本待補"
+      ],
+      "values": [
+        {
+          "doc": "C3",
+          "loc": "p.11",
+          "value": "placeholders for dates/shares/signature",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C9",
+          "loc": "p.17",
+          "value": "blank signature and date",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C10",
+          "loc": "p.7",
+          "value": "signature block incomplete",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "unverified",
+      "severity": "high",
+      "note": "已收章程/認購/治理範本；需要已簽現行版與登記證明，非全部文件缺件。",
+      "derived": null
+    },
+    {
+      "id": "F32",
+      "metric": "coverage_gap",
+      "label": "最新財務、客戶與營運明細缺口",
+      "entity": "HEVO",
+      "period": "2026-09-12",
+      "aliases_seen": [
+        "最新財務、客戶與營運明細缺口"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.1",
+          "value": "financial years 2024 and 2023",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.30",
+          "value": "anonymous customer targets",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "deck",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "unverified",
+      "severity": "high",
+      "note": "截至2026-09-12未見2025財簽/2026月報/訂單roster/地區營收/按業務收入成本/最新財測與cap table；以資料盤點為範圍。",
+      "derived": null,
+      "check_note": "recompute 判定 single_source，人工標 unverified"
+    },
+    {
+      "id": "F33",
+      "metric": "custom:33",
+      "label": "董事和團隊時間投入",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "董事和團隊時間投入"
+      ],
+      "values": [
+        {
+          "doc": "C6",
+          "loc": "p.1",
+          "value": "Founder CEO career profile",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C7",
+          "loc": "p.1",
+          "value": "multiple board roles",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C8",
+          "loc": "p.1",
+          "value": "personal career / patents",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "management",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "unverified",
+      "severity": "high",
+      "note": "已有履歷，待聘僱/FTE/外部職務與利益衝突；董事不是當然全職員工。",
+      "derived": null
+    },
+    {
+      "id": "F34",
+      "metric": "custom:34",
+      "label": "庫存與示範設備回收",
+      "entity": "HEVO",
+      "period": "2024-12-31",
+      "aliases_seen": [
+        "庫存與示範設備回收"
+      ],
+      "values": [
+        {
+          "doc": "C5",
+          "loc": "p.17",
+          "value": "2024 no inventory purchase/use/product sales; inventory 137,932",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        },
+        {
+          "doc": "C5",
+          "loc": "p.12",
+          "value": "demo equipment expected to sell within one year",
+          "basis": "unspecified",
+          "unit": "text",
+          "source_kind": "audited",
+          "as_of": "2024-12-31"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "要求庫齡/專案狀態/跌價與示範設備94,152持平原因，不直接斷言減損。",
+      "derived": null
+    }
+  ],
+  "limitations": [
+    "Local OCR recovery with selective visual QC; not all scanned pages visually confirmed.",
+    "HTML/XML share one filing; not independent corroboration.",
+    "Historical and unsigned documents do not establish current effective terms."
+  ],
+  "recomputed_at": "2026-09-12T16:09:31",
+  "recompute_summary": {
+    "derived": 4,
+    "derived_mismatch": 0,
+    "auto_derived": 0,
+    "conflict": 7,
+    "basis_mismatch": 3,
+    "single_source": 16,
+    "consistent": 3,
+    "unverified": 5
+  }
+}

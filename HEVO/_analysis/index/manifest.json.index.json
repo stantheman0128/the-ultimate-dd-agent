@@ -1,0 +1,9 @@
+{
+  "file": "manifest.json",
+  "round": "未分輪",
+  "mtime": 1789202830.4709332,
+  "size": 3577,
+  "kind": "error",
+  "error": "不支援的格式；請轉成 PDF、Office XML 或圖片",
+  "preprocess_status": "failed"
+}
