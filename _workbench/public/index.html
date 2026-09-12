@@ -1,0 +1,1285 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pipeline DD 工作台</title>
+<style>
+:root{
+  --bg:#F2F3EF; --surface:#FFFFFF; --surface-2:#FAFBF8;
+  --ink:#20261F; --ink-2:#5A635B; --ink-3:#8B948C;
+  --line:#E3E6DF; --line-2:#D3D8CF;
+  --accent:#2E6B4E; --accent-ink:#FFFFFF; --accent-soft:#E7F0EA; --accent-line:#BCD4C6;
+  --warn:#A8761C; --warn-soft:#F6EEDC;
+  --danger:#AC3E2C; --danger-soft:#F7E7E3;
+  --info:#395F86; --info-soft:#E7EEF5;
+  --font-ui:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;
+  --font-data:ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#151816; --surface:#1D211F; --surface-2:#232826;
+  --ink:#E4E8E1; --ink-2:#98A29A; --ink-3:#6B756D;
+  --line:#2C332E; --line-2:#3A423C;
+  --accent:#63AF87; --accent-ink:#10241A; --accent-soft:#24352C; --accent-line:#3D5A4B;
+  --warn:#D6A94E; --warn-soft:#332B18;
+  --danger:#D97663; --danger-soft:#33201C;
+  --info:#7FA6C9; --info-soft:#20303F;
+}}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg)}
+body{font-family:var(--font-ui);color:var(--ink);font-size:14px;line-height:1.6}
+button{font-family:var(--font-ui);font-size:13px;cursor:pointer;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);padding:7px 14px}
+button:hover{border-color:var(--ink-3)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+button.primary:disabled{opacity:.45;cursor:default}
+input[type=text],textarea,select{font-family:var(--font-ui);font-size:13px;padding:7px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink)}
+.num{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.app{display:flex;min-height:100vh;max-width:1280px;margin:0 auto}
+aside{width:232px;flex-shrink:0;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px}
+.brand{font-size:15px;font-weight:600;padding:2px 8px 14px}
+.brand small{display:block;font-weight:400;font-size:11px;color:var(--ink-3);letter-spacing:.08em;margin-top:2px}
+.sidelabel{font-size:11px;color:var(--ink-3);letter-spacing:.1em;padding:10px 8px 4px}
+.deal{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;padding:9px 10px}
+.deal:hover{background:var(--surface)}
+.deal.on{background:var(--surface);border-color:var(--line)}
+.deal .dn{font-weight:500;font-size:13.5px;display:flex;align-items:center;gap:7px}
+.deal .ds{font-size:12px;color:var(--ink-2);margin-top:1px;padding-left:15px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.g{background:var(--accent)} .dot.a{background:var(--warn)} .dot.x{background:var(--ink-3)}
+.newcase{margin-top:8px;border-style:dashed;color:var(--ink-2);text-align:left;background:none}
+.sidefoot{margin-top:auto;padding:12px 8px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+main{flex:1;min-width:0;padding:24px 28px 60px}
+.dealhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.dealhead h1{font-size:21px;font-weight:600}
+.dealhead .meta{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.roundbar{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.rpill{font-size:12.5px;font-weight:500;border:1px solid var(--line-2);border-radius:999px;padding:4px 14px;color:var(--ink-2);background:var(--surface)}
+.rpill.done{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+.rpill.cur{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+button.rpill.ghost{border-style:dashed;background:none;cursor:pointer}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:18px 0 22px;overflow-x:auto}
+.tab{background:none;border:none;border-bottom:2px solid transparent;border-radius:0;padding:8px 14px;font-size:13.5px;color:var(--ink-2);white-space:nowrap}
+.tab.on{color:var(--ink);font-weight:500;border-bottom-color:var(--accent)}
+.tab .n{display:inline-block;font-size:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:0 7px;margin-left:6px;color:var(--ink-2)}
+section{display:none}
+section.on{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card .k{font-size:12px;color:var(--ink-2)}
+.card .v{font-size:22px;font-weight:600;margin-top:4px}
+.card .v small{font-size:12px;font-weight:400;color:var(--ink-2)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.panel h2{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel h2 .hint{font-size:12px;font-weight:400;color:var(--ink-3)}
+.scroll-x{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+th{text-align:left;font-size:11.5px;font-weight:500;color:var(--ink-3);padding:6px 12px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.file{font-family:var(--font-data);font-size:12px}
+.chip{display:inline-block;font-size:11.5px;border-radius:999px;padding:2px 9px;font-weight:500;white-space:nowrap}
+.chip.ok{color:var(--accent);background:var(--accent-soft)}
+.chip.run{color:var(--info);background:var(--info-soft)}
+.chip.todo{color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line)}
+.chip.warn{color:var(--warn);background:var(--warn-soft)}
+.chip.bad{color:var(--danger);background:var(--danger-soft)}
+.dropzone{display:block;width:100%;border:1.5px dashed var(--line-2);border-radius:10px;padding:16px;text-align:center;color:var(--ink-2);font-size:13px;cursor:pointer;margin-bottom:14px;background:none}
+.dropzone.drag,.dropzone:hover{border-color:var(--accent);color:var(--ink)}
+.toolbar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=text]{flex:1;min-width:160px}
+.mdview{font-size:13px;line-height:1.7;white-space:pre-wrap;font-family:var(--font-data);background:var(--surface-2);border-radius:10px;padding:14px 16px;max-height:560px;overflow:auto}
+.mdr{font-size:13.5px;line-height:1.75;background:var(--surface-2);border-radius:10px;padding:14px 18px;max-height:620px;overflow:auto}
+.mdr table{min-width:0;margin:8px 0;font-size:12.5px}
+.mdr code{font-family:var(--font-data);font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.mdr p{margin:6px 0}
+.catgroup h3{font-size:13px;font-weight:600;margin:16px 0 6px;color:var(--ink)}
+.catgroup h3 .n{font-weight:400;color:var(--ink-3);font-size:12px}
+.qrow{display:flex;gap:12px;padding:14px 2px;border-top:1px solid var(--line);align-items:flex-start}
+.qrow:first-of-type{border-top:none}
+.qrow input[type=checkbox]{width:16px;height:16px;margin-top:4px;accent-color:var(--accent)}
+.qrow .qb{flex:1;min-width:0}
+.qmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cat{font-size:11.5px;color:var(--ink-2);border:1px solid var(--line-2);border-radius:999px;padding:1.5px 9px}
+.qtext{font-size:14px;margin-top:7px}
+.qrow.cut .qtext{color:var(--ink-3);text-decoration:line-through}
+.why{margin-top:8px}
+.why summary{font-size:12px;color:var(--ink-2);cursor:pointer}
+.why div{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-radius:8px;padding:9px 12px;margin-top:7px}
+.reasons{display:none;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.qrow.cut .reasons{display:flex}
+.rchip{font-size:12px;padding:4px 12px;border-radius:999px;border:1px solid var(--line-2);background:none;color:var(--ink-2)}
+.rchip.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:500}
+.otherbox{display:none;width:220px}
+.qedit{font-size:12px;padding:2px 10px;border-radius:6px;margin-left:auto;color:var(--ink-2)}
+.delbtn{color:var(--ink-3)}
+.ibtn{padding:5px 8px;line-height:0}
+.ibtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.starbtn{background:none;border:none;padding:0 2px;font-size:14px;color:var(--ink-3);line-height:1;cursor:pointer;margin-left:auto}
+.starbtn.on{color:var(--warn)}
+.rpill.viewing{border-color:var(--accent);color:var(--accent);border-style:solid}
+.pbarwrap{display:none;align-items:center;gap:10px;margin-top:12px}
+.pbar{flex:1;height:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--accent);width:0%;transition:width 1.2s linear}
+.histbanner{display:none;gap:10px;align-items:center;font-size:13px;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:8px 12px;margin-bottom:12px}
+.qeditbox textarea{width:100%;min-height:64px;margin-top:6px}
+.reviewfoot{display:flex;align-items:center;justify-content:flex-end;gap:14px;padding-top:14px;border-top:1px solid var(--line);margin-top:4px;flex-wrap:wrap}
+.mline{display:flex;gap:10px;align-items:center;padding:8px 0;font-size:13.5px;flex-wrap:wrap}
+.hitrow{padding:10px 2px;border-top:1px solid var(--line);font-size:13.5px}
+.hitrow:first-child{border-top:none}
+.hitsrc{font-size:12px;color:var(--ink-3);font-family:var(--font-data)}
+mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 2px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,20,17,.45);z-index:50;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;width:min(680px,100%);padding:22px 24px;max-height:88vh;overflow-y:auto}
+.box h3{font-size:15px;font-weight:600;margin-bottom:4px}
+.box .sub{font-size:12.5px;color:var(--ink-2);margin-bottom:14px}
+.boxfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.runlog{font-family:var(--font-data);font-size:11.5px;color:var(--ink-2);background:var(--surface-2);border-radius:8px;padding:10px 12px;min-height:140px;max-height:320px;overflow-y:auto;white-space:pre-wrap}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:13px;border-radius:10px;padding:10px 18px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:90vw}
+#toast.on{opacity:1}
+.emptynote{color:var(--ink-2);font-size:13.5px;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:10px;padding:16px 18px}
+/* 引擎活動時間軸 */
+.tl{font-family:var(--font-data);font-size:12px;line-height:1.55;background:var(--surface-2);border-radius:8px;padding:8px 10px;max-height:340px;overflow-y:auto}
+.tl div{display:flex;gap:8px;padding:2px 0;border-bottom:1px dashed var(--line)}
+.tl div:last-child{border-bottom:none}
+.tl .t{color:var(--ink-3);flex-shrink:0}
+.tl .a{flex-shrink:0;min-width:104px;color:var(--info);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl .a.main{color:var(--ink-2)}
+.tl .k-spawn,.tl .k-agent_done{color:var(--accent)} .tl .k-error,.tl .k-stderr{color:var(--danger)} .tl .k-done,.tl .k-exit{font-weight:600}
+.tl .k-text{color:var(--ink-2)}
+.runstats{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2);margin:0 0 8px;flex-wrap:wrap}
+.runstats b{color:var(--ink)}
+/* 矛盾圖 */
+.cmap table{min-width:0;width:auto;font-size:12px}
+.cmap td,.cmap th{padding:6px 8px;vertical-align:middle}
+.cmap td.v{font-family:var(--font-data);white-space:nowrap;color:var(--ink-3)}
+.cmap td.v.has{cursor:pointer;color:var(--ink)}
+.cmap td.v.has:hover{outline:2px solid var(--accent)}
+.cmap tr.st-conflict td.v.has{background:var(--danger-soft);color:var(--danger)}
+.cmap tr.st-basis_mismatch td.v.has{background:var(--warn-soft);color:var(--warn)}
+.cmap tr.st-single_source td.v.has{background:var(--info-soft);color:var(--info)}
+.cmap tr.st-consistent td.v.has{background:var(--accent-soft);color:var(--accent)}
+.cmap .lbl{font-weight:500;white-space:normal;min-width:180px}
+.cmap .sev{font-size:10.5px;border-radius:999px;padding:1px 7px;border:1px solid var(--line-2);color:var(--ink-2);margin-left:6px;font-weight:400}
+.cmap .sev.high{border-color:var(--danger);color:var(--danger)}
+.cmap .derived{font-size:11.5px;color:var(--ink-2);margin-top:3px;font-family:var(--font-data);white-space:normal}
+.cmap .note{font-size:11.5px;color:var(--ink-2);margin-top:2px;white-space:normal;font-weight:400}
+/* 出處連結（點了開證據檢視器） */
+.cite{color:var(--accent);text-decoration:underline dotted;cursor:pointer;font-size:12px;font-family:var(--font-data);border-radius:4px;padding:0 3px}
+.cite:hover{background:var(--accent-soft)}
+.evgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+.evgrid .pane{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2);min-height:200px}
+.evgrid .pane iframe{width:100%;height:68vh;border:none;background:#fff;display:block}
+.evtext{white-space:pre-wrap;font-family:var(--font-data);font-size:12.5px;line-height:1.55;padding:12px 14px;max-height:62vh;overflow:auto}
+.evnav{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2);background:var(--surface);flex-wrap:wrap}
+.evnav button{padding:3px 9px;font-size:12px}
+td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
+.chip.delta{color:var(--info);background:var(--info-soft)}
+.askmeta{font-size:12px;color:var(--ink-3);margin:6px 0;font-family:var(--font-data)}
+.idxcell{font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+@media(max-width:880px){
+  .evgrid{grid-template-columns:1fr}
+  .app{flex-direction:column}
+  aside{width:100%;border-right:none;border-bottom:1px solid var(--line);flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 16px}
+  .sidelabel,.sidefoot{display:none}.deal{width:auto}.deal .ds{display:none}
+  main{padding:18px 16px 60px}
+}
+</style>
+
+<div class="app">
+<aside>
+  <div class="brand">Pipeline DD 工作台<small>DD QUESTION PIPELINE</small></div>
+  <div class="sidelabel">案件</div>
+  <div id="dealList"></div>
+  <button class="newcase" onclick="show('ncOverlay')">＋ 新增案件</button>
+  <div class="sidefoot" id="engineFoot">引擎：偵測中…</div>
+</aside>
+
+<main>
+  <div class="dealhead">
+    <div>
+      <h1 id="dhName">—</h1>
+      <div class="meta" id="dhMeta"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button id="delCaseBtn" class="delbtn" onclick="deleteCase(this)">刪除案件</button>
+      <button id="reopenBtn" style="display:none" onclick="reopenDeal()">重新開啟</button>
+      <select id="modelSel" title="Codex 主 session 模型；子代理預設繼承，effort 由 QLIST_CODEX_EFFORT 設定" onchange="localStorage.setItem('qlist_model',this.value)">
+        <option value="default">模型：CLI 預設</option>
+        <option value="gpt-6-astra">模型：Astra</option>
+        <option value="gpt-5.6-sol">模型：5.6 Sol</option>
+        <option value="gpt-5.6-terra">模型：5.6 Terra</option>
+      </select>
+      <button id="closeBtn" onclick="closeDeal(this)">✓ 結案</button>
+      <button id="distillBtn" style="display:none" onclick="runDistill()">⚗ 跑蒸餾</button>
+      <button class="primary" id="runBtn" onclick="runPipeline()">▶ 跑流程</button>
+    </div>
+  </div>
+  <div class="roundbar" id="roundbar"></div>
+  <div class="pbarwrap" id="runbar"><div class="pbar"><i id="pfill"></i></div><span style="font-size:12px;color:var(--ink-2);white-space:nowrap" id="plabel"></span></div>
+
+  <nav class="tabs">
+    <button class="tab on" data-t="overview" onclick="pickTab('overview')">總覽</button>
+    <button class="tab" data-t="docs" onclick="pickTab('docs')">文件<span class="n num" id="tnDocs">0</span></button>
+    <button class="tab" data-t="recon" onclick="pickTab('recon')">對帳</button>
+    <button class="tab" data-t="review" onclick="pickTab('review')">Q-list 審核<span class="n num" id="tnReview">—</span></button>
+    <button class="tab" data-t="search" onclick="pickTab('search')">搜尋</button>
+    <button class="tab" data-t="notes" onclick="pickTab('notes')">備註</button>
+    <button class="tab" data-t="help" onclick="pickTab('help')">說明</button>
+  </nav>
+
+  <section id="tab-overview" class="on">
+    <div class="cards" id="ovCards"></div>
+    <div class="panel"><h2>已發出的 Q-list <span class="hint">qlist/ 內容（每輪正式版）</span></h2><div id="ovQlists"></div></div>
+    <div class="panel"><h2>引擎活動 <span class="hint">run.events.jsonl：哪個代理在讀哪份文件、第幾頁</span></h2>
+      <div class="runstats" id="ovStats"></div>
+      <div class="tl" id="ovTl">（尚無執行紀錄）</div>
+      <details style="margin-top:10px"><summary style="font-size:12px;color:var(--ink-2);cursor:pointer">原始 run.log</summary><div class="runlog" id="ovLog" style="margin-top:8px">（尚無執行紀錄）</div></details>
+    </div>
+  </section>
+
+  <section id="tab-docs">
+    <div class="panel">
+      <h2>Data Room 文件 <span class="hint">上傳寫入當前 round 資料夾；刪除＝移入 _archive/ 歸檔</span></h2>
+      <input type="file" id="fileInput" multiple style="display:none" onchange="uploadFiles(this.files);this.value=''">
+      <div class="dropzone" id="dz"
+        onclick="document.getElementById('fileInput').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="event.preventDefault();this.classList.remove('drag');uploadFiles(event.dataTransfer.files)">＋ 把本輪新文件拖到這裡，或點擊選擇檔案</div>
+      <div class="toolbar">
+        <input type="text" id="docQ" placeholder="搜尋檔名…" oninput="renderDocs()">
+        <select id="docView" onchange="renderDocs()"><option value="round">檢視：依輪次</option><option value="cat">檢視：依類別（全部輪次）</option></select>
+        <select id="docRound" onchange="renderDocs()"><option value="">全部輪次</option></select>
+        <select id="docSort" onchange="renderDocs()"><option value="">預設排序</option><option value="name">依名稱</option><option value="round">依輪次</option></select>
+        <button onclick="reindexAll()" title="重建 _analysis/index/（逐頁文字、逐格值與公式）">⟳ 重建索引</button>
+      </div>
+      <div class="scroll-x" id="docsTableWrap"><table>
+        <thead><tr><th>檔案</th><th>輪次</th><th>類別</th><th>大小</th><th>索引</th><th>字卡</th><th></th></tr></thead>
+        <tbody id="docsBody"></tbody>
+      </table></div>
+      <div id="docsCatWrap" style="display:none"></div>
+    </div>
+  </section>
+
+  <section id="tab-recon">
+    <div class="panel">
+      <h2>矛盾圖 <span class="hint">facts.json：事實 × 文件。紅＝矛盾、黃＝口徑不同、藍＝單一來源、綠＝一致；點格子開原文</span></h2>
+      <div class="toolbar">
+        <select id="cmFilter" onchange="renderConflictMap()"><option value="issues">矛盾＋口徑＋單一來源</option><option value="conflict">只看矛盾</option><option value="">全部事實</option></select>
+        <span id="cmStats" style="font-size:12px;color:var(--ink-3)"></span>
+      </div>
+      <div class="cmap scroll-x" id="cmap">（尚未產生 facts.json，跑流程後出現）</div>
+    </div>
+    <div class="panel">
+      <h2>跨文件對帳表 <span class="hint">_analysis/facts.md，引擎跑完階段 1a 自動產生</span></h2>
+      <div class="mdr" id="factsView">（尚未產生，跑流程後出現）</div>
+    </div>
+  </section>
+
+  <section id="tab-review">
+    <div class="panel" id="reviewPanel">
+      <h2>合併審核 <span class="hint">勾選＝保留；砍題選原因；✎ 可改問法</span></h2>
+      <div class="histbanner" id="histBanner"><span id="histLabel"></span><button onclick="viewHistory(null)" style="font-size:12px;padding:4px 10px">回到目前輪次</button></div>
+      <div class="mline" id="mergeSetup" style="display:none">
+        <span class="chip run" id="mineChip">你的版本</span>
+        <input type="file" id="mineInput" accept=".xlsx,.xls" style="display:none" onchange="uploadMine(this.files)">
+        <button onclick="document.getElementById('mineInput').click()">上傳我的 Q-list（xlsx）</button>
+        <span id="mineName" class="file" style="font-size:12px"></span>
+        <button class="primary" id="mergeBtn" disabled onclick="runMerge()">跑合併 → 三類 diff</button>
+        <span style="font-size:12px;color:var(--ink-3)" id="mergeHint"></span>
+      </div>
+      <div class="toolbar" id="revFilters" style="display:none">
+        <select id="fSrc" onchange="applyRevFilters()"></select>
+        <select id="fCat" onchange="applyRevFilters()"></select>
+        <select id="fWave" onchange="applyRevFilters()"></select>
+        <button onclick="toggleAll()" id="selAllBtn">全選／取消全選</button>
+        <span style="font-size:12px;color:var(--ink-3)" id="fCount"></span>
+      </div>
+      <div id="qlist"><div class="emptynote">尚未有草稿，上傳文件後按「▶ 跑流程」。</div></div>
+      <div class="reviewfoot" id="reviewFoot" style="display:none">
+        <span style="font-size:13px;color:var(--ink-2)" id="keepCnt"></span>
+        <button class="primary" onclick="submitReview()">送出決定 → 產出合併版</button>
+      </div>
+      <div id="mergedBar" class="mline" style="display:none"></div>
+      <div class="mline" id="finalBlock" style="display:none">
+        <span class="chip run">下一步</span>與同事定稿後上傳最終發出版：
+        <input type="file" id="finalInput" accept=".xlsx,.xls" style="display:none" onchange="uploadFinal(this.files)">
+        <button onclick="document.getElementById('finalInput').click()">上傳最終發出版</button>
+        <span id="finalMsg" style="font-size:12.5px;color:var(--ink-2)"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-search">
+    <div class="panel">
+      <h2>問 AI <span class="hint" id="aiHint">整份 Data Room 帶頁碼進 context，串流回答並標出處；點出處開原文</span></h2>
+      <div class="toolbar">
+        <input type="text" id="aiQ" placeholder="例：第 486 頁寫了什麼？／財報附註有沒有提到質押？／Vertex 持股各文件對得上嗎？" onkeydown="if(event.key==='Enter')askAI()">
+        <button class="primary" id="aiBtn" onclick="askAI()">問 Codex</button>
+      </div>
+      <div class="askmeta" id="aiMeta"></div>
+      <div class="mdr" id="aiA" style="display:none"></div>
+    </div>
+    <div class="panel">
+      <h2>全文搜尋 <span class="hint" id="kbScope"></span></h2>
+      <div class="toolbar"><input type="text" id="kbQ" placeholder="搜尋本案件原文（逐頁 / 逐格）與字卡、對帳表、草稿、備註…" oninput="kbSearch()"></div>
+      <div id="kbHits" style="color:var(--ink-3);font-size:13px">輸入關鍵字開始搜尋。</div>
+    </div>
+  </section>
+
+  <section id="tab-notes">
+    <div class="panel">
+      <h2>案件背景備註 <span class="hint">_notes.md：文件外情報唯一入口，pipeline 每輪必讀</span></h2>
+      <textarea id="notesTa" style="width:100%;min-height:280px"></textarea>
+      <div class="boxfoot"><button class="primary" onclick="saveNotes()">儲存備註</button></div>
+    </div>
+  </section>
+
+  <section id="tab-help">
+    <div class="panel">
+      <h2>使用說明</h2>
+      <div class="mdr" id="helpBody" style="max-height:none"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="overlay" id="ncOverlay">
+  <div class="box" style="width:min(440px,100%)">
+    <h3>新增案件</h3>
+    <div class="sub">建立資料夾骨架：round1–3、_analysis、qlist、_notes.md</div>
+    <input type="text" id="ncName" placeholder="案件名稱" style="width:100%">
+    <div class="boxfoot">
+      <button onclick="hide('ncOverlay')">取消</button>
+      <button class="primary" onclick="createCase()">建立案件</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="cardOverlay">
+  <div class="box">
+    <h3 id="cardTitle">字卡</h3>
+    <div class="mdr" id="cardBody"></div>
+    <div class="boxfoot"><button class="primary" onclick="hide('cardOverlay')">關閉</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="pvOverlay">
+  <div class="box" style="width:min(1040px,100%)">
+    <h3 id="pvTitle" style="word-break:break-all">預覽</h3>
+    <div id="pvBody" style="min-height:120px"></div>
+    <div class="boxfoot">
+      <button id="pvDl">下載原始檔</button>
+      <button class="primary" onclick="hide('pvOverlay')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="runOverlay">
+  <div class="box" style="width:min(820px,100%)">
+    <h3 id="runTitle">流程執行中</h3>
+    <div class="sub">底層為 headless Codex · 主 session 派工給子代理 · 可關閉視窗背景執行</div>
+    <div class="runstats" id="runStats"></div>
+    <div class="tl" id="runTl" style="max-height:52vh"></div>
+    <div class="boxfoot"><button onclick="hide('runOverlay')">背景執行</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="evOverlay">
+  <div class="box" style="width:min(1240px,100%)">
+    <h3 id="evTitle" style="word-break:break-all">證據</h3>
+    <div class="sub" id="evSub"></div>
+    <div class="evgrid">
+      <div class="pane" id="evLeft"></div>
+      <div class="pane"><div class="evnav" id="evNav"></div><div class="evtext" id="evText"></div></div>
+    </div>
+    <div class="boxfoot"><button id="evDl">下載原始檔</button><button class="primary" onclick="hide('evOverlay')">關閉</button></div>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api = async (path, opts) => {
+  const r = await fetch(path, opts);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || r.status);
+  return d;
+};
+const enc = o => Object.entries(o).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+function show(id){$(id).classList.add('on')}
+function hide(id){$(id).classList.remove('on')}
+let toastT=null;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3600)}
+const CATS=['Company & strategy','Products & technology','Commercial & traction','Financials','Corporate & legal','Reference & media'];
+const ICO={
+ dl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M4.5 20h15"/></svg>',
+ card:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h8l4 4v14h-12z"/><path d="M14.5 3v4.5H19M9.5 12.5h5M9.5 16h5"/></svg>',
+ trash:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15M9.5 6.5V4.5h5v2m-8.5 0l1 13h10l1-13"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>'};
+function mdToHtml(md){
+  const inline=s=>esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  const lines=String(md||'').split('\n');
+  let out=[],i=0,inList=false,inOl=false,para=[];
+  const flushP=()=>{if(para.length){out.push('<p>'+para.map(inline).join('<br>')+'</p>');para=[];}};
+  const endList=()=>{if(inList){out.push('</ul>');inList=false;}if(inOl){out.push('</ol>');inOl=false;}};
+  while(i<lines.length){
+    const l=lines[i];
+    if(/^\s*\|/.test(l)){
+      flushP();endList();
+      const tbl=[];
+      while(i<lines.length&&/^\s*\|/.test(lines[i])){tbl.push(lines[i]);i++;}
+      const rows=tbl.filter(r=>!/^\s*\|[\s:|-]+\|?\s*$/.test(r))
+        .map(r=>r.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>inline(c.trim())));
+      if(rows.length){
+        let h='<div class="scroll-x"><table><thead><tr>'+rows[0].map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
+        for(let r=1;r<rows.length;r++)h+='<tr>'+rows[r].map(c=>'<td>'+c+'</td>').join('')+'</tr>';
+        out.push(h+'</tbody></table></div>');
+      }
+      continue;
+    }
+    if(/^#{1,4}\s/.test(l)){flushP();endList();const lv=Math.min(l.match(/^#+/)[0].length,4);
+      out.push(`<div style="font-size:${lv<=2?'15px':'13.5px'};font-weight:600;margin:14px 0 6px">${inline(l.replace(/^#+\s*/,''))}</div>`);i++;continue;}
+    if(/^\s*[-*]\s+/.test(l)){flushP();if(inOl){out.push('</ol>');inOl=false;}
+      if(!inList){out.push('<ul style="padding-left:20px;margin:6px 0">');inList=true;}
+      out.push('<li>'+inline(l.replace(/^\s*[-*]\s+/,''))+'</li>');i++;continue;}
+    if(/^\s*\d+[.、]\s+/.test(l)){flushP();if(inList){out.push('</ul>');inList=false;}
+      if(!inOl){out.push('<ol style="padding-left:22px;margin:6px 0">');inOl=true;}
+      out.push('<li>'+inline(l.replace(/^\s*\d+[.、]\s+/,''))+'</li>');i++;continue;}
+    if(/^\s*>\s?/.test(l)){flushP();endList();
+      out.push('<blockquote style="border-left:3px solid var(--line-2);margin:8px 0;padding:2px 12px;color:var(--ink-2)">'+inline(l.replace(/^\s*>\s?/,''))+'</blockquote>');i++;continue;}
+    if(/^\s*---+\s*$/.test(l)){flushP();endList();out.push('<hr style="border:none;border-top:1px solid var(--line);margin:12px 0">');i++;continue;}
+    if(!l.trim()){flushP();endList();i++;continue;}
+    para.push(l.trim());i++;
+  }
+  flushP();endList();
+  return out.join('\n');
+}
+
+let cur = null;
+let D = null;
+let draft = [];
+let logTimer = null;
+let ENGINE = {};
+let FACTS = { facts: [], docs: {} };
+const EDITS = {};
+
+// ---- 出處連結：[檔名 p.N] / [檔名 工作表!B4] / [檔名 slide N] → 可點的 cite ----
+const CITE_RE = /\[([^\[\]\n]+?\.(?:pdf|xlsx|xlsm|pptx|docx|PDF|XLSX|PPTX))\s+((?:p\.?|page\s*|第\s*)\s*\d{1,4}(?:\s*頁)?|slide\s*\d{1,4}|[^\]\n!]+![A-Z]{1,3}\d{1,6}(?::[A-Z]{1,3}\d{1,6})?)\]/g;
+function citeLinks(html){
+  return String(html).replace(CITE_RE,(m,f,l)=>`<span class="cite" data-f="${esc(f)}" data-l="${esc(l)}" title="開原文">[${esc(f)} ${esc(l)}]</span>`);
+}
+function docRoundOf(file){ const d=(D&&D.docs||[]).find(x=>x.name===file); return d?d.round:''; }
+function parseLoc(loc){
+  loc=String(loc||'').trim();
+  let m=loc.match(/^(?:p\.?|page\s*|第\s*)?\s*(\d{1,4})\s*(?:頁)?$/i); if(m) return {page:Number(m[1])};
+  m=loc.match(/^slide\s*(\d{1,4})$/i); if(m) return {page:Number(m[1])};
+  m=loc.match(/^(.+?)!([A-Z]{1,3}\d{1,6})(?::([A-Z]{1,3}\d{1,6}))?$/); if(m) return {sheet:m[1],ref:m[2],ref2:m[3]||''};
+  m=loc.match(/^([A-Z]{1,3}\d{1,6})(?::([A-Z]{1,3}\d{1,6}))?$/); if(m) return {ref:m[1],ref2:m[2]||''};
+  return {};
+}
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.cite'); if(!c) return;
+  e.preventDefault(); openEvidence(c.dataset.f, docRoundOf(c.dataset.f), c.dataset.l);
+});
+// ---- 證據檢視器：左＝原檔（PDF 翻到該頁 / xlsx 表格標格子），右＝索引文字 ----
+let EV = {file:'',round:'',page:1,count:0};
+async function openEvidence(file, round, loc){
+  const p=parseLoc(loc); const ext=(file.split('.').pop()||'').toLowerCase();
+  round = round || docRoundOf(file);
+  const url='/api/download?'+enc({deal:cur,from:'doc',round,file});
+  $('evTitle').textContent=file+(loc?'  ·  '+loc:'');
+  $('evSub').textContent=round?`輪次 ${round}`:'';
+  $('evDl').onclick=()=>window.open(url,'_blank');
+  show('evOverlay');
+  if(ext==='xlsx'||ext==='xlsm'){
+    $('evLeft').innerHTML='<div style="padding:20px;color:var(--ink-3);font-size:13px">載入工作表…</div>';
+    $('evNav').innerHTML=''; $('evText').textContent='';
+    try{
+      const d=await api('/api/page?'+enc({deal:cur,file,sheet:p.sheet||''}));
+      const s=d.sheet; if(!s){$('evLeft').innerHTML='（空白）';return;}
+      const cells=new Map(s.cells.map(c=>[c.ref,c]));
+      const cols=new Set(), rows=new Set();
+      for(const c of s.cells){const m=c.ref.match(/^([A-Z]+)(\d+)$/); if(m){cols.add(m[1]);rows.add(Number(m[2]));}}
+      const colArr=[...cols].sort((a,b)=>a.length-b.length||a.localeCompare(b)); const rowArr=[...rows].sort((a,b)=>a-b);
+      let h=`<div class="scroll-x" style="max-height:68vh;overflow:auto"><table style="font-size:12px"><thead><tr><th></th>${colArr.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+      for(const r of rowArr){h+=`<tr><th>${r}</th>`+colArr.map(c=>{const cell=cells.get(c+r);const hl=(p.ref&&c+r===p.ref)?' class="hl"':'';return `<td${hl} title="${cell&&cell.formula?esc(cell.formula):''}">${cell?esc(cell.value==null?'':cell.value):''}</td>`;}).join('')+'</tr>';}
+      $('evLeft').innerHTML=h+'</tbody></table></div>';
+      $('evNav').innerHTML=`<span>工作表：</span>${d.sheets.map(n=>`<button data-n="${esc(n)}" ${n===s.name?'class="primary"':''} onclick="openEvidence(EV.file,EV.round,this.dataset.n+'!'+(EV.ref||'A1'))">${esc(n)}</button>`).join('')}`;
+      EV={file,round,sheet:s.name,ref:p.ref||''};
+      const target=p.ref?cells.get(p.ref):null;
+      $('evText').textContent=target?`${s.name}!${p.ref} = ${target.value==null?'':target.value}${target.formula?'\n公式：'+target.formula:''}`:`${s.name}（${s.dims||''}）共 ${s.cells.length} 格`;
+      const hlEl=$('evLeft').querySelector('td.hl'); if(hlEl) hlEl.scrollIntoView({block:'center'});
+    }catch(e){$('evLeft').innerHTML=`<div style="padding:16px;color:var(--danger)">${esc(e.message)}</div>`;}
+    return;
+  }
+  const page=p.page||1;
+  EV={file,round,page,count:0};
+  $('evLeft').innerHTML=(ext==='pdf')?`<iframe src="${url}#page=${page}&zoom=page-width" title="PDF"></iframe>`:`<div style="padding:16px;color:var(--ink-2);font-size:13px">此格式無法內嵌預覽，右側為索引文字。</div>`;
+  await loadEvPage(page);
+}
+async function loadEvPage(n){
+  try{
+    const d=await api('/api/page?'+enc({deal:cur,file:EV.file,page:n}));
+    EV.page=d.page; EV.count=d.page_count;
+    $('evNav').innerHTML=`<button onclick="loadEvPage(EV.page-1)" ${EV.page<=1?'disabled':''}>‹ 上一頁</button><span>第 <b>${d.page}</b> / ${d.page_count} 頁 · ${d.chars} 字元${d.needs_ocr?' · <span class="chip warn">掃描頁（無文字）</span>':''}</span><button onclick="loadEvPage(EV.page+1)" ${EV.page>=EV.count?'disabled':''}>下一頁 ›</button>`;
+    const q=($('kbQ').value||'').trim();
+    let t=esc(d.text||'（此頁無文字）');
+    if(q){const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); t=t.replace(re,'<mark>$1</mark>');}
+    $('evText').innerHTML=t;
+    const ifr=$('evLeft').querySelector('iframe'); if(ifr&&ifr.src.includes('#')) ifr.src=ifr.src.replace(/#page=\d+/,'#page='+d.page);
+  }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
+}
+
+const LIFE = {collecting:'收集資料中', drafted:'草稿完成，等待審核', merged:'合併版已產出', sent:'已發出，等待回覆', closed:'已結案'};
+
+async function loadDeals(sel){
+  const {deals} = await api('/api/deals');
+  deals.sort((a,b)=>(b.state.starred?1:0)-(a.state.starred?1:0));
+  $('dealList').innerHTML = deals.map(d => {
+    const dotc = d.state.closed ? 'x' : (d.state.lifecycle==='sent' ? 'a' : 'g');
+    let ds;
+    if (d.state.closed) ds = '已結案';
+    else if (d.state.lifecycle==='sent' && d.state.sentAt) {
+      const days = Math.floor((Date.now()-new Date(d.state.sentAt))/86400000)+1;
+      ds = `Round ${d.state.round} · 已發出，公司處理第 ${days} 天`;
+    } else ds = `Round ${d.state.round} · ${LIFE[d.state.lifecycle]||d.state.lifecycle}${d.running?' · 執行中':''}`;
+    return `<button class="deal${d.name===sel?' on':''}" data-name="${esc(d.name)}" onclick="pickDeal(this.dataset.name)">
+      <span class="dn"><span class="dot ${dotc}"></span><span style="flex:1;min-width:0">${esc(d.name)}</span>
+        <span class="starbtn${d.state.starred?' on':''}" data-name="${esc(d.name)}" data-s="${d.state.starred?1:0}" role="button" title="置頂" onclick="event.stopPropagation();toggleStar(this)">${d.state.starred?'★':'☆'}</span></span>
+      <span class="ds">${esc(ds)}</span></button>`;
+  }).join('');
+  api('/api/engine').then(e => {
+    ENGINE = e;
+    const tokenChip = e.token ? '<span class="chip ok">OpenAI API key</span>' : '<span class="chip warn">使用環境變數或 Codex 登入</span>';
+    const askChip = e.api ? `<span class="chip ok" title="${esc(e.askModel)}">問 AI：直連 API</span>` : (e.cli ? '<span class="chip warn" title="設 OPENAI_API_KEY 可改走直連 API（串流、快取）">問 AI：走 CLI</span>' : '');
+    $('engineFoot').innerHTML = e.mock
+      ? '引擎：<span class="chip warn">假引擎模式</span>'
+      : (e.cli ? `引擎：<span title="${esc(e.cliPath||'')}">${esc(e.cli)}</span> ${tokenChip}<br><span style="display:inline-block;margin-top:6px">${askChip}</span><br><button style="margin-top:8px;font-size:12px;padding:4px 10px" onclick="setToken()">設定 OpenAI API key</button>` : '引擎：<span class="chip bad">找不到 CLI（設 CODEX_BIN）</span>' + (e.api ? '<br>' + askChip : ''));
+    $('aiHint').textContent = e.api ? `直連 ${e.askModel} · 整份 Data Room 帶頁碼進 context（預算約 ${Math.round(e.askBudget/1000)}K tokens，超過就挑頁）· 串流 · 點出處開原文` : (e.mock ? '假引擎模式：只示範串流與 context 組裝' : '走 Codex CLI（設 OPENAI_API_KEY 可改直連 API）· 帶頁碼出處');
+  });
+  if (!sel && deals.length) pickDeal(deals[0].name);
+}
+
+async function toggleStar(el){
+  await api('/api/star',{method:'POST',body:JSON.stringify({deal:el.dataset.name,starred:el.dataset.s!=='1'})});
+  await loadDeals(cur);
+}
+function deleteCase(btn){
+  if(!btn.dataset.armed){btn.dataset.armed='1';btn.textContent='確認刪除案件？';btn.style.color='var(--danger)';
+    setTimeout(()=>{if(btn.isConnected){btn.dataset.armed='';btn.textContent='刪除案件';btn.style.color='';}},3500);return;}
+  api('/api/deletecase',{method:'POST',body:JSON.stringify({deal:cur})})
+    .then(async r=>{toast(`已刪除「${cur}」（實際移至 _trash/，可手動救回）`);cur=null;await loadDeals();})
+    .catch(e=>toast('失敗：'+e.message));
+}
+async function reopenDeal(){
+  try{
+    await api('/api/reopen',{method:'POST',body:JSON.stringify({deal:cur})});
+    toast('已重新開啟');
+    await loadDeals(cur); await pickDeal(cur);
+  }catch(e){toast(e.message);}
+}
+let viewRound = null;
+async function pickDeal(name){
+  cur = name; viewRound = null;
+  D = await api('/api/deal?' + enc({name}));
+  document.querySelectorAll('.deal').forEach(b => b.classList.toggle('on', b.dataset.name===name));
+  $('dhName').textContent = name;
+  $('dhMeta').textContent = `Round ${D.state.round} · ${LIFE[D.state.lifecycle]||D.state.lifecycle}` + (D.running ? ' · 流程執行中' : '');
+  Object.keys(EDITS).forEach(k=>delete EDITS[k]);
+  try { FACTS = await api('/api/facts?' + enc({deal:name})); } catch { FACTS = {facts:[],docs:{}}; }
+  await loadDraft();
+  renderRoundbar(); renderOverview(); renderDocs(); renderRecon(); renderNotes();
+  $('kbScope').textContent = '範圍：' + name;
+  $('kbHits').innerHTML = '輸入關鍵字開始搜尋。'; $('kbQ').value='';
+  $('runBtn').textContent = `▶ 跑 Round ${D.state.round} 流程`;
+  $('runBtn').style.display = D.state.closed ? 'none' : '';
+  $('closeBtn').style.display = D.state.closed ? 'none' : '';
+  $('closeBtn').textContent = '✓ 結案';
+  $('distillBtn').style.display = D.state.closed ? '' : 'none';
+  $('reopenBtn').style.display = D.state.closed ? '' : 'none';
+  if (!D.running) $('runbar').style.display='none';
+  if (D.running) watchRun('resume');
+}
+
+function rlabel(r){ const n = (D.state.roundNames||{})[r]; return n ? esc(n) : 'Round ' + r; }
+function renderRoundbar(){
+  const st = D.state;
+  let h = '';
+  for (let r = 1; r < st.round; r++)
+    h += `<button class="rpill done${viewRound===r?' viewing':''}" data-r="${r}" title="單擊回看｜雙擊改名" onclick="viewHistory(Number(this.dataset.r))" ondblclick="renameRound(Number(this.dataset.r))">${rlabel(r)} ✓</button>`;
+  if (st.closed) h += `<button class="rpill done${viewRound===st.round?' viewing':''}" data-r="${st.round}" title="單擊回看｜雙擊改名" onclick="viewHistory(Number(this.dataset.r))" ondblclick="renameRound(Number(this.dataset.r))">${rlabel(st.round)} ✓</button><span class="rpill">已結案</span>`;
+  else {
+    h += `<button class="rpill cur" data-r="${st.round}" title="目前輪次｜雙擊改名" onclick="viewHistory(null)" ondblclick="renameRound(Number(this.dataset.r))">${rlabel(st.round)} ●</button>`;
+    h += `<button class="rpill ghost" onclick="advance()">＋ Round ${st.round+1}</button>`;
+  }
+  $('roundbar').innerHTML = h;
+}
+async function renameRound(r){
+  const curName = (D.state.roundNames||{})[r] || '';
+  const n = window.prompt(`Round ${r} 的顯示名稱（留空恢復預設）`, curName);
+  if (n === null) return;
+  const res = await api('/api/roundname',{method:'POST',body:JSON.stringify({deal:cur, round:r, name:n})});
+  D.state.roundNames = res.state.roundNames || {};
+  renderRoundbar();
+  toast(n.trim() ? `已將 Round ${r} 命名為「${n.trim()}」` : `Round ${r} 已恢復預設名稱`);
+}
+async function viewHistory(r){
+  viewRound = (r == null || (r === D.state.round && !D.state.closed)) ? null : r;
+  $('docView').value = 'round';
+  $('docRound').value = viewRound ? 'R' + viewRound : '';
+  renderDocs();
+  await loadDraft();
+  renderRoundbar();
+  pickTab('review');
+}
+function renderOverview(){
+  const pages = D.docs.reduce((s,d)=>s+((d.index&&d.index.pages)||0),0);
+  const nConf = (FACTS.facts||[]).filter(f=>f.status==='conflict').length;
+  const nIss = (FACTS.facts||[]).filter(f=>['conflict','basis_mismatch','single_source'].includes(f.status)).length;
+  $('ovCards').innerHTML = [
+    ['文件', D.docs.length + `<small>（字卡 ${D.docs.filter(d=>d.card).length}／索引 ${D.docs.filter(d=>d.index).length}）</small>`],
+    ['已索引頁數', pages ? String(pages) : '—'],
+    ['矛盾 / 疑點', (FACTS.facts||[]).length ? `<span style="color:var(--danger)">${nConf}</span><small> / ${nIss}（共 ${FACTS.facts.length} 事實）</small>` : (D.facts ? '<span style="font-size:15px">對帳表已產生</span>' : '<span style="font-size:15px;color:var(--ink-3)">未產生</span>')],
+    ['草稿題數', draft.length ? String(draft.length) : '—'],
+    ['狀態', `<span style="font-size:15px">${esc(LIFE[D.state.lifecycle]||D.state.lifecycle)}</span>`],
+  ].map(c => `<div class="card"><div class="k">${c[0]}</div><div class="v num">${c[1]}</div></div>`).join('');
+  $('ovQlists').innerHTML = D.qlists.length
+    ? D.qlists.map(f => `<div class="mline"><span class="chip ok">已發出</span><span class="file" style="font-size:12px">${esc(f)}</span>
+        <button data-f="${esc(f)}" onclick="location.href='/api/download?'+enc({deal:cur,from:'qlist',file:this.dataset.f})">下載</button></div>`).join('')
+    : '<div style="color:var(--ink-3);font-size:13px">尚未發出任何 Q-list。</div>';
+  refreshLog();
+}
+async function refreshLog(){
+  try {
+    const {log} = await api('/api/runlog?' + enc({deal:cur}));
+    $('ovLog').textContent = log || '（尚無執行紀錄）';
+    const ev = await api('/api/runevents?' + enc({deal:cur, since:0}));
+    renderTimeline($('ovTl'), ev.events, false);
+    $('ovStats').innerHTML = statsLine(ev);
+  } catch {}
+}
+function fmtT(ts){ const d=new Date(ts); return d.toTimeString().slice(0,8); }
+function renderTimeline(el, events, append){
+  if(!events || !events.length){ if(!append) el.innerHTML='（尚無執行紀錄）'; return; }
+  const h = events.map(e=>`<div class="k-${esc(e.kind)}"><span class="t">${fmtT(e.ts)}</span><span class="a${e.agent==='main'?' main':''}" title="${esc(e.agent)}">${esc(e.agent)}</span><span>${esc(e.text)}</span></div>`).join('');
+  if(append){ el.insertAdjacentHTML('beforeend', h); } else el.innerHTML = h;
+  el.scrollTop = el.scrollHeight;
+}
+function statsLine(ev){
+  const evs = ev.events||[];
+  const c = ev.counts || { agents: evs.filter(e=>e.kind==='spawn').length, reads: evs.filter(e=>e.kind==='read').length, writes: evs.filter(e=>e.kind==='write').length };
+  const done = evs.find(e=>e.kind==='done');
+  const t0 = ev.started || (evs[0]&&evs[0].ts); const t1 = ev.running ? Date.now() : (evs.length? evs[evs.length-1].ts : t0);
+  const secs = t0 ? Math.max(0, Math.round((t1-t0)/1000)) : 0;
+  return `<span>代理 <b>${c.agents}</b></span><span>讀取 <b>${c.reads}</b></span><span>寫入 <b>${c.writes}</b></span><span>耗時 <b>${secs}s</b></span>${done&&done.cost!=null?`<span>成本 <b>$${Number(done.cost).toFixed(2)}</b></span>`:''}${ev.running?'<span class="chip run">執行中</span>':''}`;
+}
+function humanSize(n){ return n>1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB'; }
+function catSel(f){
+  return `<select data-f="${esc(f.name)}" onchange="setCat(this.dataset.f,this.value)" style="font-size:11.5px;padding:3px 6px">`+
+    CATS.map(c=>`<option${c===f.cat?' selected':''}>${c}</option>`).join('')+'</select>';
+}
+function idxCell(f){
+  if (f.indexing) return '<span class="chip run">索引中…</span>';
+  if (!f.index) return `<button class="idxcell" style="padding:2px 8px" data-f="${esc(f.name)}" onclick="reindexOne(this.dataset.f)" title="建立逐頁 / 逐格索引">建索引</button>`;
+  const i=f.index; const unit = i.kind==='xlsx' ? 'tab' : '頁';
+  return `<span class="idxcell" title="${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
+}
+function docRow(f, withRound){
+  return `<tr>
+    <td class="file">${esc(f.name)}</td>${withRound?`<td>${esc(f.round)}</td>`:''}<td>${catSel(f)}</td><td class="num">${humanSize(f.size)}</td>
+    <td>${idxCell(f)}</td>
+    <td>${f.card ? `<button class="ibtn" title="開啟字卡" aria-label="開啟字卡" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">未消化</span> <button class="ibtn" title="只消化這份：字卡 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="只消化這份" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">⚡</button>`}</td>
+    <td style="white-space:nowrap"><button class="ibtn" title="開證據檢視器（翻頁＋索引文字）" aria-label="證據" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openEvidence(this.dataset.f,this.dataset.r,'p.1')">${ICO.eye}</button>
+    <button class="ibtn" title="下載/開啟檔案" aria-label="下載" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openDoc(this.dataset.f,this.dataset.r)">${ICO.dl}</button>
+    <button class="ibtn delbtn" title="刪除（歸檔至 _archive/）" aria-label="刪除" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="archiveDoc(this)">${ICO.trash}</button></td></tr>`;
+}
+function renderDocs(){
+  const q = ($('docQ').value||'').toLowerCase();
+  const view = $('docView').value;
+  const rf = $('docRound').value;
+  const srt = $('docSort').value;
+  const rounds = [...new Set(D.docs.map(d=>d.round))];
+  const sel = $('docRound');
+  if (sel.options.length !== rounds.length+1) sel.innerHTML = '<option value="">全部輪次</option>' + rounds.map(r=>`<option>${esc(r)}</option>`).join('');
+  $('docsTableWrap').style.display = view==='cat' ? 'none' : '';
+  $('docsCatWrap').style.display = view==='cat' ? '' : 'none';
+  $('docRound').style.display = view==='cat' ? 'none' : '';
+  let rows = D.docs.filter(f => (!q || f.name.toLowerCase().includes(q)) && (view==='cat' || !rf || f.round===rf));
+  if (view==='cat'){
+    $('docsCatWrap').innerHTML = CATS.map(c=>{
+      const fs2 = rows.filter(f=>f.cat===c);
+      return `<div class="catgroup"><h3>${c} <span class="n">${fs2.length} 檔</span></h3>`+
+        (fs2.length ? `<div class="scroll-x"><table><thead><tr><th>檔案</th><th>輪次</th><th>類別</th><th>大小</th><th>索引</th><th>字卡</th><th></th></tr></thead><tbody>`+
+          fs2.map(f=>docRow(f,true)).join('')+'</tbody></table></div>' : '<div style="color:var(--ink-3);font-size:12.5px">（無）</div>')+'</div>';
+    }).join('');
+  } else {
+    if (srt==='name') rows = rows.slice().sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));
+    if (srt==='round') rows = rows.slice().sort((a,b)=>a.round.localeCompare(b.round));
+    $('docsBody').innerHTML = rows.length===0
+      ? `<tr><td colspan="7" style="color:var(--ink-3)">${D.docs.length===0?'尚無文件，用上方拖曳區上傳':'沒有符合條件的檔案'}</td></tr>`
+      : rows.map(f=>docRow(f,true)).join('');
+  if (D.docs.some(f=>f.indexing) && !docsPoll) docsPoll = setTimeout(async()=>{ docsPoll=null; if(!cur) return; D = await api('/api/deal?'+enc({name:cur})); renderDocs(); }, 2500);
+  }
+  const shown = view==='cat' ? D.docs.filter(f=>!q||f.name.toLowerCase().includes(q)).length : rows.length;
+  $('tnDocs').textContent = shown;
+  $('tnDocs').title = shown!==D.docs.length ? `顯示 ${shown} / 共 ${D.docs.length} 檔` : `共 ${D.docs.length} 檔`;
+}
+function openDoc(file,round){
+  window.open('/api/download?'+enc({deal:cur,from:'doc',round,file}),'_blank');
+}
+async function openPreview(file,round){
+  const ext = (file.split('.').pop()||'').toLowerCase();
+  const url = '/api/download?'+enc({deal:cur,from:'doc',round,file});
+  $('pvTitle').textContent = file;
+  $('pvDl').onclick = ()=>window.open(url,'_blank');
+  const body = $('pvBody');
+  body.innerHTML = '<div style="color:var(--ink-3);font-size:13px;padding:24px 0;text-align:center">載入預覽中…</div>';
+  show('pvOverlay');
+  try {
+    if (ext==='pdf'){
+      body.innerHTML = `<iframe src="${url}#zoom=page-width" style="width:100%;height:72vh;border:1px solid var(--line);border-radius:8px" title="PDF 預覽"></iframe>`;
+    } else if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)){
+      body.innerHTML = `<img src="${url}" alt="${esc(file)}" style="max-width:100%;border-radius:8px;display:block;margin:0 auto">`;
+    } else if (ext==='md'){
+      const t = await fetch(url).then(r=>r.text());
+      body.innerHTML = `<div class="mdr">${mdToHtml(t)}</div>`;
+    } else if (['txt','csv','json','log'].includes(ext)){
+      const t = await fetch(url).then(r=>r.text());
+      body.innerHTML = `<pre style="white-space:pre-wrap;font-family:var(--font-data);font-size:12.5px;background:var(--surface-2);border-radius:10px;padding:14px 18px;max-height:620px;overflow:auto;margin:0">${esc(t)}</pre>`;
+    } else if (ext==='xlsx'){
+      const d = await api('/api/preview?'+enc({deal:cur,round,file}));
+      body.innerHTML = renderSheets(d.sheets);
+    } else {
+      body.innerHTML = '<div style="color:var(--ink-2);font-size:13px;padding:16px 0">此格式無法內嵌預覽，請點「下載原始檔」以本機程式開啟。</div>';
+    }
+  } catch(e){
+    body.innerHTML = `<div style="color:var(--danger);font-size:13px;padding:16px 0">預覽失敗：${esc(e.message||e)}</div>`;
+  }
+}
+function renderSheets(sheets){
+  if(!sheets||!sheets.length) return '<div style="color:var(--ink-3);font-size:13px">（空白活頁簿）</div>';
+  return sheets.map(s=>{
+    const rows = s.rows||[];
+    let t = `<div style="margin-bottom:18px"><h4 style="font-size:13px;font-weight:600;margin:4px 0 8px;color:var(--ink-2)">${esc(s.name)}${s.truncated?' <span style="font-weight:400;color:var(--ink-3);font-size:11.5px">（僅顯示前段，完整內容請下載）</span>':''}</h4>`;
+    if(!rows.length) return t+'<div style="color:var(--ink-3);font-size:12.5px">（空白工作表）</div></div>';
+    t += '<div class="scroll-x" style="max-height:600px;overflow:auto"><table style="font-size:12px"><tbody>';
+    rows.forEach((r,ri)=>{ const tag = ri===0?'th':'td'; t += '<tr>'+r.map(c=>`<${tag}>${esc(c)}</${tag}>`).join('')+'</tr>'; });
+    return t+'</tbody></table></div></div>';
+  }).join('');
+}
+async function setCat(file,cat){
+  await api('/api/setcat',{method:'POST',body:JSON.stringify({deal:cur,file,cat})});
+  const f=D.docs.find(d=>d.name===file); if(f)f.cat=cat;
+  renderDocs(); toast('已改分類：'+cat);
+}
+let docsPoll = null;
+async function reindexAll(){ toast('重建索引中…'); try{ const r=await api('/api/reindex',{method:'POST',body:JSON.stringify({deal:cur,force:true})}); const n=(r.result&&r.result.results||[]).length; toast(`索引完成：${n} 份文件`); await pickDeal(cur); pickTab('docs'); }catch(e){ toast('索引失敗：'+e.message); } }
+async function reindexOne(file){ toast('索引中：'+file); try{ await api('/api/reindex',{method:'POST',body:JSON.stringify({deal:cur,file,force:true})}); await pickDeal(cur); pickTab('docs'); }catch(e){ toast('索引失敗：'+e.message); } }
+async function ingestOne(file, round){
+  try { await api('/api/ingest-one',{method:'POST',body:JSON.stringify({deal:cur,file,round,model:curModel()})}); toast(`只消化「${file}」：字卡 → 增量對帳 → 新題`); watchRun('ingest'); }
+  catch(e){ toast('無法啟動：'+e.message); }
+}
+function renderRecon(){
+  $('factsView').innerHTML = D.facts ? citeLinks(mdToHtml(D.facts)) : '（尚未產生，跑流程後出現）';
+  renderConflictMap();
+}
+const ST_LABEL = {conflict:'矛盾', basis_mismatch:'口徑不同', single_source:'單一來源', consistent:'一致', unverified:'未驗證'};
+function fmtVal(v, unit){
+  if (v==null) return '';
+  if (typeof v==='number'){ if(unit==='pct'||(Math.abs(v)<=1&&unit!=='count'&&unit!=='days'&&unit!=='months'&&unit!=='shares'&&String(v).includes('.'))) return (v*100).toFixed(1).replace(/\.0$/,'')+'%'; return v.toLocaleString(undefined,{maximumFractionDigits:2}); }
+  return String(v);
+}
+function renderConflictMap(){
+  const el=$('cmap'); const facts=FACTS.facts||[]; const docs=FACTS.docs||{};
+  if(!facts.length){ el.innerHTML='（尚未產生 facts.json，跑流程後出現）'; $('cmStats').textContent=''; return; }
+  const filt=$('cmFilter').value;
+  const keep=f=>!filt||(filt==='conflict'?f.status==='conflict':['conflict','basis_mismatch','single_source'].includes(f.status));
+  const rows=facts.filter(keep);
+  const codes=[...new Set(facts.flatMap(f=>(f.values||[]).map(v=>v.doc)))].filter(c=>c!=='NOTES').concat(facts.some(f=>(f.values||[]).some(v=>v.doc==='NOTES'))?['NOTES']:[]);
+  const sevOrd={high:0,medium:1,low:2}; const stOrd={conflict:0,basis_mismatch:1,single_source:2,consistent:3,unverified:4};
+  rows.sort((a,b)=>(stOrd[a.status]??5)-(stOrd[b.status]??5)||(sevOrd[a.severity]??3)-(sevOrd[b.severity]??3));
+  let h=`<table><thead><tr><th>事實</th><th>狀態</th>${codes.map(c=>`<th title="${esc((docs[c]&&docs[c].file)||c)}">${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
+  for(const f of rows){
+    const byDoc={}; for(const v of f.values||[]){ (byDoc[v.doc]=byDoc[v.doc]||[]).push(v); }
+    const d=f.derived;
+    const derivedTxt = d && d.computed!=null ? `重算 ${d.formula} = ${fmtVal(d.computed, (f.values&&f.values[0]&&f.values[0].unit)||'')}${d.match===false?` ⚠ 與揭露差 ${d.delta_pct}%`:(d.match===true?' ✓ 相符':'')}` : '';
+    h+=`<tr class="st-${esc(f.status||'unverified')}"><td class="lbl">${esc(f.label||f.id)}<span class="sev ${esc(f.severity||'')}">${esc(f.severity||'')}</span>${derivedTxt?`<div class="derived">${esc(derivedTxt)}</div>`:''}${f.note?`<div class="note">${esc(f.note)}</div>`:''}</td><td><span class="chip ${f.status==='conflict'?'bad':f.status==='basis_mismatch'?'warn':f.status==='single_source'?'run':'ok'}">${esc(ST_LABEL[f.status]||f.status||'')}</span></td>`;
+    for(const c of codes){
+      const vs=byDoc[c];
+      if(!vs){ h+='<td class="v">—</td>'; continue; }
+      const file=(docs[c]&&docs[c].file)||''; const round=(docs[c]&&docs[c].round)||'';
+      h+=`<td class="v has" data-f="${esc(file)}" data-r="${esc(round)}" data-l="${esc(vs[0].loc||'')}" title="${esc(file)} ${esc(vs[0].loc||'')}${vs[0].basis?' · 口徑：'+esc(vs[0].basis):''}" onclick="if(this.dataset.f)openEvidence(this.dataset.f,this.dataset.r,this.dataset.l)">${vs.map(v=>`${esc(fmtVal(v.value,v.unit))}<div style="font-size:10.5px;color:var(--ink-3)">${esc(v.loc||'')}</div>`).join('')}</td>`;
+    }
+    h+='</tr>';
+  }
+  el.innerHTML=h+'</tbody></table>';
+  const n=s=>facts.filter(f=>f.status===s).length;
+  $('cmStats').textContent=`顯示 ${rows.length}／${facts.length} · 矛盾 ${n('conflict')} · 口徑 ${n('basis_mismatch')} · 單一來源 ${n('single_source')} · 一致 ${n('consistent')}${FACTS.recomputed_at?` · recompute ${FACTS.recomputed_at.slice(0,16)}`:''}`;
+}
+function renderNotes(){ $('notesTa').value = D.notes || ''; }
+
+function pickTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('main > section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
+}
+
+async function uploadFiles(fl){
+  const files = Array.from(fl || []);
+  if (!files.length) return;
+  const round = D.state.round;
+  let done = 0; const fail = [];
+  toast(`上傳中… 0/${files.length}`);
+  await Promise.all(files.map(async f => {
+    try {
+      const r = await fetch('/api/upload?' + enc({deal:cur, round, name:f.name}), {method:'POST', body:f});
+      if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || r.status);
+      done++;
+    } catch(e) { fail.push(f.name); }
+    toast(`上傳中… ${done}/${files.length}`);
+  }));
+  toast(fail.length
+    ? `完成 ${done}/${files.length}，失敗：${fail.join('、')}（可重新上傳失敗的檔案）`
+    : `已存入 ${done} 個檔案 → ${cur}/round${round}/`);
+  await pickDeal(cur); pickTab('docs');
+}
+function archiveDoc(btn){
+  if (!btn.dataset.armed){
+    btn.dataset.armed='1'; btn.textContent='確認？'; btn.style.color='var(--danger)'; btn.style.lineHeight='1';
+    setTimeout(()=>{ if(btn.isConnected){btn.dataset.armed='';btn.innerHTML=ICO.trash;btn.style.color='';btn.style.lineHeight='0';} },3000);
+    return;
+  }
+  api('/api/archive',{method:'POST',body:JSON.stringify({deal:cur,file:btn.dataset.f,round:btn.dataset.r})})
+    .then(()=>{toast('已歸檔至 _archive/（新版可重新上傳，引擎會做版本 diff）');return pickDeal(cur)})
+    .then(()=>pickTab('docs')).catch(e=>toast('失敗：'+e.message));
+}
+async function openCard(file){
+  try {
+    const c = await api('/api/card?' + enc({deal:cur, file}));
+    $('cardTitle').textContent = '字卡：' + file;
+    $('cardBody').innerHTML = mdToHtml(c.content);
+    show('cardOverlay');
+  } catch(e){ toast('讀取字卡失敗：'+e.message); }
+}
+async function createCase(){
+  const name = $('ncName').value.trim();
+  if (!name) return toast('請輸入案件名稱');
+  try {
+    await api('/api/newcase',{method:'POST',body:JSON.stringify({name})});
+    hide('ncOverlay'); $('ncName').value='';
+    toast(`已建立 ${name}/（round1–3、_analysis、qlist、_notes.md）`);
+    await loadDeals(name); await pickDeal(name);
+  } catch(e){ toast('失敗：'+e.message); }
+}
+async function setToken(){
+  const t = window.prompt('貼上 OpenAI API key（只存本機 _workbench/token，不會加入 Git；也可在 server 環境設定 OPENAI_API_KEY）：');
+  if (!t || !t.trim()) return;
+  try {
+    await api('/api/token',{method:'POST',body:JSON.stringify({token:t.trim()})});
+    toast('token 已儲存，之後的引擎呼叫都會使用它');
+    loadDeals(cur);
+  } catch(e){ toast('儲存失敗：'+e.message); }
+}
+async function saveNotes(){
+  await api('/api/notes',{method:'POST',body:JSON.stringify({deal:cur,content:$('notesTa').value})});
+  toast('備註已存檔，下次跑流程會讀');
+}
+
+function curModel(){ return $('modelSel').value; }
+async function runPipeline(){
+  try {
+    await api('/api/run',{method:'POST',body:JSON.stringify({deal:cur,model:curModel()})});
+    watchRun('pipeline');
+  } catch(e){ toast('無法啟動：'+e.message); }
+}
+async function runDistill(){
+  try {
+    await api('/api/distill',{method:'POST',body:JSON.stringify({deal:cur,model:curModel()})});
+    watchRun('distill');
+    toast('蒸餾啟動，完成後結果寫回 knowledge/question-bank.md');
+  } catch(e){ toast('無法啟動：'+e.message); }
+}
+const RUN_EST = {pipeline: 12*60e3, merge: 6*60e3, distill: 6*60e3, ingest: 3*60e3, resume: 10*60e3};
+const RUN_LABEL = {pipeline: '流程', merge: '合併', distill: '蒸餾', ingest: '單檔增量', resume: '流程'};
+let runStart = 0, evSince = 0;
+function watchRun(kind){
+  kind = kind || 'resume';
+  runStart = Date.now(); evSince = 0;
+  $('runbar').style.display = 'flex';
+  $('pfill').style.width = '2%';
+  $('plabel').textContent = (RUN_LABEL[kind]||'流程') + '啟動中…';
+  $('runTitle').textContent = (RUN_LABEL[kind]||'流程') + '執行中';
+  $('runTl').innerHTML=''; $('runStats').innerHTML='';
+  if (kind !== 'resume') show('runOverlay');
+  clearInterval(logTimer);
+  logTimer = setInterval(async () => {
+    try {
+      const ev = await api('/api/runevents?' + enc({deal:cur, since:evSince}));
+      if (ev.events.length){
+        renderTimeline($('runTl'), ev.events, evSince>0);
+        renderTimeline($('ovTl'), ev.events, evSince>0);
+        evSince += ev.events.length;
+      }
+      const stats = statsLine(ev);
+      $('runStats').innerHTML = stats; $('ovStats').innerHTML = stats;
+      if (ev.running){
+        const t0 = ev.started || runStart;
+        const pct = Math.min(96, Math.round((Date.now()-t0)/(RUN_EST[kind]||RUN_EST.resume)*100));
+        $('pfill').style.width = Math.max(2, pct) + '%';
+        const last = ev.events.length ? ev.events[ev.events.length-1] : null;
+        $('plabel').textContent = `${RUN_LABEL[kind]||'流程'}執行中 · ${ev.counts?ev.counts.agents:0} 代理 · ${ev.counts?ev.counts.reads:0} 次讀取${last?' · '+last.text.slice(0,48):''}`;
+      } else {
+        clearInterval(logTimer);
+        $('pfill').style.width = '100%';
+        $('plabel').textContent = '完成';
+        setTimeout(()=>{ $('runbar').style.display='none'; }, 1800);
+        const {log} = await api('/api/runlog?' + enc({deal:cur}));
+        $('ovLog').textContent = log;
+        if (/Not logged in|not logged in|Invalid API key/i.test(log)) toast('流程失敗：引擎未登入。點側欄「設定 OpenAI API key」（見說明頁）');
+        else if (/⚠ 流程失敗/.test(log)) toast('流程失敗，請看總覽頁的執行紀錄');
+        else toast('流程結束');
+        await loadDeals(cur); await pickDeal(cur);
+      }
+    } catch { clearInterval(logTimer); }
+  }, 1500);
+}
+
+let draftMerged = false;
+let myFile = '';
+const SRC_CHIP = {'共識':'ok','Codex':'run','AI':'run','你':'warn'};
+// 證據欄（FIN:p.2; CT:Cap Table!B4）→ 用 facts.json 的文件代號表換成檔名，做成可點的 cite
+function evidenceChips(ev){
+  if(!ev||!ev.length) return '';
+  const docs=FACTS.docs||{};
+  const chips=ev.map(e=>{
+    const file=(docs[e.doc]&&docs[e.doc].file)||(D.docs.find(d=>d.name===e.doc)||{}).name||'';
+    if(!file) return `<span class="cat" title="找不到文件代號 ${esc(e.doc)}">${esc(e.doc?e.doc+':':'')}${esc(e.loc)}</span>`;
+    return `<span class="cite" data-f="${esc(file)}" data-l="${esc(e.loc)}">[${esc(e.doc)} ${esc(e.loc)}]</span>`;
+  });
+  return `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:11.5px;color:var(--ink-3)">證據</span>${chips.join('')}</div>`;
+}
+async function loadDraft(){
+  const hist = viewRound != null;
+  const d = await api('/api/draft?' + enc(hist ? {deal:cur, round:viewRound} : {deal:cur}));
+  draft = d.questions; draftMerged = d.merged;
+  $('histBanner').style.display = hist ? 'flex' : 'none';
+  if (hist) $('histLabel').textContent = `歷史檢視：Round ${viewRound}（已發出輪次，唯讀）`;
+  if (draftMerged) {
+    const ord = {'共識':0,'你':1,'Codex':2,'AI':2};
+    draft = draft.slice().sort((a,b)=>(ord[a.source]??3)-(ord[b.source]??3));
+  }
+  $('tnReview').textContent = draft.length || '—';
+  if (!draft.length){
+    $('qlist').innerHTML = hist
+      ? `<div class="emptynote">Round ${viewRound} 沒有留存草稿檔。</div>`
+      : '<div class="emptynote">尚未有本輪草稿：上傳文件後按「▶ 跑流程」，或引擎仍在執行中。</div>';
+    $('reviewFoot').style.display='none'; $('mergedBar').style.display='none';
+    $('mergeSetup').style.display='none'; $('revFilters').style.display='none';
+    $('finalBlock').style.display = (!hist && ['merged','sent'].includes(D.state.lifecycle)) ? 'flex' : 'none';
+    return;
+  }
+  $('mergeSetup').style.display = hist ? 'none' : 'flex';
+  $('mineName').textContent = myFile ? myFile+' ✓' : '';
+  $('mergeBtn').disabled = !myFile;
+  $('mergeHint').textContent = draftMerged ? '已合併（含來源標記），可重傳新版再合併' : '未合併：未標記作者的題目顯示為 AI';
+  $('qlist').innerHTML = draft.map((x,i)=>{
+    const src = x.source || 'AI';
+    return `
+    <div class="qrow" id="qr${i}" data-src="${esc(src)}" data-cat="${esc(x.cat)}" data-wave="${esc(x.wave)}" data-ch="${esc(x.channel)}">
+      <input type="checkbox" checked onchange="rowToggle(this,${i})" aria-label="保留第 ${i+1} 題">
+      <div class="qb">
+        <div class="qmeta"><span class="chip run">Q${x.no}</span>
+          ${x.delta?'<span class="chip delta">新增（單檔增量）</span>':''}
+          <span class="chip ${SRC_CHIP[src]||'run'}">${esc(src)}</span>
+          <span class="cat">${esc(x.cat)}</span>
+          ${x.wave?`<span class="cat">波次${esc(x.wave)}</span>`:''}
+          <button class="qedit" onclick="editQ(${i})">✎ 編輯</button></div>
+        <p class="qtext" id="qt${i}">${esc(x.q)}</p>
+        ${x.why?`<details class="why"><summary>出處與動機${evidenceChips(x.evidence)?'':''}</summary><div>${citeLinks(esc(x.why))}</div></details>`:''}
+        ${evidenceChips(x.evidence)}
+        <div class="reasons"><span style="font-size:12px;color:var(--ink-3)">砍題原因：</span>
+          ${['太早問','改口頭','不適用','重複','其他'].map(r=>`<button class="rchip" onclick="pickReason(this,${i})">${r}</button>`).join('')}
+          <input type="text" class="otherbox" id="ob${i}" placeholder="自己寫一句原因…" oninput="saveRevState()">
+        </div>
+      </div>
+    </div>`;}).join('');
+  const opts=(id,label,vals)=>{$(id).innerHTML=`<option value="">${label}：全部</option>`+[...new Set(vals.filter(Boolean))].map(v=>`<option>${esc(v)}</option>`).join('');};
+  opts('fSrc','來源',draft.map(x=>x.source||'AI'));
+  opts('fCat','分類',draft.map(x=>x.cat));
+  opts('fWave','波次',draft.map(x=>x.wave));
+  $('revFilters').style.display='flex';
+  $('reviewFoot').style.display = hist ? 'none' : 'flex';
+  $('finalBlock').style.display = (!hist && ['merged','sent'].includes(D.state.lifecycle)) ? 'flex' : 'none';
+  $('mergedBar').style.display='none';
+  if (hist){
+    // 套用該輪當時的審核決定：砍掉的顯示未勾＋原因、編輯過的顯示編輯後版本
+    try {
+      const {decisions} = await api('/api/reviewlog?' + enc({deal:cur, round:viewRound}));
+      document.querySelectorAll('.qrow').forEach((r,i)=>{
+        if (!draft[i]) return;
+        const dcx = decisions[String(draft[i].no)]; if (!dcx) return;
+        if (!dcx.keep){
+          const cb = r.querySelector('input[type=checkbox]');
+          cb.checked = false; r.classList.add('cut');
+          const sp = document.createElement('span');
+          sp.className = 'chip bad'; sp.textContent = '當時砍掉' + (dcx.reason ? '：' + dcx.reason : '');
+          r.querySelector('.qmeta').appendChild(sp);
+        }
+        if (dcx.edited) $('qt'+i).textContent = dcx.edited;
+        const rs = r.querySelector('.reasons'); if (rs) rs.style.display = 'none';
+      });
+    } catch {}
+    document.querySelectorAll('.qrow input[type=checkbox]').forEach(cb=>cb.disabled=true);
+    document.querySelectorAll('.qedit').forEach(b=>b.style.display='none');
+  } else {
+    restoreRevState();
+  }
+  updateCnt();
+}
+function applyRevFilters(){
+  const fs2={src:$('fSrc').value,cat:$('fCat').value,wave:$('fWave').value};
+  let shown=0;
+  document.querySelectorAll('.qrow').forEach(r=>{
+    const ok=(!fs2.src||r.dataset.src===fs2.src)&&(!fs2.cat||r.dataset.cat===fs2.cat)&&(!fs2.wave||r.dataset.wave===fs2.wave);
+    r.style.display=ok?'':'none'; if(ok)shown++;
+  });
+  $('fCount').textContent=`顯示 ${shown}／${draft.length} 題`;
+}
+function toggleAll(){
+  const vis=[...document.querySelectorAll('.qrow')].filter(r=>r.style.display!=='none');
+  const anyUnchecked=vis.some(r=>!r.querySelector('input[type=checkbox]').checked);
+  vis.forEach(r=>{
+    const cb=r.querySelector('input[type=checkbox]');
+    if(cb.disabled)return;
+    if(cb.checked!==anyUnchecked){cb.checked=anyUnchecked;r.classList.toggle('cut',!anyUnchecked);}
+  });
+  updateCnt();
+  toast(anyUnchecked?'已全選（目前顯示的題目）':'已取消全選（記得為砍掉的題選原因）');
+}
+async function uploadMine(fl){
+  if(!fl||!fl.length)return;
+  const r=await fetch('/api/myversion?'+enc({deal:cur,name:fl[0].name}),{method:'POST',body:fl[0]});
+  const d=await r.json();
+  myFile=d.saved;
+  $('mineName').textContent=myFile+' ✓';
+  $('mergeBtn').disabled=false;
+  toast('已收到你的版本，按「跑合併」啟動三類 diff');
+}
+async function runMerge(){
+  try{
+    await api('/api/merge',{method:'POST',body:JSON.stringify({deal:cur,name:myFile,model:curModel()})});
+    watchRun('merge');
+    toast('合併中，完成後題目會標上來源（共識／Codex／你）');
+  }catch(e){toast('無法啟動：'+e.message);}
+}
+function rowToggle(cb,i){ $('qr'+i).classList.toggle('cut',!cb.checked); updateCnt(); saveRevState(); }
+function pickReason(el,i){
+  el.parentElement.querySelectorAll('.rchip').forEach(c=>{if(c!==el)c.classList.remove('sel')});
+  el.classList.toggle('sel');
+  $('ob'+i).style.display = (el.textContent==='其他'&&el.classList.contains('sel'))?'inline-block':'none';
+  saveRevState();
+}
+// 審核中的勾選/原因/編輯即時存 localStorage：切輪次、切案件、重新整理都不會消失
+function revKey(){ return `rev_${cur}_R${D.state.round}`; }
+function saveRevState(){
+  if (viewRound != null || !draft.length) return;
+  const st = {};
+  document.querySelectorAll('.qrow').forEach((r,i)=>{
+    if (!draft[i]) return;
+    const cb = r.querySelector('input[type=checkbox]');
+    const sel = r.querySelector('.rchip.sel');
+    const ob = $('ob'+i);
+    const e = EDITS[i];
+    if (cb.checked && !sel && !e && !(ob && ob.value)) return;
+    st[draft[i].no] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'' };
+  });
+  localStorage.setItem(revKey(), JSON.stringify(st));
+}
+function restoreRevState(){
+  let st; try { st = JSON.parse(localStorage.getItem(revKey())||'{}'); } catch { st = {}; }
+  document.querySelectorAll('.qrow').forEach((r,i)=>{
+    if (!draft[i]) return;
+    const s = st[draft[i].no]; if (!s) return;
+    const cb = r.querySelector('input[type=checkbox]');
+    if (!s.keep && cb.checked && !cb.disabled){ cb.checked = false; r.classList.add('cut'); }
+    if (s.reason) r.querySelectorAll('.rchip').forEach(c=>{ if (c.textContent === s.reason) c.classList.add('sel'); });
+    if (s.reason === '其他'){ const ob = $('ob'+i); if (ob){ ob.style.display='inline-block'; ob.value = s.other || ''; } }
+    if (s.edited){ EDITS[i] = s.edited; $('qt'+i).textContent = s.edited; }
+  });
+  updateCnt();
+}
+function updateCnt(){
+  const rows=document.querySelectorAll('.qrow');let k=0;
+  rows.forEach(r=>{if(r.querySelector('input[type=checkbox]').checked)k++});
+  $('keepCnt').textContent=`保留 ${k}／${rows.length} 題`;
+}
+function editQ(i){
+  const row=$('qr'+i); if(row.querySelector('.qeditbox'))return;
+  const p=$('qt'+i);
+  const box=document.createElement('div');box.className='qeditbox';
+  const ta=document.createElement('textarea');ta.value=p.textContent;
+  const bar=document.createElement('div');bar.style.cssText='display:flex;gap:8px;margin-top:8px';
+  const sv=document.createElement('button');sv.className='primary';sv.textContent='儲存';
+  sv.onclick=()=>{const nv=ta.value.trim();
+    if(nv&&nv!==p.textContent){EDITS[i]=nv;p.textContent=nv;saveRevState();toast('已更新，原句與修改版成對記錄');}
+    box.remove();p.style.display='';};
+  const cc=document.createElement('button');cc.textContent='取消';
+  cc.onclick=()=>{box.remove();p.style.display='';};
+  bar.append(sv,cc);box.append(ta,bar);
+  p.style.display='none';p.after(box);ta.focus();
+}
+async function submitReview(){
+  const decisions = draft.map((x,i)=>{
+    const row=$('qr'+i);
+    const keep=row.querySelector('input[type=checkbox]').checked;
+    let reason='';
+    if(!keep){const s=row.querySelector('.rchip.sel');reason=s?s.textContent:'';
+      if(reason==='其他')reason='其他：'+($('ob'+i).value.trim()||'（未填）');}
+    return {no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||''};
+  });
+  try {
+    const r = await api('/api/review',{method:'POST',body:JSON.stringify({deal:cur,decisions})});
+    localStorage.removeItem(revKey());
+    D.state.lifecycle='merged';
+    $('mergedBar').style.display='flex';
+    $('mergedBar').innerHTML = `<span class="chip ok">合併版已產出</span>
+      <button data-f="${esc(r.xlsx)}" onclick="location.href='/api/download?'+enc({deal:cur,file:this.dataset.f})">⬇ 下載 ${esc(r.xlsx)}</button>
+      <span style="font-size:12px;color:var(--ink-3)">已存 _analysis/drafts/ · 決定已入 diff-reports/</span>`;
+    $('finalBlock').style.display='flex';
+    toast('合併版已產出，拿去與同事定稿');
+  } catch(e){ toast('失敗：'+e.message); }
+}
+async function uploadFinal(fl){
+  if(!fl||!fl.length)return;
+  const r=await fetch('/api/final?'+enc({deal:cur,name:fl[0].name,model:curModel()}),{method:'POST',body:fl[0]});
+  const d=await r.json();
+  $('finalMsg').textContent = fl[0].name+' ✓ 已存檔 qlist/，本輪已發出，可開下一輪或結案';
+  if(d.distill){
+    toast('最終版已存檔，本輪蒸餾自動啟動（同事補題→盲區學習）');
+    watchRun('distill');
+  } else {
+    toast('最終版已存檔，＋ Round '+(D.state.round+1)+' 已解鎖');
+    await loadDeals(cur); await pickDeal(cur); pickTab('review');
+  }
+}
+async function advance(){
+  try {
+    const r = await api('/api/advance',{method:'POST',body:JSON.stringify({deal:cur})});
+    toast(`已開啟 Round ${r.state.round}，round${r.state.round}/ 已建立`);
+    await loadDeals(cur); await pickDeal(cur);
+  } catch(e){ toast(e.message); }
+}
+function closeDeal(btn){
+  if(!btn.dataset.armed){btn.dataset.armed='1';btn.textContent='確認結案？';setTimeout(()=>{if(btn.isConnected){btn.dataset.armed='';btn.textContent='✓ 結案';}},3000);return;}
+  api('/api/close',{method:'POST',body:JSON.stringify({deal:cur})})
+    .then(async()=>{
+      toast('已結案，自動啟動蒸餾');
+      await loadDeals(cur);await pickDeal(cur);
+      await runDistill();
+    })
+    .catch(e=>toast(e.message));
+}
+
+let kbT=null;
+function kbSearch(){
+  clearTimeout(kbT);
+  kbT=setTimeout(async()=>{
+    const qv=$('kbQ').value.trim();
+    if(!qv){$('kbHits').innerHTML='輸入關鍵字開始搜尋。';return;}
+    const {hits}=await api('/api/search?'+enc({deal:cur,q:qv}));
+    const safeEsc=esc(qv).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const mk=s=>esc(s).replace(new RegExp('('+safeEsc+')','gi'),'<mark>$1</mark>');
+    $('kbHits').innerHTML=hits.length
+      ? hits.map(h=>{
+          if(h.page||h.ref){
+            const loc=h.page?('p.'+h.page):(h.sheet+'!'+h.ref);
+            return `<div class="hitrow"><div class="hitsrc">${esc(h.src)}</div><div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap"><span style="flex:1;min-width:200px">${mk(h.text)}</span>
+              <button data-f="${esc(h.doc.name)}" data-r="${esc(h.doc.round)}" data-l="${esc(loc)}" onclick="openEvidence(this.dataset.f,this.dataset.r,this.dataset.l)">開到 ${esc(loc)}</button></div></div>`;
+          }
+          return h.doc
+          ? `<div class="hitrow"><div class="hitsrc">${esc(h.src)}</div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${mk(h.text)}
+             <button data-f="${esc(h.doc.name)}" data-r="${esc(h.doc.round)}" onclick="openEvidence(this.dataset.f,this.dataset.r,'p.1')">開啟</button></div></div>`
+          : `<div class="hitrow"><div class="hitsrc">${esc(h.src)} · L${h.line}</div><div>${citeLinks(mk(h.text))}</div></div>`;}).join('')
+      : '<div style="color:var(--ink-3)">沒有結果。</div>';
+  },250);
+}
+async function askAI(){
+  const qv=$('aiQ').value.trim(); if(!qv)return;
+  $('aiBtn').disabled=true;$('aiBtn').textContent='思考中…';
+  $('aiA').style.display='block';$('aiA').textContent='（組 context 中…）';
+  $('aiMeta').textContent='';
+  const t0=Date.now(); let text='', firstAt=0, meta=null;
+  const render=()=>{ $('aiA').innerHTML=citeLinks(mdToHtml(text))+(firstAt?'':''); };
+  try{
+    const r=await fetch('/api/ask',{method:'POST',body:JSON.stringify({deal:cur,question:qv,model:curModel()})});
+    if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||r.status); }
+    const reader=r.body.getReader(); const dec=new TextDecoder(); let buf='';
+    while(true){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      let i; while((i=buf.indexOf('\n\n'))>=0){
+        const chunk=buf.slice(0,i); buf=buf.slice(i+2);
+        const line=chunk.split('\n').find(l=>l.startsWith('data: ')); if(!line) continue;
+        let ev; try{ ev=JSON.parse(line.slice(6)); }catch{ continue; }
+        if(ev.meta){ meta=ev.meta; $('aiMeta').textContent=`${meta.mode==='api'?'直連 API · '+meta.model:meta.mode==='cli'?'Codex CLI':'假引擎'} · ${meta.docs} 份文件 · ${meta.pages} 頁 · 約 ${((meta.tokens||0)/1000).toFixed(0)}K tokens${meta.whole?'（整份 Data Room 進 context）':`（全案約 ${((meta.totalTokens||0)/1000).toFixed(0)}K 超過預算 ${((meta.budget||0)/1000).toFixed(0)}K，依頁碼與關鍵字挑頁）`}`; }
+        if(ev.delta){ if(!firstAt) firstAt=Date.now(); text+=ev.delta; render(); }
+        if(ev.error){ text+=`\n\n**錯誤：**${ev.error}`; render(); }
+        if(ev.usage){ const u=ev.usage; const cr=u.cache_read_input_tokens||0, cw=u.cache_creation_input_tokens||0; $('aiMeta').textContent += ` · 首字 ${firstAt?((firstAt-t0)/1000).toFixed(1):'—'}s · 總 ${((Date.now()-t0)/1000).toFixed(1)}s · in ${(u.input_tokens||0).toLocaleString()} / cache 讀 ${cr.toLocaleString()} 寫 ${cw.toLocaleString()} / out ${(u.output_tokens||0).toLocaleString()}`; }
+      }
+    }
+    if(!text) $('aiA').textContent='（沒有回答）';
+  }catch(e){$('aiA').textContent='失敗：'+e.message;}
+  $('aiBtn').disabled=false;$('aiBtn').textContent='問 Codex';
+}
+
+const HELP = `## 一個案子的完整流程
+
+1. **＋ 新增案件**：自動建立資料夾骨架（round1–3、_analysis、qlist、_notes.md）
+2. **備註頁先寫兩句背景**：怎麼認識的、聊過什麼、文件外的實體（例：某轉投資公司）。這是引擎唯一看不到的資訊，寫了才問得到
+3. **文件頁拖入 Data Room**：自動存進當前 round 資料夾並分類；對方給新版本時先「刪除」舊檔（＝歸檔，引擎會做版本 diff）再上傳新版
+4. **▶ 跑流程**：引擎讀文件做字卡、對帳、四視角出題，產出草稿（可關視窗背景跑，總覽頁看進度）
+5. **審核頁：上傳我的 Q-list → 跑合併**：三類 diff 後每題標來源（共識／Codex／你）；用篩選器切來源、分類、波次；勾選＝保留、砍題選原因、✎ 改問法
+6. **送出決定 → 下載合併版**：拿去與同事定稿
+7. **上傳最終發出版**：存檔為本輪正式版＋自動觸發本輪蒸餾（同事補的題＝盲區學習）
+8. **＋ Round N＋1** 收對方回覆與新文件，重複 3–7；資料拿夠了按 **✓ 結案**（自動全案蒸餾）
+
+## 需要手動碰資料夾嗎？
+
+**不需要。** 上傳、刪除、備註、最終版全部從工作台操作。手動把檔案丟進 round 資料夾也完全相容（兩個入口等價），但不是必要的。引擎認證需設定 OpenAI API key，或先在執行 server 的主機完成 codex login。
+
+## 引擎認證
+
+可設定 server 環境變數 OPENAI_API_KEY（問答與 headless 共用），或用側欄儲存 OpenAI API key。只跑 headless 時也可使用 CODEX_API_KEY，或在執行主機完成 codex login。金鑰不會回傳到頁面；請使用 OpenAI API key。
+
+## 常見問題
+
+- **公司回覆的 Q-list 檔案放哪？** 放進「下一輪」：例如對方回覆 Round 1 的 xlsx＋新文件，全部上傳到 Round 2（先按「＋ Round 2」開輪再上傳）。跑 Round 2 流程時引擎會逐題判定回覆（完整／部分／迴避／矛盾），沒答好的自動變追問
+- **波次（wave）是什麼？** 出題的發送順序：wave 1＝業務優先題（第一波就問）、wave 2＝治理股權類（第二波）、wave 3＝交易文件類。「wave 1/3」表示這題第一波可先要、最遲第三波要拿到
+- **回看舊輪次？** 文件頁本來就列出每一輪；Q-list 部分點上方的「Round N ✓」膠囊即可回看該輪草稿（唯讀），點「回到目前輪次」返回
+- **案件管理**：側欄星號＝置頂；「刪除案件」實際是移到 _trash/ 資料夾（可手動救回）；已結案的案件可按「重新開啟」
+- **進度條**：跑流程時按鈕下方顯示估計進度（依歷史耗時估算，非精確值），詳細即時紀錄在總覽頁
+- **蒸餾什麼時候發生？** 兩層：每輪上傳最終版後自動跑「本輪蒸餾」；結案時跑「全案蒸餾」。成果都寫回 knowledge/question-bank.md
+- **模型怎麼選？** 標題列下拉控制引擎主 session；子代理預設繼承主 session 的模型與 effort
+- **工作台需要保持開著嗎？** 頁面可關閉，但執行 server 的主機與程序必須持續運作
+- **想跟 Codex 討論案子？** 在專案根目錄開 Codex 對話，它讀寫的是同一批資料夾
+
+## 可定位層、矛盾圖、問 AI（黑客松版新增）
+
+- **索引**：上傳即自動抽每頁文字（PDF／pptx）與每格值＋公式（xlsx）到 _analysis/index/。文件頁的「索引」欄看得到頁數與掃描頁數；「⟳ 重建索引」全案重跑。字卡代理讀索引而不是原檔，掃描頁才回頭視覺讀。
+- **證據檢視器**：任何出處（[檔名 p.N]、[檔名 工作表!B4]）都可以點：左邊原檔翻到該頁／表格標出格子，右邊是該頁索引文字。
+- **矛盾圖**（對帳分頁）：facts.json 的事實 × 文件矩陣。紅＝矛盾、黃＝口徑不同、藍＝單一來源。有公式的事實會顯示程式重算結果（recompute.py），不靠模型心算。點格子開兩邊原文。
+- **問 AI**：整份 Data Room 帶頁碼放進 context 並快取，串流回答、每個事實標出處。設 OPENAI_API_KEY 走直連 API（快）；沒設就走 Codex CLI（慢一點）。可問「第 486 頁寫了什麼」「有沒有提到質押」「Vertex 持股各文件對得上嗎」。
+- **只消化這份 ⚡**（文件頁）：對單一新文件跑字卡 → 增量對帳 → 3–6 題新題（審核頁標「新增」），幾分鐘完成，適合現場拖入新文件。
+- **引擎活動**（總覽）：真實事件流，看得到主 session 派工給哪個代理、誰在讀哪份文件第幾頁、成本與耗時。
+
+## 環境變數
+
+- CODEX_BIN：Codex CLI 路徑（沒設就找專案安裝與 PATH）
+- OPENAI_API_KEY：OpenAI Responses API；QLIST_ASK_MODEL（預設 gpt-6-astra）、QLIST_ASK_EFFORT（low）、QLIST_ASK_BUDGET_TOKENS（450000，超過就挑頁）；QLIST_CODEX_MODEL（gpt-6-astra）、QLIST_CODEX_EFFORT（medium）控制 headless。
+- QLIST_MOCK=1：假引擎；PYTHON_BIN：python3 路徑`;
+$('helpBody').innerHTML = mdToHtml(HELP);
+const savedModel = localStorage.getItem('qlist_model') || 'default';
+$('modelSel').value = [...$('modelSel').options].some(o => o.value === savedModel) ? savedModel : 'default';
+loadDeals();
+</script>

@@ -1,0 +1,6 @@
+# python3 -m pip install -r _workbench/requirements.txt
+openpyxl>=3.1        # xlsx 值＋公式（既有）
+pymupdf>=1.24        # PDF 逐頁文字、掃描頁偵測、頁面渲染（索引層）
+python-pptx>=0.6     # pptx 逐頁文字
+python-docx>=1.1     # docx 段落與表格
+reportlab>=4.0       # 合成示範用年報（演練資料_AcmeRobotics/_tools）
