@@ -261,7 +261,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 
   <section id="tab-recon">
     <div class="panel">
-      <h2>矛盾圖 <span class="hint">facts.json：事實 × 文件。紅＝矛盾、黃＝口徑不同、藍＝單一來源、綠＝一致；點格子開原文</span></h2>
+      <h2>矛盾圖 <span id="factsProvenance" class="chip todo"></span><span class="hint">facts.json：事實 × 文件。紅＝矛盾、黃＝口徑不同、藍＝單一來源、綠＝一致；點格子開原文</span></h2>
       <div class="toolbar">
         <select id="cmFilter" onchange="renderConflictMap()"><option value="issues">矛盾＋口徑＋單一來源</option><option value="conflict">只看矛盾</option><option value="">全部事實</option></select>
         <span id="cmStats" style="font-size:12px;color:var(--ink-3)"></span>
@@ -868,6 +868,8 @@ function fmtVal(v, unit){
   return String(v);
 }
 function renderConflictMap(){
+  const p=FACTS.provenance;$('factsProvenance').textContent=p?.kind==='engine'?'引擎產出 · '+p.run_id:p?.kind==='handwritten'?'手寫示範':'來源未標示';
+  $('factsProvenance').title=p?.note||'來源尚未驗證';
   const el=$('cmap'); const facts=FACTS.facts||[]; const docs=FACTS.docs||{};
   if(!facts.length){ el.innerHTML='（尚未產生 facts.json，跑流程後出現）'; $('cmStats').textContent=''; return; }
   const filt=$('cmFilter').value;
