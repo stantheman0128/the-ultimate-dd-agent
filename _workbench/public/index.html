@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>投資盡調工作台</title>
+<script src="/appearance.js"></script>
 <link rel="stylesheet" href="/project-chat.css">
 <style>
 :root{
@@ -186,11 +187,13 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 </style>
 <link rel="stylesheet" href="/workspace.css">
 <link rel="stylesheet" href="/conversation.css">
+<link rel="stylesheet" href="/appearance.css">
 <script src="/workspace.js" defer></script>
 
 <div class="app">
 <aside>
   <div class="brand"><span class="brand-mark" aria-hidden="true">DD</span>投資盡調工作台<small>案件研究・資料查核・問題追蹤</small></div>
+  <div class="appearance-picker"><label for="uiAppearance">介面樣式</label><select id="uiAppearance"><option value="classic">原版經典 · 綠色卡片</option><option value="modern">新版簡潔 · 藍白工作台</option></select></div>
   <div class="sidelabel">投資案件</div><input id="caseFilter" class="case-filter" type="text" aria-label="搜尋案件" placeholder="搜尋案件…" oninput="filterCases()"><div id="caseFilterEmpty" class="case-filter-empty" hidden>找不到符合的案件</div>
   <div id="dealList"></div>
   <button class="newcase" onclick="show('ncOverlay')">＋ 新增案件</button>
