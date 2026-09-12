@@ -174,7 +174,7 @@ function agentDefinitions(config, runDir, deal) {
     const raw=fs.readFileSync(fp,'utf8');
     const read=k=>{const m=raw.match(new RegExp('^'+k+' = (.*)$','m'));return m?JSON.parse(m[1]):'';};
     const body=read('developer_instructions');
-    definitions[name]={description:read('description'),prompt:body+((name.startsWith('persona-')||name==='question-reviewer')?'\n'+skillsPromptLine(name)+'\n'+rulesPromptLine(deal,name):''),tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
+    definitions[name]={description:read('description'),prompt:body,tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
     if(runDir){
       const dir=path.join(runDir,'agents');fs.mkdirSync(dir,{recursive:true});
       const file=path.join(dir,name+'.toml');
@@ -459,7 +459,17 @@ function mockRun(run, emit, dp, finish) {
     const proposals=last&&!existing.length?[{rule_id:'mock-review-timing',version:1,status:'proposed',scope:'persona, reviewer',applies_when:'追問輪的靜態盤點題與本輪待解矛盾競爭篇幅時',instruction:'優先問待解矛盾；靜態盤點題移至後續波次，保留補問機會。',exceptions:['本輪明確以團隊或合規盤點為主'],kind:'timing',deal:null,folded_into:null,source_feedback_ids:[last.feedback_id],evidence_summary:'手寫假引擎範例，供測試提案→核准→注入；不代表模型已從回饋推導出此規則。',deal_anonymized:true,proposed_at:new Date().toISOString(),approved_at:null,approved_by:null}]:[];
     fs.writeFileSync(path.join(dp,'_analysis','runs',run.manifest.run_id,'rule-proposals.json'),JSON.stringify(proposals,null,2));
   }
-  if(['distill','round-distill'].includes(run.kind))steps=[['init','main','假引擎批次蒸餾'],['spawn','main','派工 distiller','distiller'],['done','main','假引擎未修改活題庫']];
+  if(['distill','round-distill','house-style'].includes(run.kind))steps=[['init','main','假引擎批次蒸餾'],['spawn','main','派工 distiller','distiller'],['done','main','假引擎未修改活題庫']];
+  if(['house-style','distill'].includes(run.kind)){
+    const approved=ruleStore.read().filter(r=>r.status==='approved'&&r.kind!=='deal_specific');
+    if(approved.length){
+      const id='team-house-style',current=listSkills().find(s=>s.id===id),version=(Number(current?.version)||0)+1;
+      const ref=id+'@'+version,dir=path.join(SKILLS_DIR,'_proposed',ref);fs.mkdirSync(dir,{recursive:true});
+      let previous='';if(current)previous=parseFrontmatter(fs.readFileSync(path.join(SKILLS_DIR,id,'SKILL.md'),'utf8')).body;
+      const content=['---','name: '+id,'title: 團隊問法（假引擎提案）','description: 手寫測試提案，待人工核准','version: '+version,'scope: persona, reviewer','anonymized: true','derived_from_rules: '+JSON.stringify(approved.map(r=>r.rule_id+'@'+r.version)),'---',previous,'# 本次折入規則（假引擎）',...approved.map(r=>`## ${r.rule_id}\n適用：${r.applies_when}\n${r.instruction}\n例外：${r.exceptions.join('；')}`)].join('\n');
+      fs.writeFileSync(path.join(dir,'SKILL.md'),content);steps.push(['write','distiller','手寫方法論升版提案（待核准）：'+ref]);
+    }
+  }
   let i = 0;
   run.timer = setInterval(() => {
     if (i >= steps.length) { clearInterval(run.timer); return finish(0); }
@@ -486,6 +496,10 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
   }
   if(kind==='learn')prompt+=`\n候選規則只寫 ${path.join(runDir,'rule-proposals.json')}（JSON 陣列，最多三條）；不能修改 rules.json status。`;
   const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir,deal);
+  const dispatch=Object.fromEntries([...config.personas.map(p=>'persona-'+p),'question-reviewer'].map(scope=>[scope,skillsPromptLine(scope)+'\n'+rulesPromptLine(deal,scope)+'\n本案資料：'+deal+'/_analysis/；本次執行 ID：'+run_id]));
+  fs.writeFileSync(path.join(runDir,'dispatch.json'),JSON.stringify(dispatch,null,2));
+  if(['pipeline','ingest','merge','review'].includes(kind))prompt+='\n派工契約：代理 system prompt 固定。以下每個對應訊息須完整作為子代理第一則 user 訊息，再附實際資料路徑；不要把方法論與規則改寫進 system prompt。主 session 匯整取 scope=merge 的方法論。\n'+JSON.stringify(dispatch);
+
   const args=activeProvider.cliArgs({model:models.main.model,effort:models.main.effort,writable:true,prompt,system:HEADLESS_SYS,agents:definitions,models:{sub:{model:config[selected].sub_model,effort:config[selected].effort.sub}},agentFiles});
   const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:listSkills().filter(k=>k.active).map(k=>({id:k.id,version:k.version})),rules:usedRules.map(r=>({rule_id:r.rule_id,version:r.version})),personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
   const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
@@ -510,6 +524,18 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
     if (finished) return;
     finished = true;
     if (run.failed && code === 0) code = 1;
+    if(code===0&&!MOCK&&['pipeline','ingest','merge','review'].includes(kind)){
+      try{
+        const round=readState(dp).round,required=path.join(dp,'_analysis','drafts',`${kind==='review'?'review':'questions'}_R${round}.json`);
+        if(!fs.existsSync(required)||fs.statSync(required).mtimeMs<run.started)throw new Error('本次執行未產生新的 JSON 結果');
+        const loaded=questions.load(dp,round,parseDraftTable);
+        if(kind==='pipeline'||kind==='review'){
+          const reviewFile=path.join(dp,'_analysis','drafts',`review_R${round}.json`);
+          if(!fs.existsSync(reviewFile)||fs.statSync(reviewFile).mtimeMs<run.started)throw new Error('本次執行未完成獨立審題');
+          reviewer.attach(dp,round,loaded);
+        }
+      }catch(e){code=1;append('輸出驗證失敗：'+e.message+'\n');}
+    }
     if(code===0&&kind==='learn'){
       try{const fp=path.join(runDir,'rule-proposals.json');if(fs.existsSync(fp))ruleStore.propose(JSON.parse(fs.readFileSync(fp,'utf8')));}
       catch(e){code=1;append('候選規則驗證失敗：'+e.message+'\n');}
@@ -517,9 +543,9 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
     ruleStore.read();
     manifest.ended_at=new Date().toISOString();manifest.exit_code=code;
     saveManifest();
-    fs.copyFileSync(logPath,path.join(runDir,'run.log'));
     append(`\n[${new Date().toISOString()}] 結束，exit=${code}${code !== 0 ? '　⚠ 流程失敗，請檢查上方訊息（最常見：引擎未登入 → 見說明頁）' : ''}\n`);
     emit({ kind: 'exit', agent: 'main', text: `exit=${code}`, code });
+    fs.copyFileSync(logPath,path.join(runDir,'run.log'));
     delete RUNS[deal];
     try { if (code === 0) onDone && onDone(code); } catch {}
   };
@@ -1199,6 +1225,6 @@ const server = http.createServer(async (req, res) => {
     return json(res, e.status || 500, { error: e.message });
   }
 });
-if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${PORT}  root=${ROOT}  mock=${MOCK}`));
+if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${server.address().port}  root=${ROOT}  mock=${MOCK}`));
 
 module.exports={tokenize,bm25Index,bm25Scores,server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};

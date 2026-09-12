@@ -535,6 +535,13 @@ async function loadEvPage(n){
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
 
+function skillDiff(before,after){
+ const oldLines=(before||'').split('\n'),newLines=(after||'').split('\n');
+ // Show exact removed/added lines; repeated unchanged lines remain in the side-by-side source.
+ const removed=oldLines.filter(line=>line&&!newLines.includes(line));
+ const added=newLines.filter(line=>line&&!oldLines.includes(line));
+ return '<pre class="mdview">'+removed.map(line=>'<span style="color:var(--red)">− '+esc(line)+'</span>').concat(added.map(line=>'<span style="color:var(--green)">+ '+esc(line)+'</span>')).join('\n')+'</pre>';
+}
 let LEARNING=null,EDIT_RULE=null;
 async function loadLearning(){
  try{
@@ -550,7 +557,7 @@ async function loadLearning(){
   <h3>候選規則</h3>${data.rules.filter(r=>r.status==='proposed').map(card).join('')||'<div class="emptynote">尚無候選規則；先在審核頁送出決定與理由。</div>'}
   <h3>已核准規則</h3>${data.rules.filter(r=>r.status==='approved').map(card).join('')||'<p>尚無已核准規則。</p>'}
   <details><summary>已退回／停用</summary>${data.rules.filter(r=>r.status==='retired').map(card).join('')}</details>
-  ${data.skill_proposals.map(p=>`<div class="panel"><h2>方法論升版：${esc(p.ref)}</h2><div class="evgrid"><div><h4>目前版本</h4><pre class="mdview">${esc(p.before||'（新方法論）')}</pre></div><div><h4>提案版本</h4><pre class="mdview">${esc(p.content)}</pre></div></div><p>折入規則：${esc(p.derived_from_rules.join('、'))}</p><button data-ref="${esc(p.ref)}" onclick="approveSkill(this.dataset.ref)">核准升版並停用已納入規則</button></div>`).join('')}
+  ${data.skill_proposals.map(p=>`<div class="panel"><h2>方法論升版：${esc(p.ref)}</h2><h4>差異（刪除 −／新增 +）</h4>${skillDiff(p.before,p.content)}<div class="evgrid"><div><h4>目前版本</h4><pre class="mdview">${esc(p.before||'（新方法論）')}</pre></div><div><h4>提案版本</h4><pre class="mdview">${esc(p.content)}</pre></div></div><p>折入規則：${esc(p.derived_from_rules.join('、'))}</p><button data-ref="${esc(p.ref)}" onclick="approveSkill(this.dataset.ref)">核准升版並停用已納入規則</button></div>`).join('')}
   <div class="panel"><h2>題庫最近一次蒸餾摘要</h2><div class="mdr">${mdToHtml(data.summary||'尚無本輪蒸餾紀錄')}</div></div>`;
  }catch(e){$('learningBody').textContent='載入失敗：'+e.message;}
 }

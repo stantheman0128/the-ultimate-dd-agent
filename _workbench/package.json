@@ -2,7 +2,7 @@
   "name": "qlist-workbench",
   "version": "0.2.0",
   "private": true,
-  "description": "DD Q-list 工作台：Codex headless pipeline 與 OpenAI Responses API 即時問答",
+  "description": "DD Q-list 工作台：Codex／Claude 批次、證據審題與人工核准學習",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
