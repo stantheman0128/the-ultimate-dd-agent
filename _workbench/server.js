@@ -171,11 +171,11 @@ function agentDefinitions(config, runDir) {
     const raw=fs.readFileSync(fp,'utf8');
     const read=k=>{const m=raw.match(new RegExp('^'+k+' = (.*)$','m'));return m?JSON.parse(m[1]):'';};
     const body=read('developer_instructions');
-    definitions[name]={description:read('description'),prompt:body,tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
+    definitions[name]={description:read('description'),prompt:body+((name.startsWith('persona-')||name==='question-reviewer')?'\n'+skillsPromptLine(name):''),tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
     if(runDir){
       const dir=path.join(runDir,'agents');fs.mkdirSync(dir,{recursive:true});
       const file=path.join(dir,name+'.toml');
-      fs.writeFileSync(file,`model = ${JSON.stringify(choice.model)}\nmodel_reasoning_effort = ${JSON.stringify(choice.effort)}\ndeveloper_instructions = ${JSON.stringify(body)}\n`);
+      fs.writeFileSync(file,`model = ${JSON.stringify(choice.model)}\nmodel_reasoning_effort = ${JSON.stringify(choice.effort)}\ndeveloper_instructions = ${JSON.stringify(definitions[name].prompt)}\n`);
       agentFiles[name]=file;
     }
   }
@@ -274,6 +274,41 @@ function readFactsJson(dp) {
   try { return JSON.parse(fs.readFileSync(path.join(dp, '_analysis', 'facts.json'), 'utf8')); } catch { return null; }
 }
 
+// ---------- 方法論 skill 登記（knowledge/skills/<id>/SKILL.md ＋ active.json） ----------
+const SKILLS_DIR = path.join(ROOT, 'knowledge', 'skills');
+const SKILLS_ACTIVE = path.join(SKILLS_DIR, 'active.json');
+function parseFrontmatter(md) {
+  const m = /^---\n([\s\S]*?)\n---\n?/.exec(md);
+  const fm = {};
+  if (m) for (const line of m[1].split('\n')) { const i = line.indexOf(':'); if (i > 0) fm[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
+  return { fm, body: m ? md.slice(m[0].length) : md };
+}
+function readActiveSkills() {
+  try { const a = JSON.parse(fs.readFileSync(SKILLS_ACTIVE, 'utf8')).active; return Array.isArray(a) ? a : []; } catch { return ['vc-senior-qlist']; }
+}
+function listSkills() {
+  const active = new Set(readActiveSkills());
+  const out = [];
+  if (!fs.existsSync(SKILLS_DIR)) return out;
+  for (const id of fs.readdirSync(SKILLS_DIR).sort().filter(id=>!id.startsWith('_'))) {
+    const fp = path.join(SKILLS_DIR, id, 'SKILL.md');
+    if (!fs.existsSync(fp)) continue;
+    const md = fs.readFileSync(fp, 'utf8');
+    const { fm, body } = parseFrontmatter(md);
+    const refs = fs.existsSync(path.join(SKILLS_DIR, id, 'references')) ? fs.readdirSync(path.join(SKILLS_DIR, id, 'references')).filter(f => !f.startsWith('.')) : [];
+    out.push({ id, name: fm.name || id, title: fm.title || fm.name || id, description: fm.description || '', version: fm.version || '', scope: fm.scope || 'persona, reviewer', anonymized: fm.anonymized === 'true', lines: md.split('\n').length, tokens: estTokens(body), refs, active: active.has(id), builtin: id === 'vc-senior-qlist' });
+  }
+  return out;
+}
+function scopeMatches(scope, name) {
+  const scopes=Array.isArray(scope)?scope:String(scope||'persona, reviewer').replace(/[\[\]"']/g,'').split(/[,，]/).map(x=>x.trim());
+  return scopes.includes('all')||scopes.includes(name)||(name.startsWith('persona-')&&scopes.includes('persona'))||(name==='question-reviewer'&&scopes.includes('reviewer'));
+}
+function skillsPromptLine(scope) {
+  const active=listSkills().filter(k=>k.active&&(!scope||scopeMatches(k.scope,scope)));
+  return '本案適用方法論：\n'+(active.map(k=>`[${k.id}@${k.version} scope=${k.scope}]\n`+fs.readFileSync(path.join(SKILLS_DIR,k.id,'SKILL.md'),'utf8')).join('\n\n')||'無啟用 skill。');
+}
+
 // ---------- 問 AI 的 context 組裝 ----------
 function docBlock(d, pageSet) {
   if (d.kind === 'xlsx') {
@@ -364,6 +399,7 @@ function mockRun(run, emit, dp, finish) {
   const docs = run.manifest.shards.length?run.manifest.shards.map(s=>({name:s.file+' · part '+s.part+' · 頁 '+s.pages.join('–')})):listDocs(dp);
   const steps = [
     ['init', 'main', '引擎啟動 · model mock · 假引擎模式'],
+    ['text','main','載入方法論：'+run.manifest.skills.map(k=>k.id+'@'+k.version).join('、')],
     ...docs.flatMap(d => [['spawn', 'main', `派工 card-extractor：${d.name}`, 'card-extractor'], ['read', 'card-extractor', `讀 ${d.name} p.1-20`], ['write', 'card-extractor', `寫 ${d.name}.md`], ['agent_done', 'main', `✅ card-extractor 回報：字卡完成 ${d.name}`]]),
     ['spawn', 'main', '派工 reconciler：跨文件對帳', 'reconciler'], ['read', 'reconciler', '讀 knowledge/metrics.json'], ['bash', 'reconciler', '$ python3 _workbench/recompute.py …'], ['write', 'reconciler', '寫 facts.json'], ['agent_done', 'main', '✅ reconciler 回報：事實 27 列 · conflict 7'],
     ['spawn', 'main', '派工 persona-fin', 'persona-fin'], ['spawn', 'main', '派工 persona-ops', 'persona-ops'], ['spawn', 'main', '派工 persona-ind', 'persona-ind'], ['spawn', 'main', '派工 persona-ic', 'persona-ic'],
@@ -383,6 +419,7 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
   if (RUNS[deal]) throw httpErr(409, '本案已有流程在跑');
   fs.mkdirSync(path.join(dp, '_analysis'), { recursive: true });
   const config=runConfig(selectedProvider,model), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli();
+  if(['pipeline','ingest','merge','review'].includes(kind))prompt=skillsPromptLine()+'\n'+prompt;
   const run_id=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID().slice(0,8);
   const runDir=path.join(dp,'_analysis','runs',run_id);fs.mkdirSync(runDir,{recursive:true});
   let shards=[];
@@ -394,7 +431,7 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
   }
   const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir);
   const args=activeProvider.cliArgs({model:models.main.model,effort:models.main.effort,writable:true,prompt,system:HEADLESS_SYS,agents:definitions,models:{sub:{model:config[selected].sub_model,effort:config[selected].effort.sub}},agentFiles});
-  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:[],rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
+  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:listSkills().filter(k=>k.active).map(k=>({id:k.id,version:k.version})),rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
   const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
   saveManifest();
   if(['pipeline','ingest','merge'].includes(kind))prompt+=`\nJSON 正本：同步維護 ${deal}/_analysis/drafts/questions_R${readState(dp).round}.json。每題包含 question_id、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。既有題永遠保留 question_id；只修改 revision，新題使用不重複 q-rN-NNN。合併與 delta 都更新同一 JSON，Markdown 是人讀版。`;
@@ -542,7 +579,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/engine') {
       const config=settings.readSettings(), statuses=Object.fromEntries(['codex','claude'].map(p=>[p,providerStatus(config,p)])), selected=statuses[config.provider], ask=askConfig(config);
-      return json(res,200,{...selected,provider:config.provider,providers:statuses,mock:MOCK,token:!!readToken(),askModel:ask.model,askEffort:ask.effort,askBudget:ask.budget,sdk:true});
+      return json(res,200,{...selected,provider:config.provider,providers:statuses,mock:MOCK,token:!!readToken(),askModel:ask.model,askEffort:ask.effort,askBudget:ask.budget,sdk:true,skills:readActiveSkills()});
     }
     if (u.pathname === '/api/token' && req.method === 'POST') {
       const { token } = JSON.parse(await readBody(req));
@@ -888,6 +925,43 @@ const server = http.createServer(async (req, res) => {
       st.prevLifecycle = st.lifecycle;
       st.closed = true; st.lifecycle = 'closed'; writeState(dp, st);
       return json(res, 200, { state: st });
+    }
+
+    // ---- 方法論 skill（knowledge/skills/）----
+    if (u.pathname === '/api/skills' && req.method === 'GET') return json(res, 200, { skills: listSkills(), active: readActiveSkills() });
+    if (u.pathname === '/api/skills' && req.method === 'POST') {
+      // 只有 server 改 active.json；id 必須是實際存在的 skill 資料夾
+      const { active } = JSON.parse(await readBody(req));
+      const valid = new Set(listSkills().map(k => k.id));
+      if(!Array.isArray(active)||active.some(id=>typeof id!=='string'||!valid.has(id)))throw httpErr(400,'未知的 skill id');
+      const next = [...new Set(active)];
+      fs.mkdirSync(SKILLS_DIR, { recursive: true });
+      fs.writeFileSync(SKILLS_ACTIVE, JSON.stringify({ active: next, updated_at: new Date().toISOString(), note: '工作台側欄「方法論」勾選的 skill；派 persona／reviewer 時全文附進派工訊息' }, null, 2) + '\n');
+      return json(res, 200, { active: next, skills: listSkills() });
+    }
+    if (u.pathname === '/api/skills/read') {
+      const id = path.basename(q.get('id') || '');
+      const fp = path.join(SKILLS_DIR, id, 'SKILL.md');
+      if (!id || !fs.existsSync(fp)) throw httpErr(404, '找不到 skill');
+      const ref = q.get('ref') ? path.basename(q.get('ref')) : null;
+      const target = ref ? path.join(SKILLS_DIR, id, 'references', ref) : fp;
+      if (!fs.existsSync(target)) throw httpErr(404, '找不到檔案');
+      return json(res, 200, { id, file: ref ? `references/${ref}` : 'SKILL.md', content: fs.readFileSync(target, 'utf8') });
+    }
+    if (u.pathname === '/api/skills/upload' && req.method === 'POST') {
+      // 上傳一份 SKILL.md → knowledge/skills/<id>/SKILL.md；id 取自 ?id（預設檔名去副檔名），只允許安全字元；同名不覆蓋
+      const raw = (q.get('id') || path.basename(q.get('name') || 'my-skill').replace(/\.md$/i, ''));
+      const id = raw.replace(/[^\w\-一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      if (!id) throw httpErr(400, 'skill id 不合法');
+      const dir = path.join(SKILLS_DIR, id);
+      if (fs.existsSync(path.join(dir, 'SKILL.md'))) throw httpErr(409, `已有同名 skill「${id}」，請改名`);
+      let md = (await readBody(req, 4 * 1024 * 1024)).toString('utf8');
+      if (!/^---\n/.test(md)) md = `---\nname: ${id}\ntitle: ${id}\ndescription: 使用者上傳的方法論\nversion: 1\nscope: persona, reviewer\n---\n\n` + md;
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'SKILL.md'), md);
+      const active = [...new Set([...readActiveSkills(), id])];
+      fs.writeFileSync(SKILLS_ACTIVE, JSON.stringify({ active, updated_at: new Date().toISOString(), note: '工作台側欄「方法論」勾選的 skill；派 persona／reviewer 時全文附進派工訊息' }, null, 2) + '\n');
+      return json(res, 200, { id, active, skills: listSkills() });
     }
 
     // ---- 搜尋＋問 AI ----

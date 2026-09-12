@@ -190,6 +190,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
   <div class="sidelabel">案件</div>
   <div id="dealList"></div>
   <button class="newcase" onclick="show('ncOverlay')">＋ 新增案件</button>
+  <div class="sidelabel">方法論 SKILLS</div><div id="skillsList"></div><button onclick="$('skillUpload').click()">＋ 加入 skill</button><input id="skillUpload" type="file" accept=".md" hidden onchange="uploadSkill(this.files[0]);this.value=''">
   <div class="sidefoot" id="engineFoot">引擎：偵測中…</div>
 </aside>
 
@@ -529,6 +530,13 @@ async function loadEvPage(n){
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
 
+async function refreshSkills(){
+  const d=await api('/api/skills');
+  $('skillsList').innerHTML=d.skills.map(k=>`<div style="font-size:12px;padding:6px 0"><label><input type="checkbox" data-skill="${esc(k.id)}" ${k.active?'checked':''} onchange="toggleSkills()"> ${esc(k.title)}</label> ${k.anonymized?'<span class="chip ok">去識別</span>':''}<button data-id="${esc(k.id)}" onclick="viewSkill(this.dataset.id)" style="font-size:11px;padding:2px 6px">檢視</button></div>`).join('');
+}
+async function toggleSkills(){try{const active=[...document.querySelectorAll('[data-skill]:checked')].map(el=>el.dataset.skill);await api('/api/skills',{method:'POST',body:JSON.stringify({active})});toast('方法論已更新');}catch(e){toast(e.message);await refreshSkills();}}
+async function viewSkill(id,ref){try{const k=await api('/api/skills/read?'+enc({id,...(ref?{ref}:{})}));$('cardTitle').textContent=id+' / '+k.file;$('cardBody').innerHTML=mdToHtml(k.content);show('cardOverlay');}catch(e){toast(e.message);}}
+async function uploadSkill(file){if(!file)return;try{await api('/api/skills/upload?'+enc({name:file.name}),{method:'POST',body:file});await refreshSkills();toast('方法論已加入並啟用');}catch(e){toast(e.message);}}
 let SETTINGS=null;
 async function refreshEngine(){
   const e=await api('/api/engine');ENGINE=e;
@@ -584,7 +592,7 @@ async function loadDeals(sel){
         <span class="starbtn${d.state.starred?' on':''}" data-name="${esc(d.name)}" data-s="${d.state.starred?1:0}" role="button" title="置頂" onclick="event.stopPropagation();toggleStar(this)">${d.state.starred?'★':'☆'}</span></span>
       <span class="ds">${esc(ds)}</span></button>`;
   }).join('');
-  await refreshEngine();
+  await refreshEngine();await refreshSkills();
   if (!sel && deals.length) pickDeal(deals[0].name);
 }
 
@@ -1264,7 +1272,13 @@ async function askAI(){
   $('aiBtn').disabled=false;$('aiBtn').textContent='問 AI';
 }
 
-const HELP = `## 一個案子的完整流程
+const HELP = `## 方法論與規則
+側欄勾選方法論，執行時附給 scope 相符的 persona 與 Reviewer；關閉後下次執行不再載入。學到的規則需人工核准，問 AI 不載入方法論或規則。
+
+## Data Room 很大怎麼辦
+上傳即建逐頁與逐格索引；大型文件按 token 預算分片抽取，合併後逐筆核對與 QC。問答超過預算時保留指定頁，並用 BM25 挑頁。掃描頁與無法解析的檔案會標示未辨識。
+
+## 一個案子的完整流程
 
 1. **＋ 新增案件**：自動建立資料夾骨架（round1–3、_analysis、qlist、_notes.md）
 2. **備註頁先寫兩句背景**：怎麼認識的、聊過什麼、文件外的實體（例：某轉投資公司）。這是引擎唯一看不到的資訊，寫了才問得到

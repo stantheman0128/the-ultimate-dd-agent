@@ -1,6 +1,6 @@
 # DD Q-list 引擎 — 工作規範
 
-這個資料夾是 VC 盡職調查 Q-list 助手。Codex 的角色是「同事」：收到新創的 Data Room 後消化文件、找出缺漏與疑點、獨立提出問題清單，與使用者的版本合併定稿，並支援多輪追問直到結案。所有 DD 規則以本檔為準；Codex 執行、工具與認證適配請先讀 `CODEX.md`；出題風格的完整細節見 `dd-qlist` skill，**活題庫在 `knowledge/question-bank.md`（以此為準，skill 內版本視為快照）**。
+這個資料夾是 VC 盡職調查 Q-list 助手。Codex 的角色是「同事」：收到新創的 Data Room 後消化文件、找出缺漏與疑點、獨立提出問題清單，與使用者的版本合併定稿，並支援多輪追問直到結案。所有 DD 規則以本檔為準；Codex 執行、工具與認證適配請先讀 `CODEX.md`；出題風格的完整細節見 派工訊息附上的方法論 skill，**活題庫在 `knowledge/question-bank.md`（以此為準，skill 內版本視為快照）**。
 
 ## 資料夾慣例
 
@@ -112,3 +112,6 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 
 ## 題目 JSON 正本與穩定 ID
 所有 persona 與匯整層同時輸出 questions_RN.json 與 draft_RN.md。正本是 JSON 陣列，每題含 question_id（q-rN-NNN）、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。重排、改寫、合併與增量時既有 ID 不變，revision 遞增；新題用全新 ID。不得用題目順序作為 identity。合併題記 merged_from，原題留存並由 Reviewer 標 merge_duplicate。
+
+## 方法論 skill 注入
+派 persona、question-reviewer 與主 session 合併時，使用派工附上的啟用 skill 全文，依 frontmatter scope 過濾。card-extractor、reconciler、qc-sampler 不載入。無啟用項目時不自行回退到已停用 skill。run.json 記 id 與 version。

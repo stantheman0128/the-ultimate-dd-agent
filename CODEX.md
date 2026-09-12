@@ -39,7 +39,7 @@ Responses 請求設 `store: false`，快取依 provider 支援，不承諾固定
 
 - `AGENTS.md` 包含完整工作規範。
 - `.codex/agents/*.toml` 包含七個角色的完整 `developer_instructions`，不依賴其他工具的設定檔。模型與 effort 預設繼承主代理；可在各 TOML 設 `model`／`model_reasoning_effort`。
-- `.agents/skills/dd-qlist/SKILL.md` 是可發現的原生 skill，搭配 `knowledge/question-bank.md` 通用活題庫。
+- `knowledge/skills/vc-senior-qlist/SKILL.md` 是可發現的原生 skill，搭配 `knowledge/question-bank.md` 通用活題庫。
 - `.codex/config.toml` 啟用自訂代理，設定預設模型、effort 與並行上限。
 - PDF 掃描頁先用 PyMuPDF 渲染，再用可用圖片工具讀取，一次最多 20 頁；無法讀取須回報未覆蓋。
 - 新生成來源為「共識／Codex／你」。未標記作者的草稿顯示「AI」。
