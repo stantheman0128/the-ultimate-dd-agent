@@ -448,8 +448,7 @@ function mockRun(run, emit, dp, finish) {
     ['text','main','載入方法論：'+run.manifest.skills.map(k=>k.id+'@'+k.version).join('、')],
     ...docs.flatMap(d => [['spawn', 'main', `派工 card-extractor：${d.name}`, 'card-extractor'], ['read', 'card-extractor', `讀 ${d.name} p.1-20`], ['write', 'card-extractor', `寫 ${d.name}.md`], ['agent_done', 'main', `✅ card-extractor 回報：字卡完成 ${d.name}`]]),
     ['spawn', 'main', '派工 reconciler：跨文件對帳', 'reconciler'], ['read', 'reconciler', '讀 knowledge/metrics.json'], ['bash', 'reconciler', '$ python3 _workbench/recompute.py …'], ['write', 'reconciler', '寫 facts.json'], ['agent_done', 'main', '✅ reconciler 回報：事實 27 列 · conflict 7'],
-    ['spawn', 'main', '派工 persona-fin', 'persona-fin'], ['spawn', 'main', '派工 persona-ops', 'persona-ops'], ['spawn', 'main', '派工 persona-ind', 'persona-ind'], ['spawn', 'main', '派工 persona-ic', 'persona-ic'],
-    ['agent_done', 'main', '✅ persona-fin 回報：12 題'], ['agent_done', 'main', '✅ persona-ops 回報：11 題'], ['agent_done', 'main', '✅ persona-ind 回報：8 題'], ['agent_done', 'main', '✅ persona-ic 回報：13 題'],
+    ...run.config.personas.flatMap(p=>[['spawn','main','派工 persona-'+p,'persona-'+p],['agent_done','main','persona-'+p+' 假引擎回報']]),
     ['text', 'main', '匯整去重與 staple sweep…'], ['spawn','main','派工 question-reviewer：獨立回原文審題','question-reviewer'], ['write', 'main', '寫 draft_R1.md'], ['done', 'main', '結束 · 12s · $0.00 · mock'],
   ];
   if(run.kind==='review')steps=[['init','main','假引擎 Reviewer（沿用手寫 UI 範例）'],['spawn','main','派工 question-reviewer','question-reviewer'],['done','main','手寫審題結果已可檢視']];

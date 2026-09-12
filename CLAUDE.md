@@ -124,3 +124,6 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 ## 派工訊息順序與優先序
 固定代理 prompt → 本案適用方法論（啟用 skill 全文）→ 本案適用規則（server 已按 approved／scope／deal 過濾，每條含 applies_when 與 exceptions）→ 本案資料。規則 > skill > 代理預設。同一 rule_id 取最新 approved 版本；只有該版本的條件成立才套用。問 AI 不注入這三層。
 蒸餾不得修改代理 system prompt、settings、active.json 或核准帳本。先查既有規則與 skill 是否涵蓋；衝突明列 skill 章節。結案或 approved 規則 ≥10 時，可提出 house-style SKILL 新版到 knowledge/skills/_proposed/，frontmatter derived_from_rules 使用 rule-id@version。核准後才由 server 啟用、把已折入規則標 retired＋folded_into。
+
+## 可配置 persona
+persona 名單以派工訊息為準，預設 fin／ops／ind／ic，可增選 tech／legal／model／people。主 session 只派已勾選者，不默默加回停用 persona。每個 persona 獨立出題，Reviewer 統一審核。

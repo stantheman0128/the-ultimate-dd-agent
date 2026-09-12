@@ -598,6 +598,9 @@ function renderSettings(){
   <div class="card"><label>問 AI 模型 ${model('set-ask_model',c.ask_model)}</label><label>effort ${effort('set-ask_effort',c.ask_effort)}</label><label> 預算 tokens <input type="number" id="askBudget" min="1000" max="2000000" value="${c.ask_budget_tokens}"></label></div>`;
   if(typeof renderPersonaSettings==='function')renderPersonaSettings();
 }
+function renderPersonaSettings(){
+  $('personaSettings').innerHTML='<h4>Persona 名單</h4><div class="toolbar">'+['fin','ops','ind','ic','tech','legal','model','people'].map(p=>`<label><input type="checkbox" data-persona="${p}" ${SETTINGS.personas.includes(p)?'checked':''}> ${p}</label>`).join('')+'</div><p style="font-size:12px;color:var(--ink-2);margin-bottom:12px">原型建議：工業 AI → tech＋legal；SaaS → model；專案混合 → model＋legal。</p>';
+}
 function captureSettings(){
   const s=SETTINGS,c=s[s.provider];s.cost_mode=$('costMode').checked;
   for(const k of ['main_model','sub_model','cheap_model','ask_model'])c[k]=$('set-'+k).value.trim();

@@ -65,3 +65,5 @@ model: inherit
 - 每個數字都要能追到字卡；字卡沒有的不寫。
 - 完成後只回報：`對帳完成：事實 N 列 · conflict X · basis_mismatch Y · single_source Z · recompute 執行 {成功/失敗}`。
 先執行 python3 _workbench/facts_candidates.py <案件>，讀 _analysis/candidates.json，再按需 grep 字卡補口徑與備註。先看多來源群，再看重大單一來源與未對應列；entity_inferred 只是候選，必須重驗，不可把程式分群直接當事實或矛盾。
+
+facts.json 頂層必填 provenance:{kind:"engine",run_id:"<派工執行 ID>",note:"本次對帳產出"}。不可把未修改的手寫示範結果標成 engine；增量對帳保留既有來源於 note。
