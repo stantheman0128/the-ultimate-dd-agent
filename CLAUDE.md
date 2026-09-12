@@ -56,6 +56,7 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
    - 未明名詞與疑點（附出處；含附註中的質押/擔保/終止/關係人）
    - 覆蓋聲明（共 X 頁/tab，是否全數處理）
    - xlsx 一律用 python3＋openpyxl 讀「值＋公式」；掃描 PDF 逐頁視覺讀（≤20 頁/次，大檔分段）
+   - 大檔依 server 分片表派工；分片完成後執行 `python3 _workbench/merge_cards.py <案件> <檔>`，再執行 `python3 _workbench/verify_cards.py <案件>`。未達 95% 或 critical_miss 的字卡重抽一次、再驗；仍失敗明列未驗證，不能宣稱通過。之後才派 qc-sampler。
 3. **跨文件對帳**（派 `reconciler`）→ `facts.md`＋`facts.json`：事實矩陣＋不一致清單（每筆附兩邊出處與嚴重度）。同物異名對成一列（aliases_seen）、同名不同口徑分 basis、有公式的指標填 derived 交給 `recompute.py` 重算，模型不心算。**不一致＝最高優先問題來源**。
 4. **字卡抽查**（派 `qc-sampler`）→ `qc-report.md`：漏抽率 > 20% 或漏掉質押/終止/關係人條款的字卡重抽。
 

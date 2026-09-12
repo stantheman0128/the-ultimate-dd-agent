@@ -13,7 +13,7 @@
 import json, os, sys, time, datetime, re
 
 SKIP_PREFIX = ('.', '~$')
-DOC_EXT = {'.pdf', '.xlsx', '.xlsm', '.pptx', '.docx', '.txt', '.md', '.csv'}
+DOC_EXT = {'.pdf', '.xlsx', '.xlsm', '.pptx', '.docx', '.txt', '.md', '.csv', '.jpg', '.jpeg', '.png'}
 MAX_CELLS_PER_SHEET = 40000
 OCR_MIN_CHARS = 30  # 一頁文字少於此且有圖 → 判為掃描頁
 
@@ -126,7 +126,7 @@ def index_docx(path):
 def index_text(path):
     with open(path, encoding='utf-8', errors='replace') as f:
         text = f.read()
-    chunks = [text[i:i + 3000] for i in range(0, max(len(text), 1), 3000)]
+    chunks = [text[i:i + 5000] for i in range(0, max(len(text), 1), 5000)]
     return {'kind': 'text', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False} for i, c in enumerate(chunks)],
             'page_count': len(chunks)}
 
@@ -141,6 +141,8 @@ def build(path, round_label):
         body = index_pptx(path)
     elif ext == '.docx':
         body = index_docx(path)
+    elif ext in ('.jpg', '.jpeg', '.png'):
+        body = {'kind':'image','pages':[{'n':1,'text':'','chars':0,'needs_ocr':True}],'page_count':1,'needs_ocr_pages':1}
     else:
         body = index_text(path)
     st = os.stat(path)

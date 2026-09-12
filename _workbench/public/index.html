@@ -715,11 +715,13 @@ function idxCell(f){
   const i=f.index; const unit = i.kind==='xlsx' ? 'tab' : '頁';
   return `<span class="idxcell" title="${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
 }
+function verifyChip(f){const v=f.verification;if(!v)return '';return `<button class="chip ${v.critical_miss?'bad':v.passed?'ok':'warn'}" onclick="showVerification()">${v.critical_miss?'✗ 關鍵漏抽':(v.passed?'✓ ':'⚠ ')+Math.round(v.hit_rate*100)+'%'}</button> `;}
+async function showVerification(){try{const v=await api('/api/card-verify?'+enc({deal:cur}));$('cardTitle').textContent='字卡逐筆核對';$('cardBody').innerHTML=mdToHtml(v.content||'尚未核對');show('cardOverlay');}catch(e){toast(e.message);}}
 function docRow(f, withRound){
   return `<tr>
     <td class="file">${esc(f.name)}</td>${withRound?`<td>${esc(f.round)}</td>`:''}<td>${catSel(f)}</td><td class="num">${humanSize(f.size)}</td>
     <td>${idxCell(f)}</td>
-    <td>${f.card ? `<button class="ibtn" title="開啟字卡" aria-label="開啟字卡" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">未消化</span> <button class="ibtn" title="只消化這份：字卡 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="只消化這份" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">⚡</button>`}</td>
+    <td>${verifyChip(f)}${f.card ? `<button class="ibtn" title="開啟字卡" aria-label="開啟字卡" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">未消化</span> <button class="ibtn" title="只消化這份：字卡 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="只消化這份" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">⚡</button>`}</td>
     <td style="white-space:nowrap"><button class="ibtn" title="開證據檢視器（翻頁＋索引文字）" aria-label="證據" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openEvidence(this.dataset.f,this.dataset.r,'p.1')">${ICO.eye}</button>
     <button class="ibtn" title="下載/開啟檔案" aria-label="下載" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openDoc(this.dataset.f,this.dataset.r)">${ICO.dl}</button>
     <button class="ibtn delbtn" title="刪除（歸檔至 _archive/）" aria-label="刪除" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="archiveDoc(this)">${ICO.trash}</button></td></tr>`;

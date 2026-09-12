@@ -3,7 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const OpenAI = require('openai');
 const providers = {codex:require('./codex-provider'),claude:require('./claude-provider')};
 const provider=providers.codex;
@@ -75,6 +75,7 @@ function listDocs(dp) {
       name: f, round, size: st.size, mtime: st.mtimeMs,
       cat: catMap[f] || guessCat(f),
       card: !!findCard(dp, f),
+      verification:readCardVerification(dp).cards?.find(c=>c.file===f)||null,
       index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
       indexing: INDEXING.has(path.join(dir, f)),
     });
@@ -267,6 +268,7 @@ function runIndexer(dp, file, force) {
     });
   });
 }
+function readCardVerification(dp) {try{return JSON.parse(fs.readFileSync(path.join(dp,'_analysis','card-verify.json'),'utf8'));}catch{return {cards:[]};}}
 function readFactsJson(dp) {
   try { return JSON.parse(fs.readFileSync(path.join(dp, '_analysis', 'facts.json'), 'utf8')); } catch { return null; }
 }
@@ -358,7 +360,7 @@ function buildAskContext(dp, question, askBudget = ASK_BUDGET) {
 // Codex JSONL events are adapted to the existing workbench timeline contract.
 const parseStreamLine = provider.parseStreamLine;
 function mockRun(run, emit, dp, finish) {
-  const docs = listDocs(dp).slice(0, 4);
+  const docs = run.manifest.shards.length?run.manifest.shards.map(s=>({name:s.file+' · part '+s.part+' · 頁 '+s.pages.join('–')})):listDocs(dp);
   const steps = [
     ['init', 'main', '引擎啟動 · model mock · 假引擎模式'],
     ...docs.flatMap(d => [['spawn', 'main', `派工 card-extractor：${d.name}`, 'card-extractor'], ['read', 'card-extractor', `讀 ${d.name} p.1-20`], ['write', 'card-extractor', `寫 ${d.name}.md`], ['agent_done', 'main', `✅ card-extractor 回報：字卡完成 ${d.name}`]]),
@@ -382,9 +384,16 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
   const config=runConfig(selectedProvider,model), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli();
   const run_id=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID().slice(0,8);
   const runDir=path.join(dp,'_analysis','runs',run_id);fs.mkdirSync(runDir,{recursive:true});
+  let shards=[];
+  if(['pipeline','ingest'].includes(kind)&&fs.existsSync(path.join(__dirname,'shard_plan.py'))){
+    const result=spawnSync(PY,[path.join(__dirname,'shard_plan.py'),dp,...(extra.file?[extra.file]:[])],{encoding:'utf8',maxBuffer:8*1024*1024});
+    if(result.status!==0)throw httpErr(500,'分片計画失敗：'+(result.stderr||result.error));
+    shards=JSON.parse(result.stdout);
+    prompt='大檔分片（每列一次 card-extractor 派工，嚴守 output 與原始頁範圍）：'+JSON.stringify(shards)+'\n'+prompt;
+  }
   const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir);
   const args=activeProvider.cliArgs({model:models.main.model,effort:models.main.effort,writable:true,prompt,system:HEADLESS_SYS,agents:definitions,models:{sub:{model:config[selected].sub_model,effort:config[selected].effort.sub}},agentFiles});
-  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:[],rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards:[],started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
+  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:[],rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
   const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
   saveManifest();
   prompt=`執行 ID：${run_id}。persona 名單以此為準：${config.personas.map(p=>'persona-'+p).join('、')}。\n`+prompt;
@@ -652,6 +661,10 @@ const server = http.createServer(async (req, res) => {
       if (!p) return json(res, 404, { error: `沒有第 ${n} 頁（共 ${d.page_count} 頁）` });
       return json(res, 200, { file, round: d.round, kind: d.kind, page: n, page_count: d.page_count, text: p.text, needs_ocr: !!p.needs_ocr, chars: p.chars });
     }
+    if (u.pathname === '/api/card-verify') {
+      const dp=dealPath(q.get('deal'));let content='';try{content=fs.readFileSync(path.join(dp,'_analysis','card-verify.md'),'utf8');}catch{}
+      return json(res,200,{...readCardVerification(dp),content});
+    }
     if (u.pathname === '/api/facts') {
       const dp = dealPath(q.get('deal'));
       const fj = readFactsJson(dp);
@@ -670,7 +683,7 @@ const server = http.createServer(async (req, res) => {
       const rel = /^R\d+$/.test(round || '') ? `round${round.slice(1)}/${path.basename(file)}` : path.basename(file);
       if (!fs.existsSync(path.join(dp, rel))) throw httpErr(404, '找不到文件');
       const prompt = `只消化 X（單檔增量）：案子「${deal}」Round ${st.round}，新文件「${deal}/${rel}」。照本專案 AGENTS.md 執行：(1) 先確認 _analysis/index/ 有此檔索引（沒有就跑 python3 _workbench/index_doc.py "${deal}" --file "${rel}"）；(2) 派 card-extractor 只為這一份文件產字卡（檔名＝原始檔名＋.md，存 _analysis/cards/）；(3) 派 reconciler 做「增量」對帳：讀既有 _analysis/facts.json 與 facts.md，只加入與此文件相關的事實列與新矛盾（同物異名對齊、口徑分 basis、有公式的填 derived），執行 python3 _workbench/recompute.py "${deal}"，更新 facts.json 與 facts.md；(4) 依新矛盾與新事實出 3–6 題（可直接由你出，或派需要的 persona），寫入「${deal}/_analysis/drafts/draft_R${st.round}_delta.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |，No. 自 901 起連號，出處與動機寫檔名＋頁碼/tab＋引用數字＋一句白話動機，證據欄寫機讀引用（文件代號:位置，分號分隔）；(5) 完成即結束，只回報一行摘要。記得先讀「${deal}/_notes.md」。`;
-      startRun(deal, 'ingest', prompt, null, model, selectedProvider);
+      startRun(deal, 'ingest', prompt, null, model, selectedProvider, {file:path.basename(file)});
       return json(res, 200, { started: true, file: rel });
     }
     if (u.pathname === '/api/archive' && req.method === 'POST') {
