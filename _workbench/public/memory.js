@@ -16,6 +16,12 @@ async function openMemory() {
   const epoch = ++memoryView.epoch;
   memoryView.deal = CHAT.deal;
   $("memoryDialog").showModal();
+  switchMemoryPanel("range");
+  $("memoryProjectSearch").value = "";
+  $("memoryNoProjects").hidden = true;
+  $("memoryProjects").textContent = "正在載入專案…";
+  $("memoryCurrentDeal").textContent = CHAT.deal;
+  $("memoryApply").disabled = true;
   $("memoryList").textContent = "正在載入…";
   try {
     const { deals } = await api("/api/deals");
@@ -38,6 +44,7 @@ async function openMemory() {
         )
         .join("");
     $("memoryScope").value = CHAT.deal;
+    updateMemorySelection();
     await loadMemory();
   } catch (e) {
     $("memoryList").textContent = e.message;
@@ -63,6 +70,8 @@ async function saveMemorySelection() {
       CHAT.conversation = c;
     } else memoryProjects = projects;
     renderMemoryBar();
+    updateMemorySelection();
+    $("memorySelectionHint").textContent = "已套用，下次回答將參考此範圍。";
     toast("已更新本次對話的記憶範圍");
   } catch (e) {
     toast(e.message);
@@ -72,25 +81,15 @@ async function loadMemory() {
   const scope = $("memoryScope").value,
     epoch = ++memoryView.epoch;
   memoryView.scope = scope;
-  $("memoryEditor").hidden = true;
+  cancelMemoryEdit();
+  $("memoryEntrySearch").value = "";
+  memoryView.entries = [];
   $("memoryList").textContent = "正在載入…";
   try {
     const { entries, jobs } = await api("/api/memory?" + enc({ scope }));
     if (epoch !== memoryView.epoch) return;
     memoryView.entries = entries;
-    const labels = {
-      active: "使用中",
-      candidate: "待確認",
-      disabled: "已停用",
-    };
-    $("memoryList").innerHTML =
-      entries
-        .map(
-          (x) =>
-            `<button class="memory-entry" data-id="${esc(x.id)}" onclick="editMemory(this.dataset.id)"><span><strong>${esc(x.title)}</strong><small>${esc(labels[x.status])} · ${esc(x.certainty)} · 第 ${x.revision} 版</small></span><span aria-hidden="true">›</span></button>`,
-        )
-        .join("") ||
-      '<div class="memory-empty">尚無記憶<br><small>對話完成後會在背景整理，也可以直接新增。</small></div>';
+    renderMemoryEntries();
     const failed = jobs.filter((j) => j.status === "failed").length,
       pending = jobs.filter((j) =>
         ["pending", "running"].includes(j.status),
@@ -109,6 +108,8 @@ function editMemory(id) {
   const entry = id ? memoryView.entries.find((x) => x.id === id) : null;
   memoryView.editing = entry;
   $("memoryEditor").hidden = false;
+  $("memoryLibraryBrowse").hidden = true;
+  $("memoryEditorHeading").textContent = entry ? "編輯記憶" : "新增記憶";
   $("memoryTitle").value = entry?.title || "";
   $("memoryContent").value = entry?.content || "";
   $("memoryStatus").value = entry?.status || "active";
@@ -217,8 +218,9 @@ async function watchMemoryLearning(attempt = 0, epoch = CHAT.epoch) {
 }
 function filterMemoryProjects(value) {
   const q = value.trim().toLowerCase();
-  for (const label of $("memoryProjects").querySelectorAll("label"))
-    label.hidden = !label.textContent.toLowerCase().includes(q);
+  const labels = [...$("memoryProjects").querySelectorAll("label")];
+  for (const label of labels) label.hidden = !label.textContent.toLowerCase().includes(q);
+  $("memoryNoProjects").hidden = !labels.length || labels.some(x => !x.hidden);
 }
 
 async function openMemorySource() {
@@ -232,4 +234,29 @@ async function openMemorySource() {
   } catch (e) {
     toast("無法開啟來源對話：" + e.message);
   }
+}
+
+function switchMemoryPanel(panel) {
+  for (const [name, key] of [["Range", "range"], ["Library", "library"]]) {
+    $("memory" + name + "Panel").hidden = panel !== key;
+    $("memory" + name + "Tab").setAttribute("aria-pressed", String(panel === key));
+  }
+}
+function updateMemorySelection() {
+  const selected = [...$("memoryProjects").querySelectorAll("input:checked")].map(x => x.value);
+  const saved = CHAT.conversation?.memoryProjects || memoryProjects;
+  const changed = selected.length !== saved.length || selected.some(x => !saved.includes(x));
+  $("memorySelectedCount").textContent = `已選 ${selected.length} 案`;
+  $("memoryApply").disabled = !changed;
+  $("memorySelectionHint").textContent = changed ? "尚未套用；下一輪回答起生效。" : "目前範圍已套用，歷史對話會保留。";
+}
+function cancelMemoryEdit() {
+  $("memoryEditor").hidden = true;
+  $("memoryLibraryBrowse").hidden = false;
+}
+function renderMemoryEntries() {
+  const q = $("memoryEntrySearch").value.trim().toLowerCase();
+  const entries = memoryView.entries.filter(x => (x.title + " " + x.content).toLowerCase().includes(q));
+  const labels = { active: "使用中", candidate: "待確認", disabled: "已停用" };
+  $("memoryList").innerHTML = entries.map(x => `<button class="memory-entry" data-id="${esc(x.id)}" onclick="editMemory(this.dataset.id)"><span><strong>${esc(x.title)}</strong><span class="memory-preview">${esc(x.content.slice(0, 110))}</span><small>${esc(labels[x.status] || x.status)} · 第 ${x.revision} 版</small></span><span aria-hidden="true">›</span></button>`).join("") || `<div class="memory-empty"><strong>${q ? "找不到符合的記憶" : "還沒有保存的記憶"}</strong><small>${q ? "試試其他關鍵字。" : "完成對話後會自動整理，也可以先記下重要背景。"}</small>${q ? "" : '<button onclick="editMemory()">＋ 新增第一筆記憶</button>'}</div>`;
 }
