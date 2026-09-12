@@ -297,8 +297,8 @@ async function askAI() {
 function updateComposer() {
   const input = $("aiQ");
   $("aiBtn").disabled = CHAT.busy || !input.value.trim();
-  input.style.height = "auto";
-  input.style.height = Math.min(180, Math.max(70, input.scrollHeight)) + "px";
+  input.style.height = "0px";
+  input.style.height = Math.min(120, Math.max(32, input.scrollHeight)) + "px";
 }
 function toggleChatHistory(button) {
   const hidden = $("tab-chat").classList.toggle("history-hidden");
