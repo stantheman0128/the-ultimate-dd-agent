@@ -38,10 +38,13 @@ knowledge/question-bank.md  # 活題庫（蒸餾迴圈的落腳點）
 
 | 代理 | 模型 | 做什麼 | 產出 |
 |---|---|---|---|
-| `card-extractor` | 繼承 引擎 模型 | 一份文件一張字卡，機械式全量抽取；有索引用索引，掃描頁才視覺讀 | `cards/<檔名>.md` |
-| `reconciler` | 繼承 引擎 模型 | 同物異名對齊、同名不同口徑分 basis、公式交給 `recompute.py` 重算 | `facts.md`＋`facts.json` |
-| `qc-sampler` | 繼承 引擎 模型 | 隨機抽原文頁對字卡，找漏抽 | `qc-report.md` |
-| `persona-fin` / `persona-ops` / `persona-ind` / `persona-ic` | 繼承 引擎 模型 | 四視角平行出題，各自獨立、互不參考 | `drafts/persona_*.md` |
+| `card-extractor` | 由進階設定解析 | 一份文件一張字卡，機械式全量抽取；有索引用索引，掃描頁才視覺讀 | `cards/<檔名>.md` |
+| `reconciler` | 由進階設定解析 | 同物異名對齊、同名不同口徑分 basis、公式交給 `recompute.py` 重算 | `facts.md`＋`facts.json` |
+| `qc-sampler` | 由進階設定解析 | 隨機抽原文頁對字卡，找漏抽 | `qc-report.md` |
+| `persona-fin` / `persona-ops` / `persona-ind` / `persona-ic` | 由進階設定解析 | 四視角平行出題，各自獨立、互不參考 | `drafts/persona_*.md` |
+| `question-reviewer` | 由進階設定解析 | 獨立回原文逐題審查 | `review_RN.json` |
+| `distiller` | 由進階設定解析 | 從人的回饋提候選規則、批次蒸餾 | `rule-proposals.json`／蒸餾報告 |
+| `persona-tech` / `persona-legal` / `persona-model` / `persona-people` | 由進階設定解析 | 可選技術、合約、財測、團隊視角 | `drafts/persona_*.md` |
 | 主 session | — | 缺件盤點、派工、匯整去重、staple sweep、波次、寫 `draft_RN.md` | `drafts/draft_RN.md` |
 
 Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、容忍差）；`_workbench/recompute.py <案件>` 讀 `facts.json` 重算 derived 並正規化 status。
@@ -60,7 +63,7 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 3. **跨文件對帳**（派 `reconciler`）→ `facts.md`＋`facts.json`：事實矩陣＋不一致清單（每筆附兩邊出處與嚴重度）。同物異名對成一列（aliases_seen）、同名不同口徑分 basis、有公式的指標填 derived 交給 `recompute.py` 重算，模型不心算。**不一致＝最高優先問題來源**。
 4. **字卡抽查**（派 `qc-sampler`）→ `qc-report.md`：漏抽率 > 20% 或漏掉質押/終止/關係人條款的字卡重抽。
 
-### 階段 1b：出題（四 persona 子代理，平行派工）
+### 階段 1b：出題（已選 persona 子代理，平行派工）
 | Persona（代理名） | 視角 |
 |---|---|
 | 財務偵探（`persona-fin`） | 財報逐行、數字異常、收入認列、B/S 疑點、財測假設 vs 實際 |
