@@ -16,6 +16,7 @@ test("memory HTTP contract persists selection, revisions and deletion and reject
     "project-chat.js",
     "retrieval.py",
     "memory-store.js",
+    "distilled-memory.js",
     "memory-search.py",
   ])
     fs.copyFileSync(path.join(__dirname, "..", file), path.join(work, file));

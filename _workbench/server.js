@@ -621,8 +621,8 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/distill' && req.method === 'POST') {
       const { deal, model } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
-      const prompt = `結案蒸餾：案子「${deal}」。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則、per-deal profile 寫回「knowledge/question-bank.md」— 用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
-      startRun(deal, 'distill', prompt, null, model);
+      const prompt = `結案蒸餾：案子「${deal}」。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則寫回「knowledge/question-bank.md」— 僅保存抽象化通則，不得含本案名稱、profile、數字或交易條件；案件細節留在案件蒸餾報告。用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
+      startRun(deal, 'distill', prompt, () => memory.syncDistilled(), model);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/run' && req.method === 'POST') {
@@ -747,7 +747,7 @@ const server = http.createServer(async (req, res) => {
       if (!RUNS[q.get('deal')]) {
         try {
           const prompt = `本輪蒸餾：案子「${q.get('deal')}」Round ${st.round}。照 AGENTS.md 階段 4 的增量版執行：(1) 讀「${q.get('deal')}/_analysis/diff-reports/」本輪審核紀錄（砍題原因→反面規則、編輯對→措辭規則）；(2) 用 python3＋openpyxl 比對「${q.get('deal')}/qlist/${fname}」（最終發出版）與「${q.get('deal')}/_analysis/drafts/」本輪合併版 — 同事新增的題記為盲區並抽象化 pattern、修改的題記措辭差異；(3) 增量寫回「knowledge/question-bank.md」（追加與合併，絕不刪既有內容）；(4) 蒸餾摘要與「待標註」清單寫入「${q.get('deal')}/_analysis/distill-report-r${st.round}.md」。完成即結束。`;
-          startRun(q.get('deal'), 'round-distill', prompt, null, q.get('model'));
+          startRun(q.get('deal'), 'round-distill', prompt, () => memory.syncDistilled(), q.get('model'));
           distill = true;
         } catch {}
       }
@@ -783,6 +783,7 @@ const server = http.createServer(async (req, res) => {
     }
     if(u.pathname==='/api/memory/status'){const deal=q.get('deal');dealPath(deal);const id=q.get('conversation');const job=memory.jobs(deal).filter(j=>j.conversationId===id).at(-1);return json(res,200,{status:job?.status||'none'});}
     if (u.pathname === '/api/memory') {
+      memory.syncDistilled();
       if(req.method==='GET') {const scope=q.get('scope');memory.dir(scope);return json(res,200,{entries:memory.list(scope),jobs:memory.jobs(scope).map(j=>({id:j.id,status:j.status,error:j.error}))});}
       const b=JSON.parse(await readBody(req,16000));memory.dir(b.scope);
       if(req.method==='DELETE'){memory.remove(b.scope,b.id,b.revision);return json(res,200,{ok:true});}
@@ -824,7 +825,7 @@ const server = http.createServer(async (req, res) => {
         client:apiKey?new OpenAI({apiKey,maxRetries:0,timeout:90000}):null,
         mock:MOCK,memory,send,signal:abort.signal});
       res.end();
-      if(!MOCK&&conversation.messages.at(-1)?.status==='completed'){memory.enqueue(body.deal,conversation);setImmediate(runMemoryJobs);}
+      if(!MOCK&&conversation.messages.at(-1)?.status==='completed'&&!conversation.messages.at(-1)?.memoryProposals?.length){memory.enqueue(body.deal,conversation);setImmediate(runMemoryJobs);}
       return;
     }
     // ---- 靜態 ----
