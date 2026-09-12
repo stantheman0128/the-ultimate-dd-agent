@@ -6,21 +6,10 @@
 
 1. 安裝 Python 與 npm 依賴，索引 `演練資料_AcmeRobotics`。
 2. 以 `QLIST_MOCK=1 PORT=8765 node _workbench/server.js` 瀏覽合成文件、既有字卡、對帳與草稿。Mock 不產生真實模型結果。
-3. 點矛盾圖查驗兩份出處；開年報第 486 頁確認 Note 41。
+3. 點矛盾圖查驗兩份出處；開啟原文頁面查驗引用。
 4. 真實模式需移除 mock 並完成 OpenAI API key 或 Codex CLI 登入。先實測問答，再測單檔消化與完整多代理流程。
 5. 可用 `demo_extra/Acme_客戶合約摘要_2026H1.xlsx` 演練新增文件，觀察字卡、增量對帳與新增問題。
 6. 合併審核呈現人工與 AI 差異；只把抽象通用題型寫入公開題庫。
-
-## 埋雷表（示範案）
-
-| # | 在哪 | 雷 | 誰抓 | 現場動作 |
-|---|---|---|---|---|
-| M1 | Cap Table B4 vs 股東名簿 p.1 | Vertex 1,200,000 vs 1,500,000 股，差額鏡像到 minority | reconciler → 矛盾圖紅格 | 點紅格，兩份文件並排 |
-| M2 | Deck p.4 vs 財報 p.1 vs 年報 p.14 | 毛利率 58% / 41.2% / 56.8%（不含硬體）| reconciler＋recompute 重算 41.2% | 展示口徑分 basis、程式重算 |
-| M3 | 年報 **p.312** Note 27 | 向 CEO 全資 Harbor Peak 採購 US$640,120，摘要版與 Deck 未揭露 | card-extractor | 評審問「有沒有關係人交易」→ 答案附 [年報 p.312]，點開 |
-| M4 | 年報 **p.486** Note 41 | 增資逾 US$5M 或 change of control 須銀行同意；本輪 US$8M 觸發，尚未申請 | card-extractor＋persona-ic | 「第 486 頁寫什麼」→ 直翻；再看它怎麼變成一題 |
-| M5 | 現場拖入 `demo_extra/Acme_客戶合約摘要_2026H1.xlsx` | LogiOne 到期 2026-12-31 vs Deck 2027/06；QuickShip 已終止；MetroParts 仍試營運 | ingest-one | 拖入 → ⚡ → 時間軸 → 新紅格＋新題 |
-| 加碼 | 年報 p.17 Note 12 / p.18 Note 15 / p.14 Note 5 | DSO 87 天自承是 Q4 年化、全年 131 天；已授予 280,000 股選擇權；Top-10 = 88%（Deck 68%）| reconciler | 問 AI 直接問 |
 
 ## 架構與限制
 

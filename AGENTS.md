@@ -22,8 +22,7 @@
 │   └── _archive/          # 被汰換的舊版文件（永不硬刪）
 └── qlist/                 # 各輪「最終發出版」＝正式版＝下輪判定基準
 knowledge/question-bank.md  # 活題庫（蒸餾迴圈的落腳點）
-演練資料_AcmeRobotics/       # 測試案：埋 4 個地雷（毛利率不一致、Vertex 持股不一致、
-                            # 附註七設備質押、QuickShip 客戶終止），供引擎驗收
+演練資料_AcmeRobotics/       # 測試案：含已知不一致，答案卷不放 repo
 ```
 
 ## 觸發語彙（session 操作）

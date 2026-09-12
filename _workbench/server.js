@@ -686,7 +686,7 @@ const server = http.createServer(async (req, res) => {
       const st = readState(dp);
       if (st.closed) throw httpErr(400, '案件已結案');
       const followup = st.round <= 1 ? '' : `這是第 ${st.round} 輪追問，多兩件必做的事：(A) 上輪回覆判定：讀「${deal}/qlist/」內上一輪最終發出版，以及「${deal}/round${st.round}/」內對方回覆的 Q-list xlsx（檔名通常含「回覆」或「Qlist」，用 python3＋openpyxl 讀回答欄），逐題判定：完整回答／部分回答／迴避／與其他資料矛盾，判定表寫入「${deal}/_analysis/reply-judgment-r${st.round - 1}.md」；後三種進本輪追問，題目中要引用對方的原回覆再往下追。(B) 新文件做增量消化並更新 facts.md，新舊矛盾（含版本 diff）為最高優先出題來源。`;
-      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（四 persona 出題、匯整），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「Acme_Robotics_FY2025_Annual_Report_Full.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——本團隊一律書面詢問，敏感題以波次 2 表達即可。完成後即結束。`;
+      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（四 persona 出題、匯整），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——本團隊一律書面詢問，敏感題以波次 2 表達即可。完成後即結束。`;
       startRun(deal, 'pipeline', prompt, () => {
         const s = readState(dp);
         if (fs.existsSync(path.join(dp, '_analysis', 'drafts', `draft_R${s.round}.md`))) {
@@ -901,7 +901,7 @@ const server = http.createServer(async (req, res) => {
         const mode = MOCK ? 'mock' : (process.env.OPENAI_API_KEY || readToken()) ? 'api' : (CLI ? 'cli' : 'none');
         send({ meta: { mode, model: mode === 'api' ? ASK_MODEL : (model || 'CLI 預設'), docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, totalTokens: ctx.totalTokens, budget: ASK_BUDGET } });
         if (mode === 'mock') {
-          const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已依關鍵字挑頁）'}。正式版會由模型依此回答並標出處，例如：Vertex Growth Fund LP 持股在 Cap Table 為 1,200,000 股 [Acme_CapTable_202606.xlsx Cap Table!B4]，股東名簿為 1,500,000 股 [Acme_Robotics_Shareholder_Registry_20260315.pdf p.1]。`;
+          const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已依關鍵字挑頁）'}。正式版會由模型依此回答並標出處，格式 [檔名 p.N]／[檔名 工作表!B4]。`;
           for (const ch of fake.match(/.{1,12}/g)) { send({ delta: ch }); await new Promise(r => setTimeout(r, 25)); }
           send({ mode: 'mock' });
         } else if (mode === 'api') await askViaApi(ctx, question, send);

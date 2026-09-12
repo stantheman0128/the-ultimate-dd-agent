@@ -313,7 +313,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <div class="panel">
       <h2>問 AI <span class="hint" id="aiHint">整份 Data Room 帶頁碼進 context，串流回答並標出處；點出處開原文</span></h2>
       <div class="toolbar">
-        <input type="text" id="aiQ" placeholder="例：第 486 頁寫了什麼？／財報附註有沒有提到質押？／Vertex 持股各文件對得上嗎？" onkeydown="if(event.key==='Enter')askAI()">
+        <input type="text" id="aiQ" placeholder="例：第 N 頁寫了什麼？／財報附註有沒有提到質押？／某股東持股各文件對得上嗎？" onkeydown="if(event.key==='Enter')askAI()">
         <button class="primary" id="aiBtn" onclick="askAI()">問 Codex</button>
       </div>
       <div class="askmeta" id="aiMeta"></div>
@@ -1269,7 +1269,7 @@ const HELP = `## 一個案子的完整流程
 - **索引**：上傳即自動抽每頁文字（PDF／pptx）與每格值＋公式（xlsx）到 _analysis/index/。文件頁的「索引」欄看得到頁數與掃描頁數；「⟳ 重建索引」全案重跑。字卡代理讀索引而不是原檔，掃描頁才回頭視覺讀。
 - **證據檢視器**：任何出處（[檔名 p.N]、[檔名 工作表!B4]）都可以點：左邊原檔翻到該頁／表格標出格子，右邊是該頁索引文字。
 - **矛盾圖**（對帳分頁）：facts.json 的事實 × 文件矩陣。紅＝矛盾、黃＝口徑不同、藍＝單一來源。有公式的事實會顯示程式重算結果（recompute.py），不靠模型心算。點格子開兩邊原文。
-- **問 AI**：整份 Data Room 帶頁碼放進 context 並快取，串流回答、每個事實標出處。設 OPENAI_API_KEY 走直連 API（快）；沒設就走 Codex CLI（慢一點）。可問「第 486 頁寫了什麼」「有沒有提到質押」「Vertex 持股各文件對得上嗎」。
+- **問 AI**：整份 Data Room 帶頁碼放進 context 並快取，串流回答、每個事實標出處。設 OPENAI_API_KEY 走直連 API（快）；沒設就走 Codex CLI（慢一點）。可問「第 N 頁寫了什麼」「有沒有提到質押」「某股東持股各文件對得上嗎」。
 - **只消化這份 ⚡**（文件頁）：對單一新文件跑字卡 → 增量對帳 → 3–6 題新題（審核頁標「新增」），幾分鐘完成，適合現場拖入新文件。
 - **引擎活動**（總覽）：真實事件流，看得到主 session 派工給哪個代理、誰在讀哪份文件第幾頁、成本與耗時。
 
