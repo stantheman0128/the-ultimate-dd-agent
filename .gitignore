@@ -1,0 +1,40 @@
+# Only the engine and the synthetic demo may be tracked at the repository root.
+/*
+!/.gitignore
+!/AGENTS.md
+!/CODEX.md
+!/MIGRATION.md
+!/README.md
+!/HACKATHON.md
+!/ROADMAP.md
+!/.codex/
+!/.agents/
+!/_workbench/
+!/knowledge/
+!/演練資料_AcmeRobotics/
+
+# 公開合成示範 repo；禁止加入真實客戶 Data Room 或憑證。
+
+# 系統與衍生物
+**/.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+
+# 執行期 log（每次跑都變、無備份價值）
+*.log
+_workbench/server.log
+
+# 引擎長效 token（憑證，絕不入版控）
+_workbench/token
+
+# Credentials and runtime output
+.env
+.env.*
+!.env.example
+.codex/auth.json
+**/run.events.jsonl
+/_trash/
+/HANDOFF.md
+/*.xlsx
+/*.pptx
