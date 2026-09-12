@@ -1,0 +1,109 @@
+{
+  "provenance": {
+    "synthetic": true,
+    "mode": "prewritten_demo",
+    "independent_review_executed": false
+  },
+  "items": [
+    {
+      "question_id": "q-r3-001",
+      "verdict": "keep",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。展示本輪追問。",
+      "requested_facets": [
+        "營運｜續約佐證"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E7"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    },
+    {
+      "question_id": "q-r3-002",
+      "verdict": "keep",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。展示本輪追問。",
+      "requested_facets": [
+        "股權｜稀釋確認"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E8"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    },
+    {
+      "question_id": "q-r3-003",
+      "verdict": "keep",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。展示本輪追問。",
+      "requested_facets": [
+        "財務｜減損與餘款"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E9"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    },
+    {
+      "question_id": "q-r3-004",
+      "verdict": "keep",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。展示本輪追問。",
+      "requested_facets": [
+        "財測｜支出控制"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E10"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    },
+    {
+      "question_id": "q-r3-005",
+      "verdict": "keep",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。展示本輪追問。",
+      "requested_facets": [
+        "法務｜融資限制"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E11"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    }
+  ]
+}

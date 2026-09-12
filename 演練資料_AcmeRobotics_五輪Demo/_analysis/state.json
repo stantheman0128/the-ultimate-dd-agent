@@ -1,0 +1,14 @@
+{
+  "round": 5,
+  "lifecycle": "drafted",
+  "closed": false,
+  "sentRounds": [],
+  "demoSynthetic": true,
+  "demoRounds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ]
+}

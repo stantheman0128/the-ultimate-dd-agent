@@ -1,0 +1,69 @@
+{
+  "provenance": {
+    "synthetic": true,
+    "mode": "prewritten_demo",
+    "independent_review_executed": false
+  },
+  "items": [
+    {
+      "question_id": "q-r5-001",
+      "verdict": "needs_human_check",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。保留未決待辦。",
+      "requested_facets": [
+        "待辦｜關鍵客戶"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP4",
+          "loc": "公司回覆!E6"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    },
+    {
+      "question_id": "q-r5-002",
+      "verdict": "needs_human_check",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。保留未決待辦。",
+      "requested_facets": [
+        "待辦｜資金與降本"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP4",
+          "loc": "公司回覆!E8"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    },
+    {
+      "question_id": "q-r5-003",
+      "verdict": "needs_human_check",
+      "reason": "預寫模擬審題標記；未執行獨立模型審題。保留未決待辦。",
+      "requested_facets": [
+        "待辦｜銀行與質押"
+      ],
+      "covered_facets": [],
+      "missing_facets": [
+        "原始正式文件與人工確認"
+      ],
+      "answered_at": [],
+      "counter_evidence": [
+        {
+          "doc": "REP4",
+          "loc": "公司回覆!E9"
+        }
+      ],
+      "source_support": "company_assertion_only"
+    }
+  ]
+}

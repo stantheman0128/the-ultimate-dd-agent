@@ -1,0 +1,45 @@
+{
+  "round": 5,
+  "synthetic": true,
+  "items": [
+    {
+      "question_id": "q-r5-001",
+      "judgment": "部分回答",
+      "reply": "合成回覆：已排定下一週簽署討論，尚無雙方簽署版或最終驗收紀錄。495 萬美元仍是附條件預測。",
+      "reason": "保留開放：取得簽署續約、驗收與收入時點。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP5",
+          "loc": "公司回覆!E6:G6"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r5-002",
+      "judgment": "部分回答",
+      "reply": "合成回覆：財務主管已草擬每週監測表，董事會執行授權與逐月壓力模型仍待完成。沒有新增融資承諾，不可視為資金已到位。",
+      "reason": "保留開放：確認現金模型與有權決策者核准。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP5",
+          "loc": "公司回覆!E7:G7"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r5-003",
+      "judgment": "部分回答",
+      "reply": "合成回覆：銀行仍審閱文件，無簽署同意函。此輪只呈現待辦清單，不代表交割、投委會通過或案件結案。",
+      "reason": "保留開放：銀行同意及法律文件查核。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP5",
+          "loc": "公司回覆!E8:G8"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "question_id": "q-r4-001",
+    "text": "R3 LogiOne 要求 5% 折扣，SLA 99.3% 低於 99.5%。請補新版條件與連續監測，說明折扣對 500 萬預測的影響。",
+    "cat": "營運｜續約與折扣",
+    "why": "Acme_合成模擬_Qlist_R3_公司回覆.xlsx 公司回覆!E6。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP3",
+        "loc": "公司回覆!E6"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 1,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r3-001"
+    ]
+  },
+  {
+    "question_id": "q-r4-002",
+    "text": "R3 剩餘 180,000 美元驗收爭議，管理層承諾一週內回收但無客戶承諾。請補回款及和解條件。",
+    "cat": "財務｜爭議回款",
+    "why": "Acme_合成模擬_Qlist_R3_公司回覆.xlsx 公司回覆!E8。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP3",
+        "loc": "公司回覆!E8"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 2,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r3-003"
+    ]
+  },
+  {
+    "question_id": "q-r4-003",
+    "text": "R3 現金低於 270 萬才降本，銀行另要求 200 萬現金底線。請分開可動用現金與 covenant 安全距離並指定負責人。",
+    "cat": "財測｜現金控制責任",
+    "why": "Acme_合成模擬_Qlist_R3_公司回覆.xlsx 公司回覆!E9；Acme_合成模擬_Qlist_R3_公司回覆.xlsx 公司回覆!E10。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP3",
+        "loc": "公司回覆!E9"
+      },
+      {
+        "doc": "REP3",
+        "loc": "公司回覆!E10"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 3,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r3-004"
+    ]
+  },
+  {
+    "question_id": "q-r4-004",
+    "text": "R3 銀行草案要求保留 200 萬現金但未簽署。請確認正式同意函取得時點，及哪些條件須在交割前完成。",
+    "cat": "法務｜書面同意條件",
+    "why": "Acme_合成模擬_Qlist_R3_公司回覆.xlsx 公司回覆!E10。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP3",
+        "loc": "公司回覆!E10"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 4,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r3-005"
+    ]
+  }
+]

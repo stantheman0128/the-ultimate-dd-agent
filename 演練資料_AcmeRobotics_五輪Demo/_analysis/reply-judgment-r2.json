@@ -1,0 +1,84 @@
+{
+  "round": 2,
+  "synthetic": true,
+  "items": [
+    {
+      "question_id": "q-r2-001",
+      "judgment": "完整回答",
+      "reply": "合成橋接：折舊 8.0pp、安裝 5.0pp、現場維運 3.8pp，合計 16.8pp；58.0%-16.8%=41.2%。後续簡報採財簽毛利率，管理口徑另列調整表。",
+      "reason": "毛利口徑完成模擬釐清；成本總帳仍屬正式 DD 待驗資料。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E6:G6"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r2-002",
+      "judgment": "部分回答",
+      "reply": "合成 cohort 期初 MRR 100,000 美元、擴張 25,000、縮減 5,000、流失 12,000；期末 108,000，NRR 108%。已更新導航軟體，但無連續 30 天 SLA 紀錄。",
+      "reason": "R3 追問 SLA 驗證與續約。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E7:G7"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r2-003",
+      "judgment": "部分回答",
+      "reply": "合成轉讓明細設定為既有小股東 A 20 萬股、B 10 萬股；更新 Cap Table 可對平總股數。僅有轉讓清單，董事會同意文件與 ESOP 授予台帳仍缺。",
+      "reason": "R3 追問同意文件與 ESOP 稀釋口徑。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E8:G8"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r2-004",
+      "judgment": "部分回答",
+      "reply": "合成期後收款 900,000 美元，未回收 252,730 美元，其中 180,000 美元逾期超過 90 天。87 天的全年平均餘額仍未取得，公司撤回將 87 天當作已核對指標。",
+      "reason": "R3 追問逾期原因、減損與剩餘回款。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E9:G9"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r2-005",
+      "judgment": "部分回答",
+      "reply": "合成重估 2026 營收 580 萬美元，其中已簽 420 萬、尚未簽約 pipeline 160 萬。下行月淨流出 45 萬美元，靜態跑道 8 個月；尚無具體降本觸發條件。",
+      "reason": "R3 追問未簽 pipeline 與支出觸發條件。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E10:G10"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r2-006",
+      "judgment": "與其他資料矛盾",
+      "reply": "模擬法律檢視發現新增投資人取得董事席位需銀行書面同意，與 R1 僅需通知的說法矛盾。銀行窗口口頭表示可討論，尚無書面同意。",
+      "reason": "R3 追問書面同意與先決條件。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP2",
+          "loc": "公司回覆!E11:G11"
+        }
+      ]
+    }
+  ]
+}

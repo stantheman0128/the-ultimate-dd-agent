@@ -35,5 +35,5 @@ Codex CLI 使用主機既有 `codex login`、`CODEX_API_KEY` 或 `OPENAI_API_KEY
 ## 與專案對話並存
 
 「搜尋資料 → 單次文件問答」使用上述雙 provider API／CLI 與 BM25 預算，端點 `/api/ask`。
-「專案對話」保留已合併的 OpenAI 多輪工具檢索與私有記憶，端點 `/api/chat/ask`，需要 OpenAI API key；讀取設定中的 codex.ask_model／ask_effort，輸入受 project-chat.js 的 48,000 bytes 上限約束，沒有 CLI fallback。記憶整理器沿用 QLIST_ASK_MODEL／QLIST_ASK_EFFORT 部署值。
+「專案對話」端點 `/api/chat/ask` 優先使用 OpenAI API key；未設定 key 時透過本機 Codex CLI 既有登入執行多輪工具檢索。CLI 只回傳結構化工具請求，實際讀取仍由工作台限制在本案與所選記憶範圍。讀取設定中的 codex.ask_model／ask_effort，應用層輸入受 project-chat.js 的 48,000 bytes 上限約束（不含 CLI 自身提示）。CLI 模式可讀既有記憶，但不啟動需要 API key 的背景記憶整理器。
 兩種樣式共用以上功能。詳見 `_workbench/CHAT_DESIGN.md`、`MEMORY_DESIGN.md` 與 `UI_DESIGN.md`。

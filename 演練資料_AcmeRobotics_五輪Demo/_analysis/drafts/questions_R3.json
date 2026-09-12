@@ -1,0 +1,117 @@
+[
+  {
+    "question_id": "q-r3-001",
+    "text": "R2 NRR 重估 108% 但缺連續 30 天 SLA 證據。請補修復後紀錄及最大客戶 LogiOne 的續約狀態。",
+    "cat": "營運｜續約佐證",
+    "why": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx 公司回覆!E7。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP2",
+        "loc": "公司回覆!E7"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 1,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r2-002"
+    ]
+  },
+  {
+    "question_id": "q-r3-002",
+    "text": "R2 股數已對平但缺同意文件及授予台帳。請補轉讓同意與 ESOP 拆分，確認 fully diluted 分母。",
+    "cat": "股權｜稀釋確認",
+    "why": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx 公司回覆!E8。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP2",
+        "loc": "公司回覆!E8"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 2,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r2-003"
+    ]
+  },
+  {
+    "question_id": "q-r3-003",
+    "text": "R2 未收 252,730 美元，其中 180,000 逾期超過 90 天。請補催收結果、爭議原因及減損處理。",
+    "cat": "財務｜減損與餘款",
+    "why": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx 公司回覆!E9。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP2",
+        "loc": "公司回覆!E9"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 3,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r2-004"
+    ]
+  },
+  {
+    "question_id": "q-r3-004",
+    "text": "R2 580 萬營收仍含 160 萬未簽 pipeline，下行跑道 8 個月。請列明 pipeline 轉換及現金降至何值啟動降本。",
+    "cat": "財測｜支出控制",
+    "why": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx 公司回覆!E10。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP2",
+        "loc": "公司回覆!E10"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 4,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r2-005"
+    ]
+  },
+  {
+    "question_id": "q-r3-005",
+    "text": "R2 已確認董事席位變動需銀行書面同意。請提供同意函、條件及無法取得時的替代方案。",
+    "cat": "法務｜融資限制",
+    "why": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx 公司回覆!E11。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP2",
+        "loc": "公司回覆!E11"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 5,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r2-006"
+    ]
+  }
+]

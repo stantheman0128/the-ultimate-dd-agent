@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "rule_id": "mock-review-timing",
+    "version": 1,
+    "status": "proposed",
+    "scope": "persona, reviewer",
+    "applies_when": "追問輪的靜態盤點題與本輪待解矛盾競爭篇幅時",
+    "instruction": "優先問待解矛盾；靜態盤點題移至後續波次，保留補問機會。",
+    "exceptions": [
+      "本輪明確以團隊或合規盤點為主"
+    ],
+    "kind": "timing",
+    "deal": null,
+    "folded_into": null,
+    "source_feedback_ids": [
+      "fb-f0978cf6-2fb7-40c2-9d9e-2123ffdd9ecd"
+    ],
+    "evidence_summary": "手寫假引擎範例，供測試提案→核准→注入；不代表模型已從回饋推導出此規則。",
+    "deal_anonymized": true,
+    "proposed_at": "2026-09-12T08:56:44.993Z",
+    "approved_at": null,
+    "approved_by": null
+  }
+]

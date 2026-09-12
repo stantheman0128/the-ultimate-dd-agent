@@ -1,0 +1,110 @@
+{
+  "round": 1,
+  "synthetic": true,
+  "items": [
+    {
+      "question_id": "q-r1-001",
+      "judgment": "部分回答",
+      "reply": "58% 是排除硬體折舊、現場安裝與維運成本的管理口徑，41.2% 為財簽口徑。暫未附各項調整金額。",
+      "reason": "R2 追問成本橋接及對外揭露。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E6:G6"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-002",
+      "judgment": "完整回答",
+      "reply": "68% 誤用了預估新增 bookings 的母體。FY2025 營收口徑應為 88%；後續簡報改用 88%，並註明最大客戶占 31%。",
+      "reason": "此模擬口徑問題收斂；不代表真實財務查核。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E7:G7"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-003",
+      "judgment": "部分回答",
+      "reply": "128% 的截止日為 2025/12，未含 2026/6 QuickShip 流失。客戶因現場穩定性結束合作；逐月 cohort 明細尚在整理。",
+      "reason": "R2 追問流失後留存與修復證據。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E8:G8"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-004",
+      "judgment": "部分回答",
+      "reply": "模擬情節設定：Vertex 於 2026/5 轉讓 30 萬股予既有小股東；ESOP 池 80 萬股，其中已授予 28 萬、未授予 52 萬。轉讓與授予文件尚未補齊。",
+      "reason": "R2 追問轉讓文件、同意權與稀釋表。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E9:G9"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-005",
+      "judgment": "部分回答",
+      "reply": "87 天使用年度平均應收口徑，131.3 天使用期末應收。管理層稱大多已回款，但尚未提供期初餘額及逐筆銀行入帳證據。",
+      "reason": "R2 追問平均餘額橋接與期後收款。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E10:G10"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-006",
+      "judgment": "部分回答",
+      "reply": "公司願重建模型。合成最新現金假設為 360 萬美元、正常月淨流出 30 萬美元，未融資靜態跑道 12 個月；710 萬營收仍待重估。",
+      "reason": "R2 追問 bottom-up 財測及延遲募資情境。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E11:G11"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-007",
+      "judgment": "部分回答",
+      "reply": "合成設定：已動用授信 150 萬美元；契約要求新股融資前通知銀行。公司認為無需同意，但尚未提供條款原文。",
+      "reason": "R2 追問銀行同意與資產限制。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E12:G12"
+        }
+      ]
+    },
+    {
+      "question_id": "q-r1-008",
+      "judgment": "完整回答",
+      "reply": "2025Q4 是首批美國客戶開始商用；2026Q4 的 50% 是當季新增站點的目標，非首次營收。公司同意分開標示實績與目標。",
+      "reason": "時程定義收斂；目標達成仍為預測。",
+      "synthetic": true,
+      "evidence": [
+        {
+          "doc": "REP1",
+          "loc": "公司回覆!E13:G13"
+        }
+      ]
+    }
+  ]
+}

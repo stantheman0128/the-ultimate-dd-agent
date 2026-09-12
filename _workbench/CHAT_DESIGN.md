@@ -28,7 +28,7 @@
 
 紀錄寫入 `<案件>/_analysis/conversations/`，檢索庫在 `_analysis/retrieval/`，均 Git 忽略；瀏覽器只存選中的對話 ID。同案同對話禁止並行生成；錯誤、中斷、取消不標為成功。重開頁面可載入已保存對話。專案對話是唯讀，執行 DD 流程仍使用原工作台按鈕。
 
-需要 OpenAI API key；不使用不受此工具預算約束的 CLI fallback。Responses 使用 `store:false`。本地檢索只將本輪導覽／片段傳到模型 API，並不代表資料完全不離開本機。
+優先使用 OpenAI API key（Responses `store:false`）；未設定 key 時，`codex-chat-client.js` 透過既有 Codex CLI 登入回傳結構化工具請求，沿用同一個本案檢索、歷史、工具上限與取消流程。CLI 在暫存工作目錄以唯讀模式執行，停用原生檔案／Shell、插件及外部工具；由工作台執行允許的文件查詢。48,000 bytes 是應用層輸入上限，不包含 CLI 自身提示；API 的 2,200 output tokens 參數不適用 CLI。CLI 模式不啟動需要 API key 的背景記憶整理。模型仍透過網路處理本轮片段，資料並非完全不離開本機。
 
 ## 驗證與已知限制
 

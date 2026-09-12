@@ -1317,10 +1317,10 @@ const server = http.createServer(async (req, res) => {
       const send=e=>{if(!res.destroyed)res.write('data: '+JSON.stringify(e)+'\n\n')};
       const apiKey=process.env.OPENAI_API_KEY||readToken();
       await chat.run({dp,conversation,question,model:askConfig({...settings.readSettings(),provider:'codex'}).model,effort:askConfig({...settings.readSettings(),provider:'codex'}).effort,
-        client:apiKey?new OpenAI({apiKey,maxRetries:0,timeout:90000}):null,
+        client:apiKey?new OpenAI({apiKey,maxRetries:0,timeout:90000}):(!MOCK&&provider.resolveCli()?require('./codex-chat-client').createCliClient({cli:provider.resolveCli(),env:engineEnv('codex')}):null),
         mock:MOCK,memory,send,signal:abort.signal});
       res.end();
-      if(!MOCK&&conversation.messages.at(-1)?.status==='completed'){memory.enqueue(body.deal,conversation);setImmediate(runMemoryJobs);}
+      if(!MOCK&&apiKey&&conversation.messages.at(-1)?.status==='completed'){memory.enqueue(body.deal,conversation);setImmediate(runMemoryJobs);}
       return;
     }
     // ---- 靜態 ----

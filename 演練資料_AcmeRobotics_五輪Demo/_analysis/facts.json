@@ -1,0 +1,937 @@
+{
+  "deal": "演練資料_AcmeRobotics_五輪Demo",
+  "generated_at": "2026-09-12T04:10:00",
+  "source": "原 Acme 合成案的初始事實矩陣複本；R1–R5 為依使用者要求預先編寫的合成演練，未執行模型pipeline。",
+  "docs": {
+    "CT": {
+      "file": "Acme_CapTable_202606.xlsx",
+      "round": "未分輪",
+      "kind": "xlsx"
+    },
+    "FIN": {
+      "file": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "round": "未分輪",
+      "kind": "pdf"
+    },
+    "DECK": {
+      "file": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "round": "未分輪",
+      "kind": "pdf"
+    },
+    "REG": {
+      "file": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+      "round": "未分輪",
+      "kind": "pdf"
+    },
+    "TOP10": {
+      "file": "Acme_Top10客戶_2025.xlsx",
+      "round": "未分輪",
+      "kind": "xlsx"
+    },
+    "MODEL": {
+      "file": "Acme_財測模型_2026-2029.xlsx",
+      "round": "未分輪",
+      "kind": "xlsx"
+    },
+    "AR": {
+      "file": "Acme_Robotics_FY2025_Annual_Report_Full.pdf",
+      "round": "未分輪",
+      "kind": "pdf"
+    },
+    "REP1": {
+      "file": "Acme_合成模擬_Qlist_R1_公司回覆.xlsx",
+      "round": "R2",
+      "kind": "xlsx",
+      "synthetic": true
+    },
+    "REP2": {
+      "file": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx",
+      "round": "R3",
+      "kind": "xlsx",
+      "synthetic": true
+    },
+    "REP3": {
+      "file": "Acme_合成模擬_Qlist_R3_公司回覆.xlsx",
+      "round": "R4",
+      "kind": "xlsx",
+      "synthetic": true
+    },
+    "REP4": {
+      "file": "Acme_合成模擬_Qlist_R4_公司回覆.xlsx",
+      "round": "R5",
+      "kind": "xlsx",
+      "synthetic": true
+    },
+    "REP5": {
+      "file": "Acme_合成模擬_Qlist_R5_公司回覆.xlsx",
+      "round": "R5",
+      "kind": "xlsx",
+      "synthetic": true
+    }
+  },
+  "facts": [
+    {
+      "id": "F1",
+      "metric": "revenue",
+      "label": "FY2025 總營收",
+      "entity": "Acme",
+      "period": "FY2025",
+      "aliases_seen": [
+        "Revenue",
+        "總營收",
+        "US$3.2M"
+      ],
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.1",
+          "value": 3204118,
+          "unit": "USD",
+          "source_kind": "audited"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.3",
+          "value": 3200000,
+          "unit": "USD",
+          "source_kind": "deck",
+          "raw": "US$3.2M、2.4x YoY"
+        },
+        {
+          "doc": "TOP10",
+          "loc": "C2:D11",
+          "value": 3204118,
+          "unit": "USD",
+          "source_kind": "management",
+          "raw": "各列營收÷佔比反推（推算）"
+        }
+      ],
+      "status": "consistent",
+      "severity": "low"
+    },
+    {
+      "id": "F1b",
+      "metric": "cogs",
+      "label": "FY2025 營業成本",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.1",
+          "value": 1884022,
+          "unit": "USD",
+          "source_kind": "audited"
+        }
+      ],
+      "status": "single_source",
+      "severity": "low"
+    },
+    {
+      "id": "F1c",
+      "metric": "gross_profit",
+      "label": "FY2025 毛利",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.1",
+          "value": 1320096,
+          "unit": "USD",
+          "source_kind": "audited"
+        }
+      ],
+      "status": "single_source",
+      "severity": "low",
+      "derived": {
+        "formula": "revenue - cogs",
+        "inputs": {
+          "revenue": 3204118.0,
+          "cogs": 1884022.0
+        },
+        "auto_derived": true,
+        "note": "自動補算（同期間 FY2025、同實體 Acme 的輸入）",
+        "computed": 1320096.0,
+        "delta_pct": 0.0,
+        "match": true
+      }
+    },
+    {
+      "id": "F1d",
+      "metric": "opex",
+      "label": "FY2025 營業費用",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.1",
+          "value": 4102377,
+          "unit": "USD",
+          "source_kind": "audited",
+          "raw": "R&D 1,988,105／S&M 1,306,880／G&A 807,392"
+        }
+      ],
+      "status": "single_source",
+      "severity": "low"
+    },
+    {
+      "id": "F2",
+      "metric": "gross_margin",
+      "label": "FY2025 毛利率",
+      "entity": "Acme",
+      "period": "FY2025",
+      "aliases_seen": [
+        "Gross margin",
+        "毛利率",
+        "GM"
+      ],
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.1",
+          "value": 0.412,
+          "unit": "pct",
+          "source_kind": "audited",
+          "basis": "含硬體與安裝成本"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.4",
+          "value": 0.58,
+          "unit": "pct",
+          "source_kind": "deck",
+          "basis": "unspecified"
+        },
+        {
+          "doc": "MODEL",
+          "loc": "假設!B4",
+          "value": 0.62,
+          "unit": "pct",
+          "source_kind": "model",
+          "basis": "unspecified",
+          "raw": "2026 假設起點（非 FY2025 實績）"
+        },
+        {
+          "doc": "AR",
+          "loc": "p.14",
+          "value": 0.568,
+          "unit": "pct",
+          "source_kind": "audited",
+          "basis": "不含硬體與安裝",
+          "raw": "Note 4：excluding hardware & installation 56.8%；另提 Deck 58% 為 net of hosting credits"
+        }
+      ],
+      "derived": {
+        "formula": "gross_profit / revenue",
+        "inputs": {
+          "gross_profit": 1320096,
+          "revenue": 3204118
+        },
+        "input_locs": {
+          "gross_profit": "FIN:p.1",
+          "revenue": "FIN:p.1"
+        },
+        "computed": 0.4119998077474051,
+        "delta_pct": 0.0,
+        "match": true
+      },
+      "status": "conflict",
+      "severity": "high",
+      "note": "Deck 比審計值高 16.8pp，可能剔除 Hardware sales & install US$418,494；Deck 無任何口徑說明"
+    },
+    {
+      "id": "F3",
+      "metric": "top1_customer_pct",
+      "label": "最大客戶占 FY2025 營收",
+      "entity": "LogiOne 3PL",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.3",
+          "value": 0.31,
+          "unit": "pct",
+          "source_kind": "audited",
+          "raw": "Note 5"
+        },
+        {
+          "doc": "TOP10",
+          "loc": "D2",
+          "value": 0.31,
+          "unit": "pct",
+          "source_kind": "management",
+          "raw": "LogiOne 3PL US$993,276"
+        }
+      ],
+      "status": "consistent",
+      "severity": "medium"
+    },
+    {
+      "id": "F4",
+      "metric": "topn_customer_pct",
+      "label": "Top-10 客戶合計占 FY2025 營收",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.3",
+          "value": 0.68,
+          "unit": "pct",
+          "source_kind": "deck"
+        },
+        {
+          "doc": "TOP10",
+          "loc": "D2:D11",
+          "value": 0.88,
+          "unit": "pct",
+          "source_kind": "management",
+          "raw": "十列加總（推算）；合計 US$2,819,624"
+        },
+        {
+          "doc": "AR",
+          "loc": "p.14",
+          "value": 0.88,
+          "unit": "pct",
+          "source_kind": "audited",
+          "raw": "Note 5：ten largest customers 88%"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "同一事實差 20pp；TOP10 反推總營收與審計數一致，可信度較高"
+    },
+    {
+      "id": "F5",
+      "metric": "subsequent_event",
+      "label": "客戶終止事件（QuickShip，占營收 ~9%）",
+      "entity": "QuickShip Logistics",
+      "period": "2026-03",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.3",
+          "value": "2026/3 通知終止，2026/6 生效",
+          "source_kind": "audited",
+          "raw": "Note 9"
+        },
+        {
+          "doc": "TOP10",
+          "loc": "E4",
+          "value": "2026/3 通知終止，2026/6 生效",
+          "source_kind": "management",
+          "raw": "US$288,371／9%"
+        }
+      ],
+      "status": "consistent",
+      "severity": "high",
+      "note": "DECK（June 2026 製作）p.1–6 全文未揭露；MODEL 損益預估!B2:E2 未扣減"
+    },
+    {
+      "id": "F6",
+      "metric": "shares_outstanding",
+      "label": "已發行股數",
+      "entity": "Acme",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "CT",
+          "loc": "Cap Table!B8",
+          "value": 10000000,
+          "unit": "shares",
+          "source_kind": "cap table"
+        },
+        {
+          "doc": "FIN",
+          "loc": "p.2",
+          "value": 10000000,
+          "unit": "shares",
+          "source_kind": "audited"
+        },
+        {
+          "doc": "REG",
+          "loc": "p.1",
+          "value": 10000000,
+          "unit": "shares",
+          "source_kind": "registry"
+        }
+      ],
+      "status": "consistent",
+      "severity": "low"
+    },
+    {
+      "id": "F7",
+      "metric": "holder_shares",
+      "label": "Daniel Wu（Founder/CEO）持股",
+      "entity": "Daniel Wu",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "CT",
+          "loc": "Cap Table!B2",
+          "value": 3400000,
+          "unit": "shares",
+          "source_kind": "cap table"
+        },
+        {
+          "doc": "REG",
+          "loc": "p.1",
+          "value": 3400000,
+          "unit": "shares",
+          "source_kind": "registry"
+        }
+      ],
+      "status": "consistent",
+      "severity": "low"
+    },
+    {
+      "id": "F10",
+      "metric": "holder_shares",
+      "label": "Vertex Growth Fund LP 持股數",
+      "entity": "Vertex Growth Fund LP",
+      "period": "2026",
+      "aliases_seen": [
+        "Vertex",
+        "Vertex Growth Fund LP"
+      ],
+      "values": [
+        {
+          "doc": "CT",
+          "loc": "Cap Table!B4",
+          "value": 1200000,
+          "unit": "shares",
+          "source_kind": "cap table",
+          "as_of": "2026-06（僅檔名推斷）",
+          "raw": "12%；備註 Board seat（E4）"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.6",
+          "value": 1200000,
+          "unit": "shares",
+          "source_kind": "deck",
+          "as_of": "2026-06",
+          "raw": "12.0%"
+        },
+        {
+          "doc": "REG",
+          "loc": "p.1",
+          "value": 1500000,
+          "unit": "shares",
+          "source_kind": "registry",
+          "as_of": "2026-03-15",
+          "raw": "15.0%"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "3 個月內減少 300,000 股（-3pp），無任何文件揭露轉讓事由；Vertex 持董事席位，異動涉及治理"
+    },
+    {
+      "id": "F13",
+      "metric": "holder_shares",
+      "label": "Other minority holders 持股數",
+      "entity": "Other minority holders",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "CT",
+          "loc": "Cap Table!B7",
+          "value": 1550000,
+          "unit": "shares",
+          "source_kind": "cap table",
+          "raw": "15.5%"
+        },
+        {
+          "doc": "REG",
+          "loc": "p.1",
+          "value": 1250000,
+          "unit": "shares",
+          "source_kind": "registry",
+          "raw": "12.5%"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "與 F10 互為鏡像（差額同為 300,000 股），暗示 Vertex→小股東移轉；兩版均為彙總項無法核對組成"
+    },
+    {
+      "id": "F12",
+      "metric": "esop_pool_pct",
+      "label": "ESOP 保留池",
+      "entity": "Acme",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "CT",
+          "loc": "Cap Table!C6",
+          "value": 0.08,
+          "unit": "pct",
+          "source_kind": "cap table",
+          "raw": "800,000 股；E6 備註「Unallocated 5.2%」"
+        },
+        {
+          "doc": "REG",
+          "loc": "p.1",
+          "value": 0.08,
+          "unit": "pct",
+          "source_kind": "registry",
+          "raw": "僅標 reserved"
+        },
+        {
+          "doc": "AR",
+          "loc": "p.18",
+          "value": 0.08,
+          "unit": "pct",
+          "source_kind": "audited",
+          "raw": "Note 15：pool 800,000；options outstanding 280,000；unallocated 520,000 (5.2%)"
+        }
+      ],
+      "status": "consistent",
+      "severity": "medium",
+      "note": "AR Note 15 證實：已授予 280,000 股選擇權（Cap Table 未拆列），未分配 5.2%；影響 DECK p.6 創辦人 58% fully-diluted 口徑"
+    },
+    {
+      "id": "F14",
+      "metric": "arpa",
+      "label": "每站點月費",
+      "entity": "Acme",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.4",
+          "value": 8400,
+          "unit": "USD/site/month",
+          "source_kind": "deck"
+        },
+        {
+          "doc": "MODEL",
+          "loc": "假設!B3",
+          "value": 8400,
+          "unit": "USD/site/month",
+          "source_kind": "model",
+          "raw": "2027–2029：8,700／9,000／9,300"
+        }
+      ],
+      "status": "consistent",
+      "severity": "low"
+    },
+    {
+      "id": "F15",
+      "metric": "sites",
+      "label": "站點數（截至 June 2026）",
+      "entity": "Acme",
+      "period": "2026-06",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.3",
+          "value": 41,
+          "unit": "sites",
+          "source_kind": "deck",
+          "raw": "41 sites；388 robots"
+        }
+      ],
+      "status": "single_source",
+      "severity": "medium",
+      "note": "MODEL 假設!B2:E2 僅列新增站點 28/55/90/130，無期初基數，無法交叉驗證"
+    },
+    {
+      "id": "F16",
+      "metric": "dso_days",
+      "label": "應收帳款天數（DSO）",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.2",
+          "value": 87,
+          "unit": "days",
+          "source_kind": "audited",
+          "raw": "文件揭露值"
+        },
+        {
+          "doc": "AR",
+          "loc": "p.17",
+          "value": 87,
+          "unit": "days",
+          "source_kind": "audited",
+          "basis": "Q4 年化營收",
+          "raw": "Note 12：on full-year revenue the metric is 131 days"
+        }
+      ],
+      "derived": {
+        "formula": "accounts_receivable / revenue * 365",
+        "inputs": {
+          "accounts_receivable": 1152730,
+          "revenue": 3204118
+        },
+        "input_locs": {
+          "accounts_receivable": "FIN:p.2",
+          "revenue": "FIN:p.1"
+        },
+        "computed": 131.31428056020408,
+        "delta_pct": 33.75,
+        "match": false
+      },
+      "status": "conflict",
+      "severity": "high",
+      "note": "摘要版揭露 87 天；AR Note 12 自承以 Q4 年化營收計算，全年口徑為 131 天，並提及 LogiOne net 90 付款條件"
+    },
+    {
+      "id": "F16b",
+      "metric": "accounts_receivable",
+      "label": "應收帳款",
+      "entity": "Acme",
+      "period": "2025-12-31",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.2",
+          "value": 1152730,
+          "unit": "USD",
+          "source_kind": "audited"
+        }
+      ],
+      "status": "single_source",
+      "severity": "low"
+    },
+    {
+      "id": "F17",
+      "metric": "custom:us_market_timing",
+      "label": "美國市場貢獻時點",
+      "entity": "Acme US",
+      "period": "2025–2026",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.3",
+          "value": "2025Q4 進入美國；2026H1 新簽 bookings 40% 來自美國",
+          "source_kind": "deck"
+        },
+        {
+          "doc": "TOP10",
+          "loc": "B3;B6;B8",
+          "value": "FY2025 已有 3 家美國客戶合計 24%",
+          "source_kind": "management"
+        },
+        {
+          "doc": "MODEL",
+          "loc": "假設!B5",
+          "value": "美國自 2026Q4 起貢獻 50% 新站點",
+          "source_kind": "model"
+        }
+      ],
+      "status": "conflict",
+      "severity": "medium",
+      "note": "三份文件三種說法",
+      "check_note": "recompute 判定 consistent，人工標 conflict"
+    },
+    {
+      "id": "F18",
+      "metric": "revenue",
+      "label": "2026 全年營收（預測）",
+      "entity": "Acme",
+      "period": "FY2026E",
+      "values": [
+        {
+          "doc": "MODEL",
+          "loc": "損益預估!B2",
+          "value": 7100000,
+          "unit": "USD",
+          "source_kind": "model",
+          "raw": "硬編碼常數"
+        }
+      ],
+      "derived": {
+        "formula": "new_sites * arpa * 12",
+        "inputs": {
+          "new_sites": 28,
+          "arpa": 8400
+        },
+        "input_locs": {
+          "new_sites": "MODEL:假設!B2",
+          "arpa": "MODEL:假設!B3"
+        },
+        "note": "以模型自身假設粗算（缺期初站點基數）",
+        "computed": 2822400.0,
+        "delta_pct": 60.25,
+        "match": false
+      },
+      "status": "conflict",
+      "severity": "high",
+      "note": "財測起點無法由模型假設推得，亦未與 FY2025 審計實績 3,204,118 銜接（隱含 2.22x）"
+    },
+    {
+      "id": "F19",
+      "metric": "custom:revenue_growth_logic",
+      "label": "2027–2029 營收成長率",
+      "entity": "Acme",
+      "period": "FY2027E–FY2029E",
+      "values": [
+        {
+          "doc": "MODEL",
+          "loc": "損益預估!C2:E2",
+          "value": "固定 2.1x/年（硬編碼公式，未引用假設 tab）",
+          "source_kind": "model"
+        }
+      ],
+      "status": "single_source",
+      "severity": "medium",
+      "note": "同模型新增站點年增率遞減 96%→64%→44%；毛利公式反而連結假設 tab（單檔內部矛盾）"
+    },
+    {
+      "id": "F20",
+      "metric": "pledged_assets",
+      "label": "機器人設備質押",
+      "entity": "Acme",
+      "period": "2025-12-31",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.3",
+          "value": "「substantially all」機器人設備質押予 First Pacific Bank，擔保 US$1.5M 信用額度（Note 7）",
+          "source_kind": "audited"
+        },
+        {
+          "doc": "AR",
+          "loc": "p.14",
+          "value": "Note 7：substantially all robotics equipment（NBV US$6,214,880）pledged；facility fully drawn；見 Note 41",
+          "source_kind": "audited"
+        }
+      ],
+      "status": "consistent",
+      "severity": "high",
+      "note": "FIN 與 AR 一致；DECK p.1–6 無任何質押揭露；額度已全數動用",
+      "check_note": "recompute 判定 conflict，人工標 consistent"
+    },
+    {
+      "id": "F21",
+      "metric": "nrr",
+      "label": "NRR",
+      "entity": "Acme",
+      "period": "2026-06",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.3",
+          "value": 1.28,
+          "unit": "pct",
+          "source_kind": "deck"
+        }
+      ],
+      "status": "single_source",
+      "severity": "medium",
+      "note": "與 F5 終止事件緊張：Deck 製作於終止生效當月卻仍引用 128%"
+    },
+    {
+      "id": "F22",
+      "metric": "operating_income",
+      "label": "FY2025 營業損失",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.1",
+          "value": -2782281,
+          "unit": "USD",
+          "source_kind": "audited"
+        }
+      ],
+      "derived": {
+        "formula": "gross_profit - opex",
+        "inputs": {
+          "gross_profit": 1320096,
+          "opex": 4102377
+        },
+        "input_locs": {
+          "gross_profit": "FIN:p.1",
+          "opex": "FIN:p.1"
+        },
+        "computed": -2782281.0,
+        "delta_pct": 0.0,
+        "match": true
+      },
+      "status": "single_source",
+      "severity": "medium",
+      "note": "DECK 與 MODEL 均未呈現虧損、OPEX 或現金流"
+    },
+    {
+      "id": "F22b",
+      "metric": "cash",
+      "label": "現金及約當現金",
+      "entity": "Acme",
+      "period": "2025-12-31",
+      "values": [
+        {
+          "doc": "FIN",
+          "loc": "p.2",
+          "value": 4918551,
+          "unit": "USD",
+          "source_kind": "audited"
+        }
+      ],
+      "status": "single_source",
+      "severity": "medium"
+    },
+    {
+      "id": "F23a",
+      "metric": "pre_money",
+      "label": "Series A 投前估值",
+      "entity": "Acme",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.6",
+          "value": 40000000,
+          "unit": "USD",
+          "source_kind": "deck"
+        }
+      ],
+      "status": "single_source",
+      "severity": "medium"
+    },
+    {
+      "id": "F23b",
+      "metric": "round_size",
+      "label": "Series A 募資金額",
+      "entity": "Acme",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "DECK",
+          "loc": "p.6",
+          "value": 8000000,
+          "unit": "USD",
+          "source_kind": "deck"
+        }
+      ],
+      "status": "single_source",
+      "severity": "medium"
+    },
+    {
+      "id": "F24",
+      "metric": "coverage_gap",
+      "label": "文件基準日與缺件",
+      "entity": "Acme",
+      "period": "2026",
+      "values": [
+        {
+          "doc": "CT",
+          "loc": "Cap Table!A1:E8",
+          "value": "無 as-of 日期欄位，期間僅由檔名 202606 推斷",
+          "source_kind": "cap table"
+        },
+        {
+          "doc": "REG",
+          "loc": "p.1",
+          "value": "Filing date 2026/3/15",
+          "source_kind": "registry"
+        }
+      ],
+      "status": "single_source",
+      "severity": "low",
+      "note": "缺件：SPA/SHA、章程、ESOP 台帳、完整財簽（FIN 僅 3 頁摘要、無現金流量表）、2026 自結",
+      "check_note": "recompute 判定 conflict，人工標 single_source"
+    },
+    {
+      "id": "F25",
+      "metric": "related_party",
+      "label": "關係人採購（Harbor Peak Components LLC，CEO 全資）",
+      "entity": "Harbor Peak Components LLC",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "AR",
+          "loc": "p.312",
+          "value": "FY2025 採購 US$640,120（約 34% 零組件採購）；年底應付 US$88,400；無書面供應合約；未做獨立比價；董事會 2025/2 核准（Wu 迴避）",
+          "source_kind": "audited",
+          "raw": "Note 27"
+        }
+      ],
+      "status": "single_source",
+      "severity": "high",
+      "note": "摘要版財報（FIN）與 Deck 均未揭露；會計師報告列為強調事項"
+    },
+    {
+      "id": "F26",
+      "metric": "custom:covenant_change_of_control",
+      "label": "信用額度同意權：增資逾 US$5M 或 change of control 須銀行同意",
+      "entity": "First Pacific Bank facility",
+      "period": "2025-09-30",
+      "values": [
+        {
+          "doc": "AR",
+          "loc": "p.486",
+          "value": "US$1.5M 全數動用；SOFR+4.25%；到期 2027-09-30；最低現金 US$2.0M；增資 >US$5M／CoC／新增負債 >US$250K 須事前書面同意，否則 event of default 可加速",
+          "source_kind": "audited",
+          "raw": "Note 41"
+        },
+        {
+          "doc": "DECK",
+          "loc": "p.6",
+          "value": "Series A US$8.0M @ pre US$40.0M（未提銀行同意）",
+          "source_kind": "deck"
+        }
+      ],
+      "status": "conflict",
+      "severity": "high",
+      "note": "本輪 US$8.0M 觸發 clause (i)，年報自承尚未申請同意；Deck 全文未揭露 → 交割條件題"
+    },
+    {
+      "id": "F27",
+      "metric": "custom:revenue_by_geography",
+      "label": "FY2025 營收區域分布",
+      "entity": "Acme",
+      "period": "FY2025",
+      "values": [
+        {
+          "doc": "AR",
+          "loc": "p.20",
+          "value": "TW 52% / JP 24% / US 24%；首個美國站點 2025/10 上線",
+          "source_kind": "audited",
+          "raw": "Note 20"
+        },
+        {
+          "doc": "TOP10",
+          "loc": "B3;B6;B8",
+          "value": "美國 3 家客戶合計 24%",
+          "source_kind": "management"
+        },
+        {
+          "doc": "MODEL",
+          "loc": "假設!B5",
+          "value": "美國自 2026Q4 起貢獻 50% 新站點",
+          "source_kind": "model"
+        }
+      ],
+      "status": "consistent",
+      "severity": "medium",
+      "note": "AR 與 TOP10 一致（US 24%）；與 MODEL 的美國時程仍矛盾（見 F17）",
+      "check_note": "recompute 判定 conflict，人工標 consistent"
+    }
+  ],
+  "recomputed_at": "2026-09-12T04:25:52",
+  "recompute_summary": {
+    "derived": 5,
+    "derived_mismatch": 2,
+    "auto_derived": 0,
+    "conflict": 8,
+    "basis_mismatch": 0,
+    "single_source": 13,
+    "consistent": 9,
+    "unverified": 0
+  },
+  "provenance": {
+    "kind": "handwritten",
+    "run_id": null,
+    "note": "預先準備的合成示範資料；不代表本次引擎執行成果。"
+  },
+  "demoSynthetic": true
+}

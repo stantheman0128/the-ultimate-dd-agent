@@ -1,0 +1,91 @@
+{
+  "case": "演練資料_AcmeRobotics_五輪Demo",
+  "rounds": 5,
+  "questions_by_round": [
+    8,
+    6,
+    5,
+    4,
+    3
+  ],
+  "questions_total": 26,
+  "workbooks_verified": 10,
+  "citation_targets_verified": true,
+  "synthetic": true,
+  "indexes_rebuilt": 14,
+  "indexes_fresh": true,
+  "workbooks_rendered": 10,
+  "visual_review": "10 workbook sheets reviewed in contact sheet; R5 reply inspected at readable scale",
+  "indexes": [
+    {
+      "file": "Acme_CapTable_202606.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_Robotics_FY2025_Annual_Report_Full.pdf",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_Top10客戶_2025.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_合成模擬_Qlist_R1_公司回覆.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_合成模擬_Qlist_R2_公司回覆.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_合成模擬_Qlist_R3_公司回覆.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_合成模擬_Qlist_R4_公司回覆.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_合成模擬_Qlist_R5_公司回覆.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "Acme_財測模型_2026-2029.xlsx",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "DEMO.md",
+      "status": "ready",
+      "warnings": []
+    },
+    {
+      "file": "DEMO說明.md",
+      "status": "ready",
+      "warnings": []
+    }
+  ]
+}

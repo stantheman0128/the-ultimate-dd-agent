@@ -50,7 +50,8 @@ def image_area_ratio(page, infos):
         for lo,hi in intervals:
             length+=max(0,hi-max(lo,end if end is not None else lo));end=max(end if end is not None else hi,hi)
         area+=(right-left)*length
-    return area/page.rect.get_area() if page.rect.get_area() else 0
+    page_area = page.rect.width * page.rect.height
+    return area / page_area if page_area else 0
 
 def index_pdf(path):
     import pymupdf

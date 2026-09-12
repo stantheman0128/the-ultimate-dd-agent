@@ -1,0 +1,48 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 702 >>
+stream
+BT /F1 11 Tf 72 720 Td 16 TL
+(ACME ROBOTICS, INC.) Tj T*
+(Shareholder Registry Extract) Tj T*
+(Filing date: March 15, 2026) Tj T*
+() Tj T*
+(Shareholder                          Shares        %) Tj T*
+(Daniel Wu \(Founder/CEO\)           3,400,000    34.0%) Tj T*
+(Grace Lin \(Founder/CTO\)           2,400,000    24.0%) Tj T*
+(Vertex Growth Fund LP             1,500,000    15.0%) Tj T*
+(Harbor Angels LLC                   650,000     6.5%) Tj T*
+(ESOP reserved pool                  800,000     8.0%) Tj T*
+(Other minority holders            1,250,000    12.5%) Tj T*
+() Tj T*
+(Total issued shares              10,000,000   100.0%) Tj T*
+() Tj T*
+(Registrar: Pacific Corporate Services Ltd.) Tj T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000185 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1064
+%%EOF

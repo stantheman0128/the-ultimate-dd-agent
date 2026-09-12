@@ -1,0 +1,71 @@
+[
+  {
+    "question_id": "q-r5-001",
+    "text": "R4 SLA 模擬改善至 99.6%，但 LogiOne 續約草案仍未簽。請補雙方簽署版、5% 折扣生效日及驗收標準，才能將續約收入納入確定性收入。",
+    "cat": "待辦｜關鍵客戶",
+    "why": "Acme_合成模擬_Qlist_R4_公司回覆.xlsx 公司回覆!E6。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP4",
+        "loc": "公司回覆!E6"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 1,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r4-001"
+    ]
+  },
+  {
+    "question_id": "q-r5-002",
+    "text": "R4 距 200 萬現金限制的緩衝為 160 萬、約 6.4 個月。請提交銀行底線下逐月現金表、延遲 3 個月募資情境及正式降本授權。",
+    "cat": "待辦｜資金與降本",
+    "why": "Acme_合成模擬_Qlist_R4_公司回覆.xlsx 公司回覆!E8。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP4",
+        "loc": "公司回覆!E8"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 2,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r4-003"
+    ]
+  },
+  {
+    "question_id": "q-r5-003",
+    "text": "R4 銀行同意、受限現金定義及質押順位均未完成。請取得正式文件並逐項勾稽交易先決條件，未完成前保持待查狀態。",
+    "cat": "待辦｜銀行與質押",
+    "why": "Acme_合成模擬_Qlist_R4_公司回覆.xlsx 公司回覆!E9。追查上輪合成回覆尚未提供的證據及決策影響。",
+    "evidence": [
+      {
+        "doc": "REP4",
+        "loc": "公司回覆!E9"
+      }
+    ],
+    "wave": 1,
+    "channel": "書面",
+    "source": "AI",
+    "revision": 1,
+    "persona": "demo-synthetic",
+    "no": 3,
+    "synthetic": true,
+    "provenance": "authored_synthetic_demo_not_pipeline",
+    "followup_of": [
+      "q-r4-004"
+    ]
+  }
+]

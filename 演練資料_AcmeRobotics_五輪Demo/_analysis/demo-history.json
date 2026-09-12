@@ -1,0 +1,58 @@
+{
+  "synthetic": true,
+  "pipeline_executed": false,
+  "human_approved": false,
+  "actually_sent": false,
+  "rounds": [
+    {
+      "round": 1,
+      "title": "辨識初始矛盾",
+      "questions": 8,
+      "complete": 2,
+      "open": 6,
+      "final": "qlist/Acme_合成模擬_Qlist_R1_final_展示版.xlsx",
+      "reply": "round2/Acme_合成模擬_Qlist_R1_公司回覆.xlsx",
+      "synthetic": true
+    },
+    {
+      "round": 2,
+      "title": "追問解釋與量化證據",
+      "questions": 6,
+      "complete": 1,
+      "open": 5,
+      "final": "qlist/Acme_合成模擬_Qlist_R2_final_展示版.xlsx",
+      "reply": "round3/Acme_合成模擬_Qlist_R2_公司回覆.xlsx",
+      "synthetic": true
+    },
+    {
+      "round": 3,
+      "title": "驗證回覆並下修假設",
+      "questions": 5,
+      "complete": 1,
+      "open": 4,
+      "final": "qlist/Acme_合成模擬_Qlist_R3_final_展示版.xlsx",
+      "reply": "round4/Acme_合成模擬_Qlist_R3_公司回覆.xlsx",
+      "synthetic": true
+    },
+    {
+      "round": 4,
+      "title": "收斂风险與交易條件",
+      "questions": 4,
+      "complete": 1,
+      "open": 3,
+      "final": "qlist/Acme_合成模擬_Qlist_R4_final_展示版.xlsx",
+      "reply": "round5/Acme_合成模擬_Qlist_R4_公司回覆.xlsx",
+      "synthetic": true
+    },
+    {
+      "round": 5,
+      "title": "形成三項未決待辦",
+      "questions": 3,
+      "complete": 0,
+      "open": 3,
+      "final": "qlist/Acme_合成模擬_Qlist_R5_final_展示版.xlsx",
+      "reply": "round5/Acme_合成模擬_Qlist_R5_公司回覆.xlsx",
+      "synthetic": true
+    }
+  ]
+}

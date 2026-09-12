@@ -2,6 +2,12 @@
 
 # Q-List 工作台（本地薄殼）
 
+## 本機 Codex CLI 啟動
+
+已登入 `codex login` 後，可執行 `./_workbench/start-local.command`。啟動器關閉 Mock，指定 `$HOME/.local/bin/codex` 及專案 `.venv/bin/python`；可用 `CODEX_BIN` 覆寫 CLI 路徑。工作台位於 http://127.0.0.1:8765。批次 DD、單次問答與專案對話均可沿用 CLI 登入；未設定 API key 時不執行背景記憶整理。不要在另一個工作台已佔用 8765 時重複啟動。
+
+五輪合成示範使用獨立案例 `演練資料_AcmeRobotics_五輪Demo`，詳見該案例的 `DEMO.md`。所有補件、公司回覆及輪次均為模擬，不代表實際寄送或五輪完整引擎執行。
+
 包裝 headless Codex 引擎的本地介面。資料庫＝專案資料夾本身，工作台只是視圖＋遙控器，砍掉它資料一個位元都不會少。
 
 ## 啟動
@@ -48,7 +54,7 @@ QLIST_MOCK=1 node _workbench/server.js
 | ⟳ 重建索引 | `python3 _workbench/index_doc.py <案件> --force` |
 | 對帳分頁的矛盾圖 | 讀 `_analysis/facts.json`（reconciler 產出、`recompute.py` 驗算） |
 | 點任何出處 [檔名 p.N] | 證據檢視器：原檔翻頁＋該頁索引文字 |
-| 專案對話 | `/api/chat/ask` SSE 多輪對話；文件導覽 → 搜尋片段 → 按需讀取原文。需要 OpenAI API key；詳見 [對話設計](CHAT_DESIGN.md) |
+| 專案對話 | `/api/chat/ask` SSE 多輪對話；文件導覽 → 搜尋片段 → 按需讀取原文。支援 OpenAI API key 或本機 Codex CLI 登入；詳見 [對話設計](CHAT_DESIGN.md) |
 | ⚡ 只消化這份 | `/api/ingest-one`：單檔字卡 → 增量對帳 → `drafts/draft_RN_delta.md` |
 | 總覽的引擎活動 | `_analysis/run.events.jsonl`（Codex JSONL 適配事件流） |
 

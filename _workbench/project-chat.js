@@ -385,7 +385,7 @@ async function run({
       send({ delta: assistant.content });
     } else if (!client) {
       throw new Error(
-        "專案對話需要 OpenAI API key，才能限制工具讀取範圍；請在側欄設定。批次 DD 仍可使用 Codex 登入。",
+        "專案對話找不到已設定的 OpenAI API key 或本機 Codex CLI，請確認 CLI 安裝與登入。",
       );
     } else {
       let final = false;
