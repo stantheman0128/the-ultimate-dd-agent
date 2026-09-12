@@ -6,11 +6,11 @@ const path = require('node:path');
 const net = require('node:net');
 const { spawn } = require('node:child_process');
 
-test('failed Codex turn cannot mark an existing draft as newly completed', { skip: process.platform === 'win32' }, async t => {
+for (const resultType of ['turn.failed', 'turn.completed']) test(resultType + ' without fresh artifacts cannot mark an old draft completed', { skip: process.platform === 'win32' }, async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qlist-server-'));
   const work = path.join(root, '_workbench');
   fs.mkdirSync(work);
-  for (const file of ['server.js', 'codex-provider.js', 'claude-provider.js', 'settings.js', 'questions.js', 'review.js', 'rules.js', 'project-chat.js', 'retrieval.py', 'memory-store.js', 'memory-search.py']) fs.copyFileSync(path.join(__dirname, '..', file), path.join(work, file));
+  for (const file of ['server.js', 'document-tree.js', 'codex-provider.js', 'claude-provider.js', 'settings.js', 'questions.js', 'review.js', 'rules.js', 'project-chat.js', 'retrieval.py', 'memory-store.js', 'memory-search.py']) fs.copyFileSync(path.join(__dirname, '..', file), path.join(work, file));
   fs.symlinkSync(path.join(__dirname, '..', 'node_modules'), path.join(work, 'node_modules'), 'dir');
   const analysis = path.join(root, 'SyntheticCase', '_analysis');
   fs.mkdirSync(path.join(analysis, 'drafts'), { recursive: true });
@@ -25,7 +25,7 @@ test('failed Codex turn cannot mark an existing draft as newly completed', { ski
     process.stdin.on('end',()=>{
       assert.ok(input.includes('SyntheticCase'));
       assert.ok(input.includes('CODEX.md'));
-      process.stdout.write(JSON.stringify({type:'turn.failed',error:{message:'provider unavailable'}})+'\\n');
+      process.stdout.write(JSON.stringify({type:'${resultType}',error:{message:'provider unavailable'}})+'\\n');
     });
   `, { mode: 0o700 });
   const socket = net.createServer();

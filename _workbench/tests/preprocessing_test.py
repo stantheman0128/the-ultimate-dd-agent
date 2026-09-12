@@ -13,6 +13,20 @@ class Preprocessing(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name)
   self.env=patch.dict(os.environ,{'QLIST_INDEX_AI':'0'});self.env.start();self.addCleanup(self.env.stop)
+ def test_sec_markup_retains_fields_without_scripts(self):
+  html=self.root/'primary.html';html.write_text('<h1>HEVO</h1><script>ignore me</script><table><tr><td>Revenue</td><td>325291</td></tr></table>')
+  body=idx.build(str(html),'R1');self.assertIn('325291',body['pages'][0]['text']);self.assertNotIn('ignore me',body['pages'][0]['text'])
+  xml=self.root/'primary.xml';xml.write_text('<filing><revenue>325291</revenue></filing>');self.assertIn('revenue: 325291',idx.build(str(xml),'R1')['pages'][0]['text'])
+ def test_nested_files_and_symlink_exclusion(self):
+  folder=self.root/'round1'/'attachments';folder.mkdir(parents=True)
+  file=folder/'nested.txt';file.write_text('Nested source revenue 98765')
+  (folder/'outside').symlink_to(Path(tempfile.gettempdir()),target_is_directory=True)
+  self.assertEqual(idx.list_docs(str(self.root)),[(str(file),'R1')])
+  body=idx.build(str(file),'R1');out=self.root/'_analysis'/'index';out.mkdir(parents=True)
+  (out/'nested.txt.index.json').write_text(json.dumps(body))
+  db,warnings=retrieval.prepare(self.root)
+  try:self.assertTrue(retrieval.execute(db,{'op':'search','query':'98765'},warnings)['matches'])
+  finally:db.close()
  def test_images_and_scanned_pdf(self):
   im=Image.new('RGB',(1200,500),'white');draw=ImageDraw.Draw(im)
   font=ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf',48) if Path('/System/Library/Fonts/Supplemental/Arial.ttf').exists() else ImageFont.load_default(size=48)

@@ -93,7 +93,7 @@ function listDocs(dp) {
     if (/^round\d+$/.test(e)) {
       const rd = path.join(dp, e);
       // round 資料夾內的 Q-list 檔＝對方的回覆，屬本輪文件，要顯示
-      for (const f of fs.readdirSync(rd)) if (!skipFile(f)) push(f, rd, 'R' + e.slice(5));
+      if (!fs.lstatSync(rd).isSymbolicLink()) for (const file of require('./document-tree').files(rd)) push(path.basename(file), path.dirname(file), 'R' + e.slice(5));
     }
   }
   for (const f of fs.readdirSync(dp)) {
@@ -624,13 +624,8 @@ function parseDraftTable(text, isMerged) {
   }
   return rows;
 }
-function findDocPath(dp, file) {
-  const base = path.basename(file);
-  for (const e of fs.readdirSync(dp)) {
-    if (/^round\d+$/.test(e) && fs.existsSync(path.join(dp, e, base))) return path.join(dp, e, base);
-  }
-  return fs.existsSync(path.join(dp, base)) ? path.join(dp, base) : null;
-}
+function findDocPath(dp, file, round) { return require('./document-tree').resolveDocument(dp, file, round); }
+
 function readRunEvents(dp, since) {
   const name = path.basename(dp);
   if (RUNS[name]) return RUNS[name].events.slice(since || 0);
@@ -854,6 +849,7 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/page') {
       const dp = dealPath(q.get('deal'));
       const file = path.basename(q.get('file') || '');
+      if (!findDocPath(dp, file)) throw httpErr(404, '找不到原始文件');
       const d = loadIndex(dp, file);
       if (!d) return json(res, 404, { error: '尚未索引（上傳後自動建立；或按「重建索引」）' });
       if (d.kind === 'xlsx') {
@@ -885,8 +881,9 @@ const server = http.createServer(async (req, res) => {
       const { deal, file, round, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
-      const rel = /^R\d+$/.test(round || '') ? `round${round.slice(1)}/${path.basename(file)}` : path.basename(file);
-      if (!fs.existsSync(path.join(dp, rel))) throw httpErr(404, '找不到文件');
+      const original = findDocPath(dp, path.basename(file), round || undefined);
+      if (!original) throw httpErr(404, '找不到文件');
+      const rel = path.relative(dp, original);
       const prompt = `只消化 X（單檔增量）：案子「${deal}」Round ${st.round}，新文件「${deal}/${rel}」。照本專案 AGENTS.md 執行：(1) 先確認 _analysis/index/ 有此檔索引（沒有就跑 python3 _workbench/index_doc.py "${deal}" --file "${rel}"）；(2) 派 card-extractor 只為這一份文件產字卡（檔名＝原始檔名＋.md，存 _analysis/cards/）；(3) 派 reconciler 做「增量」對帳：讀既有 _analysis/facts.json 與 facts.md，只加入與此文件相關的事實列與新矛盾（同物異名對齊、口徑分 basis、有公式的填 derived），執行 python3 _workbench/recompute.py "${deal}"，更新 facts.json 與 facts.md；(4) 依新矛盾與新事實出 3–6 題（可直接由你出，或派需要的 persona），寫入「${deal}/_analysis/drafts/draft_R${st.round}_delta.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |，No. 自 901 起連號，出處與動機寫檔名＋頁碼/tab＋引用數字＋一句白話動機，證據欄寫機讀引用（文件代號:位置，分號分隔）；(5) 完成即結束，只回報一行摘要。記得先讀「${deal}/_notes.md」。`;
       startRun(deal, 'ingest', prompt, null, model, selectedProvider, {file:path.basename(file)});
       return json(res, 200, { started: true, file: rel });
@@ -895,8 +892,8 @@ const server = http.createServer(async (req, res) => {
       const { deal, file, round } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const dir = round && round.startsWith('R') ? path.join(dp, 'round' + round.slice(1)) : dp;
-      const src = safeJoin(dir, path.basename(file));
-      if (!fs.existsSync(src)) throw httpErr(404, 'file not found');
+      const src = findDocPath(dp, path.basename(file), round || undefined);
+      if (!src || !fs.existsSync(src)) throw httpErr(404, 'file not found');
       const arch = path.join(dp, '_analysis', '_archive');
       fs.mkdirSync(arch, { recursive: true });
       fs.renameSync(src, safeJoin(arch, Date.now() + '_' + path.basename(file)));
@@ -950,7 +947,7 @@ const server = http.createServer(async (req, res) => {
       const st = readState(dp);
       if (st.closed) throw httpErr(400, '案件已結案');
       const followup = st.round <= 1 ? '' : `這是第 ${st.round} 輪追問，多兩件必做的事：(A) 上輪回覆判定：讀「${deal}/qlist/」內上一輪最終發出版，以及「${deal}/round${st.round}/」內對方回覆的 Q-list xlsx（檔名通常含「回覆」或「Qlist」，用 python3＋openpyxl 讀回答欄），逐題判定：完整回答／部分回答／迴避／與其他資料矛盾，判定表寫入「${deal}/_analysis/reply-judgment-r${st.round - 1}.md」；後三種進本輪追問，題目中要引用對方的原回覆再往下追。(B) 新文件做增量消化並更新 facts.md，新舊矛盾（含版本 diff）為最高優先出題來源。`;
-      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（設定名單的 persona 出題、匯整）及階段 1c（獨立 question-reviewer 回原文審題），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——通路與波次遵循 AGENTS.md 的「書面詢問政策」。完成後即結束。`;
+      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（設定名單的 persona 出題、匯整）及階段 1c（獨立 question-reviewer 回原文審題），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |。證據欄引用 facts.json 文件代號與頁碼，不得省略；無法完成應明確回報受阻，不得宣稱完成。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——通路與波次遵循 AGENTS.md 的「書面詢問政策」。完成後即結束。`;
       startRun(deal, 'pipeline', prompt, () => {
         const s = readState(dp);
         if (fs.existsSync(path.join(dp, '_analysis', 'drafts', `draft_R${s.round}.md`))) {
@@ -1042,8 +1039,8 @@ const server = http.createServer(async (req, res) => {
         const r = q.get('round') || '';
         where = /^R\d+$/.test(r) ? path.join(dp, 'round' + r.slice(1)) : dp;
       } else where = path.join(dp, '_analysis', 'drafts');
-      const f = safeJoin(where, path.basename(q.get('file') || ''));
-      if (!fs.existsSync(f)) throw httpErr(404, 'file not found');
+      const f = q.get('from') === 'doc' ? findDocPath(dp, path.basename(q.get('file') || ''), q.get('round') || undefined) : safeJoin(where, path.basename(q.get('file') || ''));
+      if (!f || !fs.existsSync(f)) throw httpErr(404, 'file not found');
       const INLINE = { '.pdf': 'application/pdf', '.png': 'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.gif':'image/gif', '.bmp':'image/bmp', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
       const ct = INLINE[path.extname(f).toLowerCase()];
       res.writeHead(200, {
@@ -1056,8 +1053,8 @@ const server = http.createServer(async (req, res) => {
       const dp = dealPath(q.get('deal'));
       const r = q.get('round') || '';
       const where = /^R\d+$/.test(r) ? path.join(dp, 'round' + r.slice(1)) : dp;
-      const f = safeJoin(where, path.basename(q.get('file') || ''));
-      if (!fs.existsSync(f)) throw httpErr(404, 'file not found');
+      const f = findDocPath(dp, path.basename(q.get('file') || ''), r || undefined);
+      if (!f || !fs.existsSync(f)) throw httpErr(404, 'file not found');
       if (path.extname(f).toLowerCase() !== '.xlsx') throw httpErr(400, '預覽僅支援 xlsx');
       const out = await new Promise((resolve, reject) => {
         const py = spawn('python3', [path.join(__dirname, 'read_xlsx.py'), f]);

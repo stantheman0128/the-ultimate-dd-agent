@@ -12,7 +12,7 @@
 """
 import json, os, sys, time, datetime, re, csv, io
 from document_enrichment import image_page, describe
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".bmp", ".gif"}
 
 SKIP_PREFIX = ('.', '~$')
@@ -28,9 +28,11 @@ def list_docs(deal):
     for e in sorted(os.listdir(deal)):
         p = os.path.join(deal, e)
         if re.fullmatch(r'round\d+', e) and os.path.isdir(p):
-            for f in sorted(os.listdir(p)):
-                if not f.startswith(SKIP_PREFIX):
-                    out.append((os.path.join(p, f), 'R' + e[5:]))
+            if os.path.islink(p): continue
+            for directory, dirs, files in os.walk(p, followlinks=False):
+                dirs[:] = sorted(d for d in dirs if not d.startswith(SKIP_PREFIX) and not os.path.islink(os.path.join(directory,d)))
+                for f in sorted(files):
+                    if not f.startswith(SKIP_PREFIX): out.append((os.path.join(directory, f), 'R' + e[5:]))
         elif os.path.isfile(p) and not e.startswith(SKIP_PREFIX) and e != '_notes.md' and not is_qlist(e):
             out.append((p, '未分輪'))
     return [(p, r) for p, r in out if os.path.isfile(p) and not os.path.islink(p)]
@@ -138,6 +140,27 @@ def index_text(path):
     return {'kind': 'text', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False} for i, c in enumerate(chunks)],
             'page_count': len(chunks)}
 
+def index_markup(path, ext):
+    from html.parser import HTMLParser
+    with open(path, encoding='utf-8', errors='replace') as source:
+        text = source.read()
+    if ext == '.xml':
+        import xml.etree.ElementTree as ET
+        tree = ET.fromstring(text)
+        text = '\n'.join(node.tag.split('}')[-1]+': '+node.text.strip() for node in tree.iter() if node.text and node.text.strip())
+    else:
+        class Extract(HTMLParser):
+            def __init__(self): super().__init__(); self.parts=[]; self.skip=0
+            def handle_starttag(self,tag,attrs):
+                if tag in ('script','style'): self.skip+=1
+            def handle_endtag(self,tag):
+                if tag in ('script','style'): self.skip=max(0,self.skip-1)
+            def handle_data(self,data):
+                if not self.skip and data.strip(): self.parts.append(data.strip())
+        parser=Extract();parser.feed(text);text='\n'.join(parser.parts)
+    chunks=[text[i:i+3000] for i in range(0,max(len(text),1),3000)]
+    return {'kind':'text','pages':[{'n':i+1,'text':c,'chars':len(c),'needs_ocr':False} for i,c in enumerate(chunks)],'page_count':len(chunks),'note':'結構化文字段落，非實體頁碼'}
+
 def build(path, round_label):
     ext = os.path.splitext(path)[1].lower()
     t0 = time.time()
@@ -167,6 +190,8 @@ def build(path, round_label):
         rows=csv.reader(io.StringIO(text),delimiter='\t' if ext=='.tsv' else ',')
         cells=[{'ref':get_column_letter(c)+str(r),'value':value,'formula':None} for r,row in enumerate(rows,1) for c,value in enumerate(row,1) if value]
         body={'kind':'xlsx','sheets':[{'name':'資料','cells':cells,'dims':'','text':'\n'.join(c['ref']+'\t'+c['value'] for c in cells),'truncated':False}],'sheet_count':1}
+    elif ext in ('.html','.htm','.xml'):
+        body = index_markup(path, ext)
     elif ext in ('.txt','.md'):
         body = index_text(path)
     else: raise ValueError('不支援的格式；請轉成 PDF、Office XML 或圖片')
@@ -205,8 +230,14 @@ def main():
     out_dir = os.path.join(deal, '_analysis', 'index')
     os.makedirs(out_dir, exist_ok=True)
     results = []
-    for path, rnd in list_docs(deal):
+    documents = list_docs(deal)
+    from collections import Counter
+    counts = Counter(os.path.basename(p) for p, _ in documents)
+    for path, rnd in documents:
         if only and os.path.abspath(path) != only:
+            continue
+        if counts[os.path.basename(path)] > 1:
+            results.append({'file':os.path.basename(path),'error':'同名文件會使來源不明，請先重新命名'})
             continue
         out = os.path.join(out_dir, os.path.basename(path) + '.index.json')
         st = os.stat(path)

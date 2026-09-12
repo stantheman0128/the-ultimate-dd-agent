@@ -47,8 +47,8 @@ def prepare(deal):
     originals = {}
     for f in base.iterdir():
         if f.is_dir() and re.fullmatch(r'round\d+', f.name):
-            for raw in f.iterdir():
-                if raw.is_file() and not raw.is_symlink(): originals.setdefault(raw.name, []).append(raw)
+            for raw in f.rglob("*"):
+                if raw.is_file() and not raw.is_symlink() and not any(p.is_symlink() for p in raw.parents) and not any(part.startswith((".","~$")) for part in raw.relative_to(f).parts): originals.setdefault(raw.name, []).append(raw)
         elif f.is_file() and not f.name.startswith(('_', '.')):
             originals.setdefault(f.name, []).append(f)
     warnings = []
