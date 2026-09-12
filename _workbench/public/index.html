@@ -1261,7 +1261,7 @@ async function askAI(){
         const chunk=buf.slice(0,i); buf=buf.slice(i+2);
         const line=chunk.split('\n').find(l=>l.startsWith('data: ')); if(!line) continue;
         let ev; try{ ev=JSON.parse(line.slice(6)); }catch{ continue; }
-        if(ev.meta){ meta=ev.meta; $('aiMeta').textContent=`${meta.mode==='api'?'直連 API · '+meta.model:meta.mode==='cli'?'Codex CLI':'假引擎'} · ${meta.docs} 份文件 · ${meta.pages} 頁 · 約 ${((meta.tokens||0)/1000).toFixed(0)}K tokens${meta.whole?'（整份 Data Room 進 context）':`（全案約 ${((meta.totalTokens||0)/1000).toFixed(0)}K 超過預算 ${((meta.budget||0)/1000).toFixed(0)}K，依頁碼與關鍵字挑頁）`}`; }
+        if(ev.meta){ meta=ev.meta; $('aiMeta').textContent=`${meta.provider} · ${meta.mode==='api'?'直連 API · '+meta.model:meta.mode==='cli'?'CLI':'假引擎'} · ${meta.retrieval} · ${meta.docs} 份文件 · ${meta.pages} 頁 · 約 ${((meta.tokens||0)/1000).toFixed(0)}K tokens${meta.whole?'（整份 Data Room 進 context）':`（全案約 ${((meta.totalTokens||0)/1000).toFixed(0)}K 超過預算 ${((meta.budget||0)/1000).toFixed(0)}K，BM25 挑頁）`}`; }
         if(ev.delta){ if(!firstAt) firstAt=Date.now(); text+=ev.delta; render(); }
         if(ev.error){ text+=`\n\n**錯誤：**${ev.error}`; render(); }
         if(ev.usage){ const u=ev.usage; const cr=u.cache_read_input_tokens||0, cw=u.cache_creation_input_tokens||0; $('aiMeta').textContent += ` · 首字 ${firstAt?((firstAt-t0)/1000).toFixed(1):'—'}s · 總 ${((Date.now()-t0)/1000).toFixed(1)}s · in ${(u.input_tokens||0).toLocaleString()} / cache 讀 ${cr.toLocaleString()} 寫 ${cw.toLocaleString()} / out ${(u.output_tokens||0).toLocaleString()}`; }

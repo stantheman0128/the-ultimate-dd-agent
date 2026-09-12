@@ -333,6 +333,55 @@ function docText(d) {
   return (d.pages || []).map(p => p.text || '').join('\n');
 }
 function docChars(d) { return estTokens(docText(d)); } // 以「估算 token」為預算單位
+function tokenize(s) {
+  const out = [];
+  const low = (s || '').toLowerCase();
+  for (const m of (low.match(/[a-z][a-z0-9&\-\.]{1,}/g) || [])) if (m.length >= 2) out.push(m);
+  for (const m of (low.match(/\d[\d,\.]{1,}/g) || [])) out.push(m.replace(/,/g, ''));
+  for (const run of (low.match(/[㐀-鿿]{2,}/g) || [])) for (let i = 0; i + 1 < run.length; i++) out.push(run.slice(i, i + 2));
+  return out;
+}
+const BM25_CACHE = new Map(); // dp -> { key, units, df, avgdl, N }
+// 檢索單位：PDF/pptx 一頁一單位；xlsx 一個 tab 一單位。key 以索引 mtime 組成，索引重建就失效。
+function bm25Index(dp) {
+  const docs = loadAllIndex(dp);
+  const key = docs.map(d => `${d.file}@${fs.statSync(path.join(indexDir(dp),d.file+'.index.json')).mtimeMs}`).join('|');
+  const hit = BM25_CACHE.get(dp);
+  if (hit && hit.key === key) return hit;
+  const units = [], df = new Map();
+  let totalLen = 0;
+  for (const d of docs) {
+    const push = (text, loc) => {
+      const toks = tokenize(text);
+      const tf = new Map(); for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
+      for (const t of tf.keys()) df.set(t, (df.get(t) || 0) + 1);
+      units.push({ d, loc, tf, len: toks.length, text }); totalLen += toks.length;
+    };
+    if (d.kind === 'xlsx') for (const sh of d.sheets || []) push(sh.text || (sh.cells || []).map(c => `${c.ref} ${c.value == null ? '' : c.value} ${c.formula || ''}`).join('\n'), { sheet: sh.name });
+    else for (const pg of d.pages || []) push(pg.text || '', { page: pg.n });
+  }
+  const idx = { key, units, df, N: units.length, avgdl: units.length ? totalLen / units.length : 1 };
+  BM25_CACHE.set(dp, idx);
+  return idx;
+}
+function bm25Scores(idx, query, k1 = 1.5, b = 0.75) {
+  const qt = [...new Set(tokenize(query))];
+  const res = [];
+  for (const u of idx.units) {
+    let score = 0;
+    for (const t of qt) {
+      const f = u.tf.get(t); if (!f) continue;
+      const n = idx.df.get(t) || 0;
+      const idf = Math.log(1 + (idx.N - n + 0.5) / (n + 0.5));
+      score += idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * u.len / idx.avgdl));
+    }
+    if (score > 0) res.push({ u, score });
+  }
+  res.sort((a, b2) => b2.score - a.score);
+  return res;
+}
+
+
 function questionTerms(q) {
   const terms = new Set();
   for (const m of (q.toLowerCase().match(/[a-z][a-z0-9&\-\.]{1,}/g) || [])) if (m.length >= 2) terms.add(m);
@@ -347,52 +396,28 @@ function explicitPages(q) {
   return out;
 }
 function buildAskContext(dp, question, askBudget = ASK_BUDGET) {
-  const docs = loadAllIndex(dp);
-  const read = f => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
-  const notes = read(path.join(dp, '_notes.md')).trim();
-  const facts = read(path.join(dp, '_analysis', 'facts.md')).trim();
-  const parts = [];
-  if (notes) parts.push(`<notes file="_notes.md">\n${notes}\n</notes>`);
-  if (facts) parts.push(`<facts file="_analysis/facts.md">\n${facts.slice(0, 60000)}\n</facts>`);
-  const total = docs.reduce((s, d) => s + docChars(d), 0) + estTokens(notes) + estTokens(facts.slice(0, 60000));
-  const whole = total <= askBudget;
-  let pagesUsed = 0;
-  if (whole) {
-    for (const d of docs) { parts.push(docBlock(d, null)); pagesUsed += (d.pages || []).length || (d.sheets || []).length; }
-  } else {
-    // 超過預算：先放明確指到的頁（±1），再依關鍵字命中分數填到預算為止；xlsx 整份放（通常小）
-    const q = question || '';
-    const terms = questionTerms(q);
-    const wantPages = explicitPages(q);
-    const mentioned = docs.filter(d => q.includes(d.file.replace(/\.[^.]+$/, '')) || q.includes(d.file));
-    let budget = askBudget - estTokens(parts.join('\n'));
-    const chosen = new Map(); // file -> Set(page)
-    const pcost = p => estTokens(p.text || '') + 12;
-    const add = (d, n, cost) => { if (!chosen.has(d.file)) chosen.set(d.file, new Set()); if (!chosen.get(d.file).has(n)) { chosen.get(d.file).add(n); budget -= cost; } };
-    for (const d of docs) {
-      if (d.kind === 'xlsx') { const c = docChars(d); if (c < budget) { parts.push(docBlock(d, null)); budget -= c; pagesUsed += (d.sheets || []).length; } continue; }
-      const scope = mentioned.length ? mentioned.includes(d) : true;
-      if (!scope) continue;
-      for (const n of wantPages) for (const k of [n - 1, n, n + 1]) { const p = (d.pages || [])[k - 1]; if (p) add(d, k, pcost(p)); }
-    }
-    const cands = [];
-    for (const d of docs) {
-      if (d.kind === 'xlsx') continue;
-      if (mentioned.length && !mentioned.includes(d)) continue;
-      for (const p of d.pages || []) {
-        const low = (p.text || '').toLowerCase();
-        let score = 0;
-        for (const t of terms) { let i = 0, c = 0; while (c < 5 && (i = low.indexOf(t, i)) >= 0) { c++; i += t.length; } score += c * Math.min(t.length, 6); }
-        if (score > 0) cands.push({ d, p, score });
-      }
-    }
-    cands.sort((a, b) => b.score - a.score);
-    for (const c of cands) { if (budget <= 0) break; const cost = pcost(c.p); if (cost <= budget) add(c.d, c.p.n, cost); }
-    for (const d of docs) { const set = chosen.get(d.file); if (set && set.size) { parts.push(docBlock(d, set)); pagesUsed += set.size; } }
-  }
-  const text = `<documents whole_corpus="${whole}">\n${parts.join('\n')}\n</documents>`;
-  return { text, docs: docs.length, pages: pagesUsed, whole, totalTokens: total, tokens: estTokens(text) };
+  const docs=loadAllIndex(dp), read=f=>{try{return fs.readFileSync(f,'utf8');}catch{return '';}};
+  const notes=read(path.join(dp,'_notes.md')),facts=read(path.join(dp,'_analysis','facts.md'));
+  const wrapper=parts=>`<documents>\n${parts.join('\n')}\n</documents>`;
+  const supplemental=[notes?`<notes>${notes}</notes>`:'',facts?`<facts>${facts}</facts>`:''].filter(Boolean);
+  const full=wrapper([...supplemental,...docs.map(d=>docBlock(d))]);
+  const total=estTokens(full);
+  if(total<=askBudget)return {text:full,docs:docs.length,pages:docs.reduce((n,d)=>n+(d.pages||d.sheets||[]).length,0),whole:true,retrieval:'whole',totalTokens:total,tokens:total};
+  const units=bm25Index(dp).units, selected=[],seen=new Set();
+  const block=u=>u.loc.sheet?docBlock({...u.d,sheets:u.d.sheets.filter(sh=>sh.name===u.loc.sheet)}):docBlock(u.d,new Set([u.loc.page]));
+  const add=u=>{const key=u.d.file+':'+(u.loc.sheet||u.loc.page);if(seen.has(key))return;const text=block(u);if(estTokens(wrapper([...selected,text]))<=askBudget){selected.push(text);seen.add(key);}};
+  const wanted=explicitPages(question||''),mentioned=docs.filter(d=>(question||'').includes(d.file)||(question||'').includes(d.file.replace(/\.[^.]+$/,'')));
+  const relevant=u=>!mentioned.length||mentioned.includes(u.d);
+  // Explicit pages precede neighbours and ranking; never exceed the budget silently.
+  for(const offset of [0,-1,1])for(const n of wanted)for(const u of units)if(relevant(u)&&u.loc.page===n+offset)add(u);
+  for(const {u} of bm25Scores(bm25Index(dp),question||''))if(relevant(u))add(u);
+  if(!seen.size)for(const u of units)if(relevant(u))add(u);
+  const pagesUsed=seen.size;
+  for(const text of supplemental)if(estTokens(wrapper([...selected,text]))<=askBudget)selected.push(text);
+  const text=wrapper(selected);
+  return {text,docs:docs.length,pages:pagesUsed,whole:false,retrieval:'bm25',totalTokens:total,tokens:estTokens(text)};
 }
+
 // Codex JSONL events are adapted to the existing workbench timeline contract.
 const parseStreamLine = provider.parseStreamLine;
 function mockRun(run, emit, dp, finish) {
@@ -988,28 +1013,32 @@ const server = http.createServer(async (req, res) => {
         if (matches(doc.name))
           hits.push({ src: '文件 · ' + doc.round, line: 0, text: doc.name, doc: { name: doc.name, round: doc.round } });
       }
-      // 原文（索引層）：逐頁 / 逐格命中，附頁碼或儲存格，前端可直接開到該處
+      // 原文（索引層）：逐頁 / 逐格命中，附頁碼或儲存格，前端可直接開到該處。
+      // 頁面命中用 BM25 排序（大 Data Room 時先看最相關的頁，不是檔案順序前 60 頁）；xlsx 逐格仍用字串比對。
       let rawHits = 0;
-      for (const d of loadAllIndex(dp)) {
-        if (rawHits >= 60) break;
+      const allIdx = loadAllIndex(dp);
+      for (const d of allIdx) {
+        if (rawHits >= 60 || d.kind !== 'xlsx') continue;
         const docRef = { name: d.file, round: d.round };
-        if (d.kind === 'xlsx') {
-          for (const s of d.sheets || []) for (const c of s.cells || []) {
-            if (rawHits >= 60) break;
-            const cellText = `${c.value == null ? '' : c.value}${c.formula ? ' ' + c.formula : ''}`;
-            if (matches(cellText)) { rawHits++; hits.push({ src: `原文 · ${d.file} · ${s.name}!${c.ref}`, line: 0, text: `${c.ref} = ${cellText}`.slice(0, 300), doc: docRef, sheet: s.name, ref: c.ref }); }
-          }
-        } else {
-          for (const p of d.pages || []) {
-            if (rawHits >= 60) break;
-            const i = firstIdx(p.text || '');
-            if (i < 0) continue;
-            rawHits++;
-            const snippet = (p.text || '').slice(Math.max(0, i - 110), i + 190).replace(/\s+/g, ' ');
-            hits.push({ src: `原文 · ${d.file} · p.${p.n}`, line: 0, text: snippet, doc: docRef, page: p.n });
-          }
+        for (const s of d.sheets || []) for (const c of s.cells || []) {
+          if (rawHits >= 60) break;
+          const cellText = `${c.value == null ? '' : c.value}${c.formula ? ' ' + c.formula : ''}`;
+          if (matches(cellText)) { rawHits++; hits.push({ src: `原文 · ${d.file} · ${s.name}!${c.ref}`, line: 0, text: `${c.ref} = ${cellText}`.slice(0, 300), doc: docRef, sheet: s.name, ref: c.ref }); }
         }
       }
+      const ranked = bm25Scores(bm25Index(dp), q.get('q') || '');
+      const seen = new Set();
+      const pushPage = (d, p, score) => {
+        const k = d.file + '#' + p.n; if (seen.has(k)) return; seen.add(k);
+        const i = Math.max(0, firstIdx(p.text || ''));
+        const snippet = (p.text || '').slice(Math.max(0, i - 110), i + 190).replace(/\s+/g, ' ');
+        rawHits++;
+        hits.push({ src: `原文 · ${d.file} · p.${p.n}`, line: 0, text: snippet, doc: { name: d.file, round: d.round }, page: p.n, score: Math.round(score * 100) / 100 });
+      };
+      for (const r of ranked) { if (rawHits >= 60) break; const d = r.u.d; if (d.kind === 'xlsx') continue; const p = (d.pages || [])[r.u.loc.page - 1]; if (p && matches(p.text || '')) pushPage(d, p, r.score); }
+      for (const r of ranked) { if (rawHits >= 60) break; const d = r.u.d; if (d.kind === 'xlsx') continue; const p = (d.pages || [])[r.u.loc.page - 1]; if (p) pushPage(d, p, r.score); }
+      // 同義詞放寬只命中、BM25 沒分數的頁（例：搜「財報」命中 balance sheet 頁）
+      for (const d of allIdx) { if (rawHits >= 60) break; if (d.kind === 'xlsx') continue; for (const p of d.pages || []) { if (rawHits >= 60) break; if (!seen.has(d.file + '#' + p.n) && firstIdx(p.text || '') >= 0) pushPage(d, p, 0); } }
       const scanFile = (fp, label) => {
         let txt; try { txt = fs.readFileSync(fp, 'utf8'); } catch { return; }
         const lines = txt.split('\n');
@@ -1037,9 +1066,9 @@ const server = http.createServer(async (req, res) => {
       try {
         const ctx = buildAskContext(dp, question, ask.budget);
         const mode = MOCK ? 'mock' : providerStatus(config,selected).api ? 'api' : (cli ? 'cli' : 'none');
-        send({ meta: { mode, provider:selected, model:ask.model, docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, totalTokens: ctx.totalTokens, budget: ask.budget } });
+        send({ meta: { mode, provider:selected, model:ask.model, docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, retrieval:ctx.retrieval, totalTokens: ctx.totalTokens, budget: ask.budget } });
         if (mode === 'mock') {
-          const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已依關鍵字挑頁）'}。正式版會由模型依此回答並標出處，格式 [檔名 p.N]／[檔名 工作表!B4]。`;
+          const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已用 BM25 挑頁）'}。正式版會由模型依此回答並標出處，格式 [檔名 p.N]／[檔名 工作表!B4]。`;
           for (const ch of fake.match(/.{1,12}/g)) { send({ delta: ch }); await new Promise(r => setTimeout(r, 25)); }
           send({ mode: 'mock' });
          } else if (mode === 'api') {
@@ -1065,4 +1094,4 @@ const server = http.createServer(async (req, res) => {
 });
 if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${PORT}  root=${ROOT}  mock=${MOCK}`));
 
-module.exports={server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};
+module.exports={tokenize,bm25Index,bm25Scores,server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};
