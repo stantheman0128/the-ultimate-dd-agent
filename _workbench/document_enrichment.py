@@ -16,7 +16,7 @@ def tessdata():
         if folder and all((Path(folder)/(lang+'.traineddata')).is_file() for lang in ['eng','chi_tra']):return folder
     return None
 
-def image_page(blob, number=1, file='image'):
+def image_page(blob, number=1, file='image', allow_ai=True):
     from PIL import Image, ImageOps
     import pymupdf
     with Image.open(io.BytesIO(blob)) as original:
@@ -34,7 +34,7 @@ def image_page(blob, number=1, file='image'):
             method='tesseract'
         except Exception: warnings.append('本地 OCR 失敗')
     else:warnings.append('尚未安裝繁體中文／英文 OCR 語言資料')
-    result=ai({'mode':'image','file':file,'text':text[:12000],'image':'data:image/png;base64,'+base64.b64encode(png).decode()})
+    result=ai({'mode':'image','file':file,'text':text[:12000],'image':'data:image/png;base64,'+base64.b64encode(png).decode()}) if allow_ai else {}
     if result.get('transcription'):
         text=result['transcription'];method='vision'
     warnings+=result.get('warnings',[])

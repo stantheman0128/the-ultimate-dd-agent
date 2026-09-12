@@ -7,13 +7,13 @@
   python3 _workbench/index_doc.py <案件資料夾> --force         # 全部重建
 
 索引是引擎與工作台共用的「可定位層」：
-- card-extractor 讀它做字卡（掃描頁 needs_ocr=true 時才回頭用視覺讀原檔）
+- card-extractor 讀它做五段字卡；needs_visual 頁另外讀渲染 PNG
 - /api/search 用它搜原文、/api/page 用它回單頁、/api/ask 用它組 context 並標出處 [檔名 p.N] / [檔名 工作表!B4]
 """
 import json, os, sys, time, datetime, re, csv, io
 from document_enrichment import image_page, describe
-SCHEMA_VERSION = 3
-IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".bmp", ".gif"}
+SCHEMA_VERSION = 4
+IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".bmp", ".gif", ".heic", ".heif"}
 
 SKIP_PREFIX = ('.', '~$')
 DOC_EXT = {'.pdf', '.xlsx', '.xlsm', '.pptx', '.docx', '.txt', '.md', '.csv', '.tsv'} | IMAGE_EXT
@@ -37,29 +37,46 @@ def list_docs(deal):
             out.append((p, '未分輪'))
     return [(p, r) for p, r in out if os.path.isfile(p) and not os.path.islink(p)]
 
+def image_area_ratio(page, infos):
+    # Rectangle union, clipped to page bounds: overlapping images count only once.
+    rects=[]
+    for info in infos:
+        r=__import__('pymupdf').Rect(info['bbox']) & page.rect
+        if not r.is_empty: rects.append(tuple(r))
+    xs=sorted({x for r in rects for x in (r[0],r[2])});area=0
+    for left,right in zip(xs,xs[1:]):
+        intervals=sorted((r[1],r[3]) for r in rects if r[0]<right and r[2]>left)
+        end=None;length=0
+        for lo,hi in intervals:
+            length+=max(0,hi-max(lo,end if end is not None else lo));end=max(end if end is not None else hi,hi)
+        area+=(right-left)*length
+    return area/page.rect.get_area() if page.rect.get_area() else 0
+
 def index_pdf(path):
     import pymupdf
-    doc = pymupdf.open(path)
-    pages, ocr_pages = [], 0
-    for i, page in enumerate(doc):
-        text = page.get_text('text', sort=True) or ''
-        # Native text can coexist with scanned sections. OCR image-bearing pages as well.
-        needs_ocr = len(text.strip()) < OCR_MIN_CHARS or bool(page.get_images(full=False))
-        entry = {'n':i+1,'text':text,'chars':len(text),'needs_ocr':False,'extraction':'native','blocks':[{'bbox':list(b[:4]),'text':b[4]} for b in page.get_text('blocks',sort=True) if b[6]==0]}
-        if needs_ocr:
-            pix = page.get_pixmap(matrix=__import__('pymupdf').Matrix(2,2), alpha=False)
-            visual = image_page(pix.tobytes('png'), i+1, os.path.basename(path))
-            # Keep native extraction even if OCR / vision fails.
-            if text.strip():
-                visual['text'] = text + '\n[影像區域辨識，可能與原生文字重複]\n' + visual['text']
-                visual['chars'] = len(visual['text'])
-            entry = visual
-        if entry['needs_ocr']: ocr_pages += 1
-        pages.append(entry)
-    doc.close()
-    return {'kind': 'pdf', 'pages': pages, 'page_count': len(pages), 'needs_ocr_pages': ocr_pages}
+    pages=[]
+    with pymupdf.open(path) as doc:
+        for i,page in enumerate(doc):
+            text=page.get_text('text',sort=True) or '';infos=page.get_image_info()
+            scan=len(text.strip())<OCR_MIN_CHARS and bool(infos)
+            ratio=image_area_ratio(page,infos)
+            entry={'n':i+1,'text':text,'chars':len(text),'needs_ocr':scan,'needs_visual':scan or ratio>=.2,
+                   'images':len(infos),'image_area_ratio':ratio,'extraction':'native','tables':[],
+                   'blocks':[{'bbox':list(b[:4]),'text':b[4]} for b in page.get_text('blocks',sort=True) if b[6]==0]}
+            try:
+                from contextlib import redirect_stdout
+                with redirect_stdout(sys.stderr):entry['tables']=[t.extract() for t in page.find_tables().tables]
+            except Exception as e:entry.setdefault('warnings',[]).append('表格抽取失敗：'+str(e)[:150])
+            if scan:
+                visual=image_page(page.get_pixmap(matrix=pymupdf.Matrix(2,2),alpha=False).tobytes('png'),i+1,os.path.basename(path),allow_ai=False)
+                if visual['text'].strip():
+                    entry['text']=(text+'\n'+visual['text']).strip();entry['chars']=len(entry['text'])
+                entry['needs_ocr']=visual['needs_ocr'];entry['extraction']=visual['extraction']
+                entry.setdefault('warnings',[]).extend(visual.get('warnings',[]))
+            pages.append(entry)
+    return {'kind':'pdf','pages':pages,'page_count':len(pages),'needs_ocr_pages':sum(p['needs_ocr'] for p in pages)}
 
-def index_xlsx(path):
+def read_xlsx(path):
     from openpyxl import load_workbook
     wb_v = load_workbook(path, read_only=True, data_only=True)
     wb_f = load_workbook(path, read_only=True, data_only=False)
@@ -90,28 +107,62 @@ def index_xlsx(path):
         wb_f.close()
     return {'kind': 'xlsx', 'sheets': sheets, 'sheet_count': len(sheets)}
 
+def index_xlsx(path):
+    body=read_xlsx(path)
+    missing=[(sh['name'],c) for sh in body['sheets'] for c in sh['cells'] if c['formula'] and c['value'] is None]
+    body['formula_cache']={'status':'not_needed','recalculated':0,'missing':len(missing)}
+    if missing:
+        import tempfile
+        from office_convert import convert
+        try:
+            with tempfile.TemporaryDirectory(prefix='dd-recalc-') as tmp:
+                recalculated=read_xlsx(convert(path,tmp,'xlsx'))
+            values={(sh['name'],c['ref']):c['value'] for sh in recalculated['sheets'] for c in sh['cells']}
+            for name,c in missing:
+                c['value']=values.get((name,c['ref']))
+                if c['value'] is not None:c['cache_source']='libreoffice_copy'
+            body['formula_cache']['recalculated']=sum(c['value'] is not None for _,c in missing)
+            body['formula_cache']['status']='recalculated'
+        except Exception as e:
+            body['formula_cache']['status']='unavailable';body.setdefault('warnings',[]).append('公式無快取值：'+str(e)[:250])
+        remaining=sum(c['value'] is None for _,c in missing);body['formula_cache']['missing']=remaining
+        if remaining:body.setdefault('warnings',[]).append(f'公式無快取值：{remaining} 格；照抄公式，不得猜值')
+    for sh in body['sheets']:
+        for c in sh['cells']:
+            if c['formula'] and c['value'] is None:c['cache_missing']=True
+        sh['text']='\n'.join(f"{c['ref']}\t{c['value'] if c['value'] is not None else '值未快取' if c['formula'] else ''}"+(f"\t{c['formula']}" if c['formula'] else '') for c in sh['cells'])
+    return body
+
 def index_pptx(path):
     from pptx import Presentation
-    prs = Presentation(path)
-    slides = []
-    for i, s in enumerate(prs.slides):
-        parts = []
-        for sh in s.shapes:
-            if getattr(sh,'shape_type',None) == 13:
-                visual=image_page(sh.image.blob,i+1,os.path.basename(path))
-                parts.append('[嵌入圖片辨識] '+visual['text']+'\n[AI 圖片描述] '+visual['summary_zh']+'\n'+'；'.join(visual['warnings']))
-            if sh.has_text_frame and sh.text_frame.text.strip():
-                parts.append(sh.text_frame.text)
-            if getattr(sh, 'has_table', False) and sh.has_table:
-                for r in sh.table.rows:
-                    parts.append('\t'.join(c.text for c in r.cells))
+    prs=Presentation(path);slides=[]
+    def shapes(group):
+        for sh in group:
+            yield sh
+            if getattr(sh,'shape_type',None)==6:yield from shapes(sh.shapes)
+    for i,s in enumerate(prs.slides):
+        parts=[];charts=[];pictures=False;warnings=[]
+        for sh in shapes(s.shapes):
+            if getattr(sh,'shape_type',None)==13:pictures=True
+            if getattr(sh,'has_text_frame',False) and sh.text_frame.text.strip():parts.append(sh.text_frame.text)
+            if getattr(sh,'has_table',False):
+                parts.extend('\t'.join(c.text for c in row.cells) for row in sh.table.rows)
+            if getattr(sh,'has_chart',False):
+                for plot in sh.chart.plots:
+                    try:categories=[str(c.label) for c in plot.categories]
+                    except (AttributeError,ValueError,TypeError):categories=[]
+                    for series in plot.series:
+                        try:
+                            values=list(series.values);record={'series':series.name,'categories':categories,'values':values}
+                            charts.append(record);parts.append('[chart] '+series.name+'\n'+'\n'.join(f"{categories[n] if n<len(categories) else n+1}\t{v}" for n,v in enumerate(values)))
+                        except (AttributeError,ValueError,TypeError) as e:warnings.append('圖表資料需視覺核對：'+str(e)[:100]);charts.append({'unreadable':True})
         if s.has_notes_slide and s.notes_slide.notes_text_frame is not None:
-            nt = s.notes_slide.notes_text_frame.text.strip()
-            if nt:
-                parts.append('[notes] ' + nt)
-        text = '\n'.join(parts)
-        slides.append({'n': i + 1, 'text': text, 'chars': len(text), 'needs_ocr': len(text.strip()) < OCR_MIN_CHARS})
-    return {'kind': 'pptx', 'pages': slides, 'page_count': len(slides)}
+            nt=s.notes_slide.notes_text_frame.text.strip()
+            if nt:parts.append('[notes] '+nt)
+        text='\n'.join(parts)
+        slides.append({'n':i+1,'text':text,'chars':len(text),'needs_ocr':False,'needs_visual':pictures or bool(charts),
+                       'has_pictures':pictures,'charts':charts,'warnings':warnings,'loc_kind':'slide'})
+    return {'kind':'pptx','pages':slides,'page_count':len(slides)}
 
 def index_docx(path):
     try:
@@ -125,20 +176,20 @@ def index_docx(path):
             parts.append('\t'.join(c.text for c in r.cells))
     for relation in d.part.rels.values():
         if relation.reltype.endswith('/image') and not relation.is_external:
-            visual=image_page(relation.target_part.blob,1,os.path.basename(path))
-            parts.append('[嵌入圖片 OCR] '+visual['text']+'\n[AI 圖片描述] '+visual['summary_zh']+'\n'+'；'.join(visual['warnings']))
+            visual=image_page(relation.target_part.blob,1,os.path.basename(path),allow_ai=False)
+            parts.append('[嵌入圖片 OCR] '+visual['text']+'\n'+'；'.join(visual['warnings']))
     text = '\n'.join(parts)
     # docx 沒有穩定頁碼：以 3,000 字切「頁」
     chunks = [text[i:i + 3000] for i in range(0, max(len(text), 1), 3000)]
-    return {'kind': 'docx', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False} for i, c in enumerate(chunks)],
+    return {'kind': 'docx', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False, 'needs_visual':False, 'loc_kind':'segment'} for i, c in enumerate(chunks)],
             'page_count': len(chunks), 'note': '頁碼為 3000 字切分，非原始分頁'}
 
 def index_text(path):
     with open(path, encoding='utf-8', errors='replace') as f:
         text = f.read()
     chunks = [text[i:i + 5000] for i in range(0, max(len(text), 1), 5000)]
-    return {'kind': 'text', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False} for i, c in enumerate(chunks)],
-            'page_count': len(chunks)}
+    return {'kind': 'text', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False, 'needs_visual':False, 'loc_kind':'segment'} for i, c in enumerate(chunks)],
+            'page_count': len(chunks), 'note':'段號為 5000 字切分，非原始分頁'}
 
 def index_markup(path, ext):
     from html.parser import HTMLParser
@@ -173,13 +224,10 @@ def build(path, round_label):
     elif ext == '.docx':
         body = index_docx(path)
     elif ext in IMAGE_EXT:
-        from PIL import Image, ImageSequence, ImageOps
-        pages=[]
-        with Image.open(path) as im:
-            for n,frame in enumerate(ImageSequence.Iterator(im)):
-                buf=io.BytesIO(); ImageOps.exif_transpose(frame).convert('RGB').save(buf,format='PNG')
-                pages.append(image_page(buf.getvalue(),n+1,os.path.basename(path)))
-        body={'kind':'image','pages':pages,'page_count':len(pages),'needs_ocr_pages':sum(p['needs_ocr'] for p in pages)}
+        from render_document import open_image
+        with open_image(path) as im:
+            pages=[{'n':n+1,'text':'','chars':0,'needs_ocr':True,'needs_visual':True,'extraction':'visual_pending'} for n in range(getattr(im,'n_frames',1))]
+        body={'kind':'image','pages':pages,'page_count':len(pages),'needs_ocr_pages':len(pages)}
     elif ext in ('.csv','.tsv'):
         with open(path,'rb') as source: raw=source.read()
         for encoding in ('utf-8-sig','cp950','utf-16'):
@@ -200,16 +248,17 @@ def build(path, round_label):
                  'indexed_at': datetime.datetime.now().isoformat(timespec='seconds'), 'seconds': round(time.time() - t0, 2)})
     body['total_chars'] = sum(p.get('chars', 0) for p in body.get('pages', [])) + sum(len(s.get('text', '')) for s in body.get('sheets', []))
     body['schema_version']=SCHEMA_VERSION
-    body['enrichment']=describe(body)
-    body['warnings']=list(dict.fromkeys([w for p in body.get('pages',[]) for w in p.get('warnings',[])]))
-    if body['enrichment']['status']!='ready': body['warnings'].append('中文 AI 摘要尚未完成，原文仍可搜尋；可重建索引重試')
-    body['preprocess_status']='partial' if body.get('needs_ocr_pages') or body['warnings'] or body['enrichment']['status']!='ready' or any(s.get('truncated') for s in body.get('sheets',[])) else 'ready'
+    body['needs_visual_pages']=sum(bool(p.get('needs_visual')) for p in body.get('pages',[]))
+    body['enrichment']=describe(body) if os.environ.get('QLIST_INDEX_AI')=='1' else {'status':'disabled','summary_zh':'','keywords':[],'coverage':'未啟用額外 AI 描述；原文索引不呼叫模型'}
+    body['warnings']=list(dict.fromkeys(body.get('warnings',[])+[w for p in body.get('pages',[]) for w in p.get('warnings',[])]))
+    if body['enrichment']['status'] not in ('ready','disabled'): body['warnings'].append('中文 AI 摘要尚未完成，原文仍可搜尋；可重建索引重試')
+    body['preprocess_status']='partial' if body.get('needs_ocr_pages') or body['warnings'] or body['enrichment']['status'] not in ('ready','disabled') or any(s.get('truncated') for s in body.get('sheets',[])) else 'ready'
     body['seconds']=round(time.time()-t0,2)
     return body
 
 def save_meta(out, body):
     st = os.stat(out)
-    meta = {k: body.get(k) for k in ('kind','page_count','sheet_count','needs_ocr_pages','total_chars','mtime','preprocess_status','warnings','error','enrichment')}
+    meta = {k: body.get(k) for k in ('kind','page_count','sheet_count','needs_ocr_pages','needs_visual_pages','formula_cache','total_chars','mtime','preprocess_status','warnings','error','enrichment')}
     meta.update(indexSize=st.st_size, indexMtime=st.st_mtime)
     with open(out+'.meta.tmp', 'w', encoding='utf-8') as f:
         json.dump(meta,f)
@@ -255,6 +304,16 @@ def main():
             with open(out + '.tmp', 'w', encoding='utf-8') as f:
                 json.dump(body, f, ensure_ascii=False)
             os.replace(out + '.tmp', out)
+            if body.get('needs_visual_pages'):
+                from render_document import render
+                try:
+                    for r in render(deal,body['file']):body['pages'][r['page']-1]['render_path']=r['path']
+                except Exception as e:
+                    body['warnings'].append('視覺頁渲染未完成：'+str(e)[:250]);body['preprocess_status']='partial'
+                    for page in body.get('pages',[]):
+                        if page.get('needs_visual') and not page.get('render_path'):page['render_error']=str(e)[:250]
+                with open(out+'.tmp','w',encoding='utf-8') as f:json.dump(body,f,ensure_ascii=False)
+                os.replace(out+'.tmp',out)
             save_meta(out,body)
             results.append({'file': body['file'], 'kind': body['kind'], 'pages': body.get('page_count') or body.get('sheet_count'),
                             'needs_ocr_pages': body.get('needs_ocr_pages', 0), 'chars': body['total_chars'], 'seconds': body['seconds']})

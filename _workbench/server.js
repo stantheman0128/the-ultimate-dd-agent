@@ -85,7 +85,7 @@ function listDocs(dp) {
       cat: catMap[f] || guessCat(f),
       card: !!findCard(dp, f),
       verification:readCardVerification(dp).cards?.find(c=>c.file===f)||null,
-      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
+      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, needsVisual: im.needs_visual_pages || 0, formulaCache: im.formula_cache || null, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
       indexing: INDEXING.has(path.join(dir, f)),
     });
   };
@@ -258,7 +258,7 @@ function indexMeta(dp) {
     let d;
     try {const m=JSON.parse(fs.readFileSync(ip+'.meta','utf8'));if(m.indexSize===st.size&&Math.abs(m.indexMtime-st.mtimeMs/1000)<.001)d=m;}catch{}
     if(!d)d=loadIndex(dp,name);
-    if(d){const meta={kind:d.kind,page_count:d.page_count,sheet_count:d.sheet_count,needs_ocr_pages:d.needs_ocr_pages,total_chars:d.total_chars,mtime:d.mtime,preprocess_status:d.preprocess_status,warnings:d.warnings,error:d.error,enrichment:d.enrichment};out[name]=meta;INDEX_META_CACHE.set(ip,{mtime:st.mtimeMs,meta});}
+    if(d){const meta={kind:d.kind,page_count:d.page_count,sheet_count:d.sheet_count,needs_ocr_pages:d.needs_ocr_pages,needs_visual_pages:d.needs_visual_pages,formula_cache:d.formula_cache,total_chars:d.total_chars,mtime:d.mtime,preprocess_status:d.preprocess_status,warnings:d.warnings,error:d.error,enrichment:d.enrichment};out[name]=meta;INDEX_META_CACHE.set(ip,{mtime:st.mtimeMs,meta});}
     if(INDEX_META_CACHE.size>5000)INDEX_META_CACHE.delete(INDEX_META_CACHE.keys().next().value);
   }
   return out;
@@ -846,6 +846,22 @@ const server = http.createServer(async (req, res) => {
       const total = Object.values(meta).reduce((s,d)=>s+Math.ceil((d.total_chars||0)/3),0);
       return json(res, 200, { docs, totalTokens: total, budget: ASK_BUDGET, wholeCorpus: false });
     }
+    if(u.pathname==='/api/visual-pages'){
+      const d=loadIndex(dealPath(q.get('deal')),path.basename(q.get('file')||''));if(!d)throw httpErr(404,'尚未索引');
+      return json(res,200,{pages:(d.pages||[]).filter(p=>p.needs_visual).map(p=>({n:p.n,render_error:p.render_error||null}))});
+    }
+    if(u.pathname==='/api/render'){
+      const dp=dealPath(q.get('deal')),file=q.get('file')||'',page=Number(q.get('page'));
+      if(path.basename(file)!==file||!Number.isSafeInteger(page)||page<1)throw httpErr(400,'invalid visual page');
+      const result=await new Promise((resolve,reject)=>{
+        const proc=spawn(PY,[path.join(__dirname,'render_document.py'),dp,file,'--page',String(page)],{cwd:ROOT});let out='',err='';
+        const timer=setTimeout(()=>{proc.kill();reject(httpErr(504,'渲染逾時'));},120000);
+        proc.stdout.on('data',d=>out+=d);proc.stderr.on('data',d=>err+=d);
+        proc.on('error',e=>{clearTimeout(timer);reject(e)});proc.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(out.trim());if(code||result.error)reject(httpErr(422,result.error||'渲染失敗'));else resolve(result)}catch{reject(httpErr(422,err.slice(-300)||'渲染失敗'))}});
+      });
+      const rendered=result.pages.find(p=>p.page===page);if(!rendered)throw httpErr(404,'無渲染頁');
+      const fp=safeJoin(dp,rendered.path);res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'no-store'});return fs.createReadStream(fp).pipe(res);
+    }
     if (u.pathname === '/api/page') {
       const dp = dealPath(q.get('deal'));
       const file = path.basename(q.get('file') || '');
@@ -860,7 +876,7 @@ const server = http.createServer(async (req, res) => {
       const n = Math.max(1, Number(q.get('page')) || 1);
       const p = (d.pages || [])[n - 1];
       if (!p) return json(res, 404, { error: `沒有第 ${n} 頁（共 ${d.page_count} 頁）` });
-      return json(res, 200, { file, round: d.round, kind: d.kind, page: n, page_count: d.page_count, text: p.text, needs_ocr: !!p.needs_ocr, chars: p.chars });
+      return json(res, 200, { file, round: d.round, kind: d.kind, page: n, page_count: d.page_count, text: p.text, needs_ocr: !!p.needs_ocr, needs_visual:!!p.needs_visual, loc_kind:p.loc_kind, tables:p.tables||[], render_error:p.render_error||null, chars: p.chars });
     }
     if (u.pathname === '/api/card-verify') {
       const dp=dealPath(q.get('deal'));let content='';try{content=fs.readFileSync(path.join(dp,'_analysis','card-verify.md'),'utf8');}catch{}

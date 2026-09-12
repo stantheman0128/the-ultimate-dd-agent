@@ -5,3 +5,4 @@ python-pptx>=0.6     # pptx 逐頁文字
 python-docx>=1.1     # docx 段落與表格
 reportlab>=4.0       # 合成示範用年報（演練資料_AcmeRobotics/_tools）
 Pillow>=10.1         # image orientation, multi-frame TIFF/GIF, normalized vision input
+pillow-heif>=0.18    # HEIC/HEIF decode for visual-page PNG rendering

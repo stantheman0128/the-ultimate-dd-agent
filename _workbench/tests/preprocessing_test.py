@@ -34,7 +34,7 @@ class Preprocessing(unittest.TestCase):
   for ext in ('png','jpg','webp','tiff','bmp','gif'):
    file=self.root/('image.'+ext);im.save(file);r=idx.build(str(file),'R1')
    self.assertEqual(r['kind'],'image');self.assertEqual(r['page_count'],1)
-   if enrich.tessdata():self.assertIn('18600',r['pages'][0]['text'])
+   self.assertTrue(r['pages'][0]['needs_visual']);self.assertEqual(r['pages'][0]['text'],'')
   pdf=pymupdf.open();page=pdf.new_page();page.insert_image(page.rect,filename=str(self.root/'image.png'));pdf.save(self.root/'scan.pdf');pdf.close()
   r=idx.build(str(self.root/'scan.pdf'),'R1');self.assertEqual(r['kind'],'pdf')
   if enrich.tessdata():self.assertIn('18600',r['pages'][0]['text'])
@@ -54,7 +54,7 @@ class Preprocessing(unittest.TestCase):
   finally:db.close()
  def test_summary_failure_preserves_native_and_is_visible(self):
   f=self.root/'x.txt';f.write_text('Revenue is USD 18600')
-  r=idx.build(str(f),'R1');self.assertIn('18600',r['pages'][0]['text']);self.assertEqual(r['preprocess_status'],'partial')
+  r=idx.build(str(f),'R1');self.assertIn('18600',r['pages'][0]['text']);self.assertEqual(r['preprocess_status'],'ready');self.assertEqual(r['enrichment']['status'],'disabled')
   with self.assertRaises(ValueError):idx.build(str(self.root/'x.exe'),'R1')
  def test_description_sampling_includes_last_page_and_is_bounded(self):
   def fake(req):
