@@ -98,7 +98,9 @@ async function loadMemory() {
       ? `${failed} 筆整理未完成，可重試；既有記憶不受影響。`
       : pending
         ? `${pending} 筆正在背景整理，稍後重新整理查看。`
-        : "記憶會在每次成功回答後增量整理。";
+        : scope === "global"
+          ? `已同步 ${entries.filter(x => x.source?.type === "distillation").length} 條蒸餾記憶；人工修訂優先保留。`
+          : "記憶會在每次成功回答後增量整理。";
     $("memoryRetry").hidden = !failed || scope === "global";
   } catch (e) {
     $("memoryList").textContent = e.message;
@@ -115,7 +117,9 @@ function editMemory(id) {
   $("memoryStatus").value = entry?.status || "active";
   $("memoryRemove").hidden = !entry;
   $("memoryDeleteConfirm").hidden = true;
-  $("memorySource").textContent = entry?.source?.messageId
+  $("memorySource").textContent = entry?.source?.type === "distillation"
+    ? `來源：結案蒸餾 · ${entry.source.file} · 第 ${entry.source.line} 行${entry.source.overridden ? "\n目前使用團隊修訂版；蒸餾原文保留。" : ""}${entry.source.conflict ? "\n蒸餾原文已變動，請比較原文後確認本次修訂。" : ""}${entry.source.missing ? "\n原文已移除，此處保留人工修訂。" : ""}`
+    : entry?.source?.messageId
     ? "來源：" +
       entry.source.deal +
       " · " +
@@ -127,6 +131,9 @@ function editMemory(id) {
             .join("、")
         : "")
     : "來源：手動新增";
+  $("memoryOrigin").hidden = !entry?.source?.original;
+  $("memoryOrigin").open = false;
+  $("memoryOrigin").querySelector("pre").textContent = entry?.source?.original || "";
   $("memoryOpenSource").hidden = !entry?.source?.conversationId;
   $("memoryVersions").innerHTML = entry?.history?.length
     ? "<summary>過去版本 · " +
@@ -258,5 +265,22 @@ function renderMemoryEntries() {
   const q = $("memoryEntrySearch").value.trim().toLowerCase();
   const entries = memoryView.entries.filter(x => (x.title + " " + x.content).toLowerCase().includes(q));
   const labels = { active: "使用中", candidate: "待確認", disabled: "已停用" };
-  $("memoryList").innerHTML = entries.map(x => `<button class="memory-entry" data-id="${esc(x.id)}" onclick="editMemory(this.dataset.id)"><span><strong>${esc(x.title)}</strong><span class="memory-preview">${esc(x.content.slice(0, 110))}</span><small>${esc(labels[x.status] || x.status)} · 第 ${x.revision} 版</small></span><span aria-hidden="true">›</span></button>`).join("") || `<div class="memory-empty"><strong>${q ? "找不到符合的記憶" : "還沒有保存的記憶"}</strong><small>${q ? "試試其他關鍵字。" : "完成對話後會自動整理，也可以先記下重要背景。"}</small>${q ? "" : '<button onclick="editMemory()">＋ 新增第一筆記憶</button>'}</div>`;
+  $("memoryList").innerHTML = entries.map(x => `<button class="memory-entry" data-id="${esc(x.id)}" onclick="editMemory(this.dataset.id)"><span><strong>${esc(x.title)}</strong><span class="memory-preview">${esc(x.content.slice(0, 110))}</span><small>${x.source?.type === "distillation" ? "結案蒸餾 · " : ""}${x.source?.conflict ? "原文有更新 · " : ""}${esc(labels[x.status] || x.status)} · 第 ${x.revision} 版</small></span><span aria-hidden="true">›</span></button>`).join("") || `<div class="memory-empty"><strong>${q ? "找不到符合的記憶" : "還沒有保存的記憶"}</strong><small>${q ? "試試其他關鍵字。" : "完成對話後會自動整理，也可以先記下重要背景。"}</small>${q ? "" : '<button onclick="editMemory()">＋ 新增第一筆記憶</button>'}</div>`;
 }
+
+async function reviewMemoryProposal(messageId, index) {
+  const proposal = CHAT.conversation?.messages.find(x => x.id === messageId)?.memoryProposals?.[index];
+  if (!proposal) return toast("找不到這份修訂草稿，請重新開啟對話");
+  await openMemory();
+  $("memoryScope").value = "global";
+  switchMemoryPanel("library");
+  await loadMemory();
+  const entry = memoryView.entries.find(x => x.id === proposal.id);
+  if (!entry || entry.revision !== proposal.revision) return toast("記憶已有新版本，請重新提出修訂，避免覆蓋更新");
+  editMemory(entry.id);
+  $("memoryContent").value = proposal.content;
+  $("memoryEditorHeading").textContent = "檢視對話修訂草稿";
+  $("memorySource").textContent += "\n\n修改前：" + proposal.before;
+}
+
+async function openMemoryScope(scope) { $("memoryScope").value = scope; switchMemoryPanel("library"); await loadMemory(); }

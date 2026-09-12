@@ -8,9 +8,17 @@ const fail = (s, m) => Object.assign(new Error(m), { status: s });
 const bound = (s, n) => String(s || "").slice(0, n);
 class MemoryStore {
   constructor(root, resolve) {
+    this.projectRoot = root;
     this.root = path.join(root, "_private_memory");
     this.resolve = resolve;
     this.working = false;
+  }
+  syncDistilled() { require("./distilled-memory").sync(this); }
+  directory(offset = 0) {
+    this.syncDistilled();
+    const entries = this.list("global").filter(x => x.status === "active");
+    offset = Math.max(0, Number(offset) || 0);
+    return { total: entries.length, entries: entries.slice(offset, offset + 12).map(x => ({id:x.id,scope:x.scope,title:x.title,revision:x.revision})), next: offset + 12 < entries.length ? offset + 12 : null };
   }
   generation() {
     try {
@@ -91,7 +99,9 @@ class MemoryStore {
       revision: (old?.revision || 0) + 1,
       createdAt: old?.createdAt || now,
       updatedAt: now,
-      source: data.source || old?.source || { type: "manual" },
+      source: old?.source?.type === "distillation" && !automatic
+        ? {...old.source, overridden:true, conflict:false}
+        : data.source || old?.source || { type: "manual" },
       supersedes: data.supersedes || old?.supersedes || null,
       history: old
         ? [
@@ -150,7 +160,7 @@ class MemoryStore {
     this.persist({
       id,
       scope,
-      source: { messageId: old.source?.messageId },
+      source: old.source?.type === "distillation" ? {type:"distillation",key:old.source.key} : { messageId: old.source?.messageId },
       title: "已刪除",
       status: "deleted",
       revision: revision + 1,
@@ -193,6 +203,7 @@ class MemoryStore {
       }));
     return {
       core: CORE,
+      teamDirectory: this.directory(),
       summary: bound(summary, 1000),
       matches: [
         ...new Map(
