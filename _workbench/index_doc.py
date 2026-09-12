@@ -134,7 +134,7 @@ def index_docx(path):
 def index_text(path):
     with open(path, encoding='utf-8', errors='replace') as f:
         text = f.read()
-    chunks = [text[i:i + 3000] for i in range(0, max(len(text), 1), 3000)]
+    chunks = [text[i:i + 5000] for i in range(0, max(len(text), 1), 5000)]
     return {'kind': 'text', 'pages': [{'n': i + 1, 'text': c, 'chars': len(c), 'needs_ocr': False} for i, c in enumerate(chunks)],
             'page_count': len(chunks)}
 

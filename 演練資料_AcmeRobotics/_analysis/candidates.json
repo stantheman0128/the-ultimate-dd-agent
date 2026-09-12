@@ -1,0 +1,2512 @@
+{
+  "groups": [
+    {
+      "metric_id": "esop_pool_pct",
+      "entity": null,
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "A6",
+          "item": "股東：ESOP reserved",
+          "value_raw": "—",
+          "value_num": null,
+          "unit": "pct",
+          "metric_id": "esop_pool_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B6",
+          "item": "ESOP reserved 股數",
+          "value_raw": "800,000 股",
+          "value_num": 800000.0,
+          "unit": "pct",
+          "metric_id": "esop_pool_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "D6",
+          "item": "ESOP reserved 輪次",
+          "value_raw": "\"-\"（無標示）",
+          "value_num": null,
+          "unit": "pct",
+          "metric_id": "esop_pool_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "E6",
+          "item": "ESOP reserved 備註",
+          "value_raw": "Unallocated 5.2%",
+          "value_num": 0.052,
+          "unit": "pct",
+          "metric_id": "esop_pool_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "ESOP reserved pool 持股數",
+          "value_raw": "800,000 股",
+          "value_num": 800000.0,
+          "unit": "pct",
+          "metric_id": "esop_pool_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_margin",
+      "entity": null,
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Gross margin",
+          "value_raw": "41.2%",
+          "value_num": 0.412,
+          "unit": "pct",
+          "metric_id": "gross_margin",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.4",
+          "item": "毛利率",
+          "value_raw": "58%（FY2025）",
+          "value_num": 0.58,
+          "unit": "pct",
+          "metric_id": "gross_margin",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Vertex Growth Fund LP",
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C4",
+          "item": "Vertex Growth Fund LP 持股比例",
+          "value_raw": "12%（0.12）",
+          "value_num": 0.12,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Vertex Growth Fund LP",
+          "period": null,
+          "entity_inferred": true
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Vertex Growth Fund LP 持股比例",
+          "value_raw": "15.0%",
+          "value_num": 0.15,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Vertex Growth Fund LP",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Harbor Angels LLC",
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C5",
+          "item": "Harbor Angels LLC 持股比例",
+          "value_raw": "6.5%（0.065）",
+          "value_num": 0.065,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Harbor Angels LLC",
+          "period": null,
+          "entity_inferred": true
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Harbor Angels LLC 持股比例",
+          "value_raw": "6.5%",
+          "value_num": 0.065,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Harbor Angels LLC",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Other minority holders",
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C7",
+          "item": "Other minority holders 持股比例",
+          "value_raw": "15.5%（0.155）",
+          "value_num": 0.155,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Other minority holders",
+          "period": null,
+          "entity_inferred": true
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Other minority holders 持股比例",
+          "value_raw": "12.5%",
+          "value_num": 0.125,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Other minority holders",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Vertex Growth Fund LP",
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B4",
+          "item": "Vertex Growth Fund LP 股數",
+          "value_raw": "1,200,000 股",
+          "value_num": 1200000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Vertex Growth Fund LP",
+          "period": null,
+          "entity_inferred": true
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Vertex Growth Fund LP 持股數",
+          "value_raw": "1,500,000 股",
+          "value_num": 1500000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Vertex Growth Fund LP",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Harbor Angels LLC",
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B5",
+          "item": "Harbor Angels LLC 股數",
+          "value_raw": "650,000 股",
+          "value_num": 650000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Harbor Angels LLC",
+          "period": null,
+          "entity_inferred": true
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Harbor Angels LLC 持股數",
+          "value_raw": "650,000 股",
+          "value_num": 650000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Harbor Angels LLC",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Other minority holders",
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B7",
+          "item": "Other minority holders 股數",
+          "value_raw": "1,550,000 股",
+          "value_num": 1550000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Other minority holders",
+          "period": null,
+          "entity_inferred": true
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Other minority holders 持股數",
+          "value_raw": "1,250,000 股",
+          "value_num": 1250000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Other minority holders",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Revenue（總營收）",
+          "value_raw": "US$3,204,118",
+          "value_num": 3204118.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Sales & marketing",
+          "value_raw": "US$1,306,880",
+          "value_num": 1306880.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A3:E3",
+          "item": "Pacific Fulfillment｜US｜營收 384,494｜佔比 12%｜進行中",
+          "value_raw": "384494 / 0.12",
+          "value_num": 384494.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A5:E5",
+          "item": "Hansei Warehousing｜JP｜營收 256,329｜佔比 8%｜進行中",
+          "value_raw": "256329 / 0.08",
+          "value_num": 256329.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A6:E6",
+          "item": "MetroParts Dist.｜US｜營收 224,288｜佔比 7%｜進行中（試營運轉正式）",
+          "value_raw": "224288 / 0.07",
+          "value_num": 224288.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A7:E7",
+          "item": "EverFresh Cold Chain｜TW｜營收 192,247｜佔比 6%｜進行中",
+          "value_raw": "192247 / 0.06",
+          "value_num": 192247.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A8:E8",
+          "item": "Nordic Storage｜US｜營收 160,206｜佔比 5%｜進行中",
+          "value_raw": "160206 / 0.05",
+          "value_num": 160206.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A9:E9",
+          "item": "Sunrise Apparel DC｜TW｜營收 128,165｜佔比 4%｜進行中",
+          "value_raw": "128165 / 0.04",
+          "value_num": 128165.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A10:E10",
+          "item": "Kyushu Micro-FC｜JP｜營收 96,124｜佔比 3%｜進行中",
+          "value_raw": "96124 / 0.03",
+          "value_num": 96124.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A11:E11",
+          "item": "BlueBox Storage｜TW｜營收 96,124｜佔比 3%｜進行中",
+          "value_raw": "96124 / 0.03",
+          "value_num": 96124.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "由 C2:C11 加總計算，非表內既有欄位",
+          "item": "Top10 客戶營收合計（本表加總）",
+          "value_raw": "2,819,624 US$",
+          "value_num": 2819624.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!A1",
+          "item": "營收單位",
+          "value_raw": "US$",
+          "value_num": null,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!C2、D2、E2 公式",
+          "item": "營收年成長硬編碼倍數",
+          "value_raw": "2.1（即 110% YoY，2027–2029 三年皆同）",
+          "value_num": 2.1,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": "2025",
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.3",
+          "item": "FY2025 營收",
+          "value_raw": "US$3.2M（2.4x YoY）",
+          "value_num": 3.2,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2025",
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "由 C 欄 ÷ D 欄逐列反推，非表內既有欄位",
+          "item": "推算 FY2025 公司總營收（各列營收÷佔比反推，10 列結果均落在 3,204,112.5～3,204,133.3 之間，一致）",
+          "value_raw": "約 3,204,100～3,204,133 US$（約 320 萬美元）",
+          "value_num": 3204100.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2025",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": "2026",
+      "multiple_sources": true,
+      "critical": true,
+      "rows": [
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A4:E4",
+          "item": "QuickShip Logistics｜TW｜營收 288,371｜佔比 9%｜2026/3 通知終止，2026/6 生效",
+          "value_raw": "288371 / 0.09",
+          "value_num": 288371.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2026",
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!B2",
+          "item": "營收 2026",
+          "value_raw": "US$7,100,000（硬編碼數值，非公式）",
+          "value_num": 7100000.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2026",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "shares_outstanding",
+      "entity": null,
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Total shares outstanding",
+          "value_raw": "10,000,000 shares",
+          "value_num": 10000000.0,
+          "unit": "shares",
+          "metric_id": "shares_outstanding",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Total issued shares（總發行股數）",
+          "value_raw": "10,000,000 股",
+          "value_num": 10000000.0,
+          "unit": "shares",
+          "metric_id": "shares_outstanding",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "top1_customer_pct",
+      "entity": null,
+      "period": null,
+      "multiple_sources": true,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.3",
+          "item": "Note 5：客戶集中度",
+          "value_raw": "最大客戶占 FY2025 營收 31%",
+          "value_num": 2025.0,
+          "unit": "pct",
+          "metric_id": "top1_customer_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.3",
+          "item": "Top-10 客戶集中度",
+          "value_raw": "68% of revenue",
+          "value_num": 0.68,
+          "unit": "pct",
+          "metric_id": "top1_customer_pct",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "pledged_assets",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": true,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.3",
+          "item": "Note 7：質押/擔保",
+          "value_raw": "「substantially all」機器人設備已質押，作為 First Pacific Bank US$1.5M 信用額度之擔保",
+          "value_num": 1.5,
+          "unit": "text",
+          "metric_id": "pledged_assets",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "subsequent_event",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": true,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.3",
+          "item": "Note 9：期後事項",
+          "value_raw": "2026年3月，一名占 FY2025 營收約 9% 的客戶通知終止服務合約，生效日 2026年6月",
+          "value_num": 2026.0,
+          "unit": "text",
+          "metric_id": "subsequent_event",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "accounts_receivable",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Accounts receivable",
+          "value_raw": "US$1,152,730",
+          "value_num": 1152730.0,
+          "unit": "currency",
+          "metric_id": "accounts_receivable",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "arpa",
+      "entity": null,
+      "period": "2026",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!B3",
+          "item": "每站點月費 2026",
+          "value_raw": "US$8,400",
+          "value_num": 8400.0,
+          "unit": "currency",
+          "metric_id": "arpa",
+          "entity": null,
+          "period": "2026",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "arpa",
+      "entity": null,
+      "period": "2027",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!C3",
+          "item": "每站點月費 2027",
+          "value_raw": "US$8,700",
+          "value_num": 8700.0,
+          "unit": "currency",
+          "metric_id": "arpa",
+          "entity": null,
+          "period": "2027",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "arpa",
+      "entity": null,
+      "period": "2028",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!D3",
+          "item": "每站點月費 2028",
+          "value_raw": "US$9,000",
+          "value_num": 9000.0,
+          "unit": "currency",
+          "metric_id": "arpa",
+          "entity": null,
+          "period": "2028",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "arpa",
+      "entity": null,
+      "period": "2029",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!E3",
+          "item": "每站點月費 2029",
+          "value_raw": "US$9,300",
+          "value_num": 9300.0,
+          "unit": "currency",
+          "metric_id": "arpa",
+          "entity": null,
+          "period": "2029",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "cash",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Cash and equivalents",
+          "value_raw": "US$4,918,551",
+          "value_num": 4918551.0,
+          "unit": "currency",
+          "metric_id": "cash",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "cogs",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Cost of revenue",
+          "value_raw": "US$1,884,022",
+          "value_num": 1884022.0,
+          "unit": "currency",
+          "metric_id": "cogs",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "debt",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Long-term debt",
+          "value_raw": "US$1,500,000",
+          "value_num": 1500000.0,
+          "unit": "currency",
+          "metric_id": "debt",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "deferred_revenue",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Deferred revenue",
+          "value_raw": "US$941,808",
+          "value_num": 941808.0,
+          "unit": "currency",
+          "metric_id": "deferred_revenue",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "dso_days",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Days sales outstanding (DSO)（文件揭露值）",
+          "value_raw": "87 days",
+          "value_num": 87.0,
+          "unit": "days",
+          "metric_id": "dso_days",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_margin",
+      "entity": null,
+      "period": "2026",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!B4",
+          "item": "毛利率假設 2026",
+          "value_raw": "62%",
+          "value_num": 0.62,
+          "unit": "pct",
+          "metric_id": "gross_margin",
+          "entity": null,
+          "period": "2026",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_margin",
+      "entity": null,
+      "period": "2027",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!C4",
+          "item": "毛利率假設 2027",
+          "value_raw": "64%",
+          "value_num": 0.64,
+          "unit": "pct",
+          "metric_id": "gross_margin",
+          "entity": null,
+          "period": "2027",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_margin",
+      "entity": null,
+      "period": "2028",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!D4",
+          "item": "毛利率假設 2028",
+          "value_raw": "66%",
+          "value_num": 0.66,
+          "unit": "pct",
+          "metric_id": "gross_margin",
+          "entity": null,
+          "period": "2028",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_margin",
+      "entity": null,
+      "period": "2029",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!E4",
+          "item": "毛利率假設 2029",
+          "value_raw": "68%",
+          "value_num": 0.68,
+          "unit": "pct",
+          "metric_id": "gross_margin",
+          "entity": null,
+          "period": "2029",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_profit",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Gross profit",
+          "value_raw": "US$1,320,096",
+          "value_num": 1320096.0,
+          "unit": "currency",
+          "metric_id": "gross_profit",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_profit",
+      "entity": null,
+      "period": "2026",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!B3",
+          "item": "毛利 2026",
+          "value_raw": "US$4,402,000（公式 =B2*假設!B4）",
+          "value_num": 4402000.0,
+          "unit": "currency",
+          "metric_id": "gross_profit",
+          "entity": null,
+          "period": "2026",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_profit",
+      "entity": null,
+      "period": "2027",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!C3",
+          "item": "毛利 2027",
+          "value_raw": "US$9,542,400（公式 =C2*假設!C4）",
+          "value_num": 9542400.0,
+          "unit": "currency",
+          "metric_id": "gross_profit",
+          "entity": null,
+          "period": "2027",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_profit",
+      "entity": null,
+      "period": "2028",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!D3",
+          "item": "毛利 2028",
+          "value_raw": "US$20,665,260（公式 =D2*假設!D4）",
+          "value_num": 20665260.0,
+          "unit": "currency",
+          "metric_id": "gross_profit",
+          "entity": null,
+          "period": "2028",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "gross_profit",
+      "entity": null,
+      "period": "2029",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!E3",
+          "item": "毛利 2029",
+          "value_raw": "US$44,712,108（公式 =E2*假設!E4）",
+          "value_num": 44712108.0,
+          "unit": "currency",
+          "metric_id": "gross_profit",
+          "entity": null,
+          "period": "2029",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "headcount",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.1",
+          "item": "團隊人數",
+          "value_raw": "34",
+          "value_num": 34.0,
+          "unit": "count",
+          "metric_id": "headcount",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        },
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.3",
+          "item": "已部署機器人數",
+          "value_raw": "388 robots（截至 June 2026）",
+          "value_num": 388.0,
+          "unit": "count",
+          "metric_id": "headcount",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Daniel Wu",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C2",
+          "item": "Daniel Wu 持股比例",
+          "value_raw": "34%（0.34）",
+          "value_num": 0.34,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Daniel Wu",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Grace Lin",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C3",
+          "item": "Grace Lin 持股比例",
+          "value_raw": "24%（0.24）",
+          "value_num": 0.24,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Grace Lin",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "ESOP reserved",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C6",
+          "item": "ESOP reserved 持股比例",
+          "value_raw": "8%（0.08）",
+          "value_num": 0.08,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "ESOP reserved",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "總",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "C8",
+          "item": "總持股比例",
+          "value_raw": "100%（1）",
+          "value_num": 1.0,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "總",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Daniel Wu (Founder/CEO",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Daniel Wu (Founder/CEO) 持股比例",
+          "value_raw": "34.0%",
+          "value_num": 0.34,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Daniel Wu (Founder/CEO",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Grace Lin (Founder/CTO",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Grace Lin (Founder/CTO) 持股比例",
+          "value_raw": "24.0%",
+          "value_num": 0.24,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Grace Lin (Founder/CTO",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "ESOP reserved pool",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "ESOP reserved pool 持股比例",
+          "value_raw": "8.0%",
+          "value_num": 0.08,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "ESOP reserved pool",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_pct",
+      "entity": "Total issued shares 合計",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Total issued shares 持股比例合計",
+          "value_raw": "100.0%",
+          "value_num": 1.0,
+          "unit": "pct",
+          "metric_id": "holder_pct",
+          "entity": "Total issued shares 合計",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Daniel Wu",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B2",
+          "item": "Daniel Wu 股數",
+          "value_raw": "3,400,000 股",
+          "value_num": 3400000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Daniel Wu",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Grace Lin",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B3",
+          "item": "Grace Lin 股數",
+          "value_raw": "2,400,000 股",
+          "value_num": 2400000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Grace Lin",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "總",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_CapTable_202606.xlsx",
+          "loc": "B8",
+          "item": "總股數",
+          "value_raw": "10,000,000 股",
+          "value_num": 10000000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "總",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Daniel Wu (Founder/CEO",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Daniel Wu (Founder/CEO) 持股數",
+          "value_raw": "3,400,000 股",
+          "value_num": 3400000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Daniel Wu (Founder/CEO",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "holder_shares",
+      "entity": "Grace Lin (Founder/CTO",
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+          "loc": "p.1",
+          "item": "Grace Lin (Founder/CTO) 持股數",
+          "value_raw": "2,400,000 股",
+          "value_num": 2400000.0,
+          "unit": "shares",
+          "metric_id": "holder_shares",
+          "entity": "Grace Lin (Founder/CTO",
+          "period": null,
+          "entity_inferred": true
+        }
+      ]
+    },
+    {
+      "metric_id": "inventory",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.2",
+          "item": "Inventory (robot components)",
+          "value_raw": "US$688,214",
+          "value_num": 688214.0,
+          "unit": "currency",
+          "metric_id": "inventory",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "nrr",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.3",
+          "item": "淨營收留存率（NRR）",
+          "value_raw": "128%",
+          "value_num": 1.28,
+          "unit": "pct",
+          "metric_id": "nrr",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "operating_income",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Operating loss",
+          "value_raw": "US$(2,782,281)",
+          "value_num": -2782281.0,
+          "unit": "currency",
+          "metric_id": "operating_income",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "opex",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Operating expenses（總計）",
+          "value_raw": "US$4,102,377",
+          "value_num": 4102377.0,
+          "unit": "currency",
+          "metric_id": "opex",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "pre_money",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.6",
+          "item": "Pre-money 估值",
+          "value_raw": "US$40.0M",
+          "value_num": 40.0,
+          "unit": "currency",
+          "metric_id": "pre_money",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": "2027-06",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Top10客戶_2025.xlsx",
+          "loc": "A2:E2",
+          "item": "LogiOne 3PL｜TW｜營收 993,276｜佔比 31%｜進行中（2027/06 到期）",
+          "value_raw": "993276 / 0.31",
+          "value_num": 993276.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2027-06",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": "2027",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!C2",
+          "item": "營收 2027",
+          "value_raw": "US$14,910,000（公式 =B2*2.1）",
+          "value_num": 14910000.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2027",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": "2028",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!D2",
+          "item": "營收 2028",
+          "value_raw": "US$31,311,000（公式 =C2*2.1）",
+          "value_num": 31311000.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2028",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue",
+      "entity": null,
+      "period": "2029",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "損益預估!E2",
+          "item": "營收 2029",
+          "value_raw": "US$65,753,100（公式 =D2*2.1）",
+          "value_num": 65753100.0,
+          "unit": "currency",
+          "metric_id": "revenue",
+          "entity": null,
+          "period": "2029",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue_hardware",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Hardware sales & install",
+          "value_raw": "US$418,494",
+          "value_num": 418494.0,
+          "unit": "currency",
+          "metric_id": "revenue_hardware",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue_subscription",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Subscription revenue",
+          "value_raw": "US$1,872,404",
+          "value_num": 1872404.0,
+          "unit": "currency",
+          "metric_id": "revenue_subscription",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "revenue_usage",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+          "loc": "p.1",
+          "item": "Usage fees",
+          "value_raw": "US$913,220",
+          "value_num": 913220.0,
+          "unit": "currency",
+          "metric_id": "revenue_usage",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "round_size",
+      "entity": null,
+      "period": null,
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+          "loc": "p.6",
+          "item": "本輪募資金額",
+          "value_raw": "US$8.0M Series A",
+          "value_num": 8.0,
+          "unit": "currency",
+          "metric_id": "round_size",
+          "entity": null,
+          "period": null,
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "sites",
+      "entity": null,
+      "period": "2026",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!B2",
+          "item": "新增站點數 2026",
+          "value_raw": "28",
+          "value_num": 28.0,
+          "unit": "count",
+          "metric_id": "sites",
+          "entity": null,
+          "period": "2026",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "sites",
+      "entity": null,
+      "period": "2027",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!C2",
+          "item": "新增站點數 2027",
+          "value_raw": "55",
+          "value_num": 55.0,
+          "unit": "count",
+          "metric_id": "sites",
+          "entity": null,
+          "period": "2027",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "sites",
+      "entity": null,
+      "period": "2028",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!D2",
+          "item": "新增站點數 2028",
+          "value_raw": "90",
+          "value_num": 90.0,
+          "unit": "count",
+          "metric_id": "sites",
+          "entity": null,
+          "period": "2028",
+          "entity_inferred": false
+        }
+      ]
+    },
+    {
+      "metric_id": "sites",
+      "entity": null,
+      "period": "2029",
+      "multiple_sources": false,
+      "critical": false,
+      "rows": [
+        {
+          "doc": "Acme_財測模型_2026-2029.xlsx",
+          "loc": "假設!E2",
+          "item": "新增站點數 2029",
+          "value_raw": "130",
+          "value_num": 130.0,
+          "unit": "count",
+          "metric_id": "sites",
+          "entity": null,
+          "period": "2029",
+          "entity_inferred": false
+        }
+      ]
+    }
+  ],
+  "unmatched": [
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "tab 名稱",
+      "item": "分頁名稱",
+      "value_raw": "Cap Table",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "Cap Table",
+      "item": "表格範圍",
+      "value_raw": "A1:E8（8 列 × 5 欄）",
+      "value_num": 1.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A1:E1",
+      "item": "欄位標題",
+      "value_raw": "Shareholder / Shares / % / Round / Notes",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A2",
+      "item": "股東：Daniel Wu (Founder/CEO)",
+      "value_raw": "—",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "D2",
+      "item": "Daniel Wu 輪次",
+      "value_raw": "Common",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A3",
+      "item": "股東：Grace Lin (Founder/CTO)",
+      "value_raw": "—",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "D3",
+      "item": "Grace Lin 輪次",
+      "value_raw": "Common",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A4",
+      "item": "股東：Vertex Growth Fund LP",
+      "value_raw": "—",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "D4",
+      "item": "Vertex Growth Fund LP 輪次",
+      "value_raw": "Seed",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "E4",
+      "item": "Vertex Growth Fund LP 備註",
+      "value_raw": "Board seat",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A5",
+      "item": "股東：Harbor Angels LLC",
+      "value_raw": "—",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "D5",
+      "item": "Harbor Angels LLC 輪次",
+      "value_raw": "Seed",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A7",
+      "item": "股東：Other minority holders",
+      "value_raw": "—",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "D7",
+      "item": "Other minority holders 輪次",
+      "value_raw": "Common",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "A8",
+      "item": "合計列標籤",
+      "value_raw": "Total",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_CapTable_202606.xlsx",
+      "loc": "檔名，非儲存格內容",
+      "item": "檔名隱含期間",
+      "value_raw": "2026 年 6 月（202606）",
+      "value_num": 2026.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.1",
+      "item": "文件標題 / 期間",
+      "value_raw": "Consolidated Financial Statements FY2025 (Audited)",
+      "value_num": 2025.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.1",
+      "item": "主體名稱",
+      "value_raw": "ACME ROBOTICS, INC.",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.1",
+      "item": "簽證會計師",
+      "value_raw": "Chen & Willis LLP (Independent Auditor)",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.1",
+      "item": "R&D",
+      "value_raw": "US$1,988,105",
+      "value_num": 1988105.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.1",
+      "item": "G&A",
+      "value_raw": "US$807,392",
+      "value_num": 807392.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.2",
+      "item": "資產負債表基準日",
+      "value_raw": "Dec 31, 2025",
+      "value_num": 31.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_FY2025_Financials_Audited.pdf",
+      "loc": "p.3",
+      "item": "Note 3：收入認列政策",
+      "value_raw": "subscription 按比例攤銷認列；usage fees 於交付「monthly pick reports」時認列",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.1",
+      "item": "公司名稱",
+      "value_raw": "Acme Robotics, Inc.",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.1",
+      "item": "文件標題/期間",
+      "value_raw": "Series A Investor Deck - June 2026",
+      "value_num": 2026.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.1",
+      "item": "總部",
+      "value_raw": "Taipei / San Jose",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.1",
+      "item": "成立年份",
+      "value_raw": "2022",
+      "value_num": 2022.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.1",
+      "item": "機密標記",
+      "value_raw": "CONFIDENTIAL",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.2",
+      "item": "目標客群",
+      "value_raw": "Mid-size 3PL warehouses",
+      "value_num": 3.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.2",
+      "item": "產品型態",
+      "value_raw": "AMR（autonomous mobile robots）,per-pick pricing",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.2",
+      "item": "部署時間（Acme）",
+      "value_raw": "3 weeks",
+      "value_num": 3.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.2",
+      "item": "部署時間（固定式自動化對比）",
+      "value_raw": "9 months",
+      "value_num": 9.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.2",
+      "item": "商業模式",
+      "value_raw": "RaaS：monthly subscription + usage fee",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.3",
+      "item": "已部署據點數",
+      "value_raw": "41 sites",
+      "value_num": 41.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.3",
+      "item": "美國市場進入時間",
+      "value_raw": "2025Q4",
+      "value_num": 2025.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.3",
+      "item": "美國占新簽約比例",
+      "value_raw": "40% of new bookings in 2026H1",
+      "value_num": 0.4,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.4",
+      "item": "CAC 回收期",
+      "value_raw": "11 months",
+      "value_num": 11.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.4",
+      "item": "平均合約長度",
+      "value_raw": "24 months",
+      "value_num": 24.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.4",
+      "item": "每據點 MRR",
+      "value_raw": "US$8,400",
+      "value_num": 8400.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.4",
+      "item": "機器人 BOM 成本降幅",
+      "value_raw": "-31% since 2024",
+      "value_num": -0.31,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.4",
+      "item": "成本下降手段",
+      "value_raw": "in-house controller",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.5",
+      "item": "競爭對手",
+      "value_raw": "Locus Robotics, 6 River (Ocado), Geek+",
+      "value_num": 6.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.5",
+      "item": "競爭對手特徵",
+      "value_raw": "enterprise-first, heavy CAPEX",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.5",
+      "item": "Acme 市場切入點",
+      "value_raw": "mid-market 3PL, 3-week deployment, per-pick pricing",
+      "value_num": 3.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.5",
+      "item": "市場宣稱",
+      "value_raw": "No direct competitor in TW/JP mid-market segment today",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.6",
+      "item": "資金用途：US fleet ops",
+      "value_raw": "45%",
+      "value_num": 0.45,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.6",
+      "item": "資金用途：R&D",
+      "value_raw": "30%",
+      "value_num": 0.3,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.6",
+      "item": "資金用途：WC（營運資金）",
+      "value_raw": "25%",
+      "value_num": 0.25,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.6",
+      "item": "現有股東：Vertex Growth",
+      "value_raw": "12.0%（1,200,000 shares）",
+      "value_num": 0.12,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.6",
+      "item": "現有股東：Harbor Angels",
+      "value_raw": "6.5%",
+      "value_num": 0.065,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_SeriesA_Deck_2026.pdf",
+      "loc": "p.6",
+      "item": "創辦人持股（完全稀釋後）",
+      "value_raw": "58%",
+      "value_num": 0.58,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+      "loc": "p.1",
+      "item": "文件標題",
+      "value_raw": "ACME ROBOTICS, INC. — Shareholder Registry Extract",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+      "loc": "p.1",
+      "item": "申報日期（Filing date）",
+      "value_raw": "March 15, 2026",
+      "value_num": 15.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+      "loc": "p.1",
+      "item": "Registrar（股務代理機構）",
+      "value_raw": "Pacific Corporate Services Ltd.",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Robotics_Shareholder_Registry_20260315.pdf",
+      "loc": "p.1（由上列兩筆加總推算，非文件原文列出的加總列）",
+      "item": "創辦人合計持股（Daniel Wu + Grace Lin，推算值）",
+      "value_raw": "5,800,000 股／58.0%",
+      "value_num": 5800000.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Top10客戶_2025.xlsx",
+      "loc": "tab: Top10 客戶 2025",
+      "item": "Sheet 名稱 / 範圍",
+      "value_raw": "\"Top10 客戶 2025\", A1:E11（10 筆客戶列＋1 列標題）",
+      "value_num": 10.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Top10客戶_2025.xlsx",
+      "loc": "A1:E1",
+      "item": "欄位標題",
+      "value_raw": "客戶／國別／FY2025 營收 (US$)／佔比／合約狀態",
+      "value_num": 2025.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Top10客戶_2025.xlsx",
+      "loc": "由 D2:D11 加總計算，非表內既有欄位",
+      "item": "Top10 客戶佔比合計（本表加總）",
+      "value_raw": "88%（0.88）",
+      "value_num": 0.88,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Top10客戶_2025.xlsx",
+      "loc": "B2:B11",
+      "item": "客戶所屬國別分布",
+      "value_raw": "TW 5 家（LogiOne, QuickShip, EverFresh, Sunrise, BlueBox）／US 3 家（Pacific, MetroParts, Nordic）／JP 2 家（Hansei, Kyushu）",
+      "value_num": 5.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_Top10客戶_2025.xlsx",
+      "loc": "E2:E11",
+      "item": "合約狀態分布",
+      "value_raw": "「進行中」8 家；「進行中（2027/06 到期）」1 家（LogiOne）；「進行中（試營運轉正式）」1 家（MetroParts）；「2026/3 通知終止，2026/6 生效」1 家（QuickShip）",
+      "value_num": 8.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "假設!A1（工作表名稱）",
+      "item": "Tab 名稱 1",
+      "value_raw": "假設",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "損益預估!A1（工作表名稱）",
+      "item": "Tab 名稱 2",
+      "value_raw": "損益預估",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "假設!B5",
+      "item": "備註（假設 tab）",
+      "value_raw": "美國自 2026Q4 起貢獻 50% 新站點",
+      "value_num": 2026.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "假設!B5",
+      "item": "涉及地區實體",
+      "value_raw": "美國（US）",
+      "value_num": null,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "假設!B5",
+      "item": "涉及時間點",
+      "value_raw": "2026 Q4",
+      "value_num": 2026.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "假設!B1:E1、損益預估!B1:E1",
+      "item": "年度欄位範圍",
+      "value_raw": "2026、2027、2028、2029",
+      "value_num": 2026.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    },
+    {
+      "doc": "Acme_財測模型_2026-2029.xlsx",
+      "loc": "檔案內建屬性（core properties）",
+      "item": "檔案建立/修改時間（xlsx metadata）",
+      "value_raw": "2026-07-11 15:56:20（creator: openpyxl）",
+      "value_num": 2026.0,
+      "unit": null,
+      "metric_id": null,
+      "entity": null,
+      "period": null,
+      "entity_inferred": false
+    }
+  ],
+  "note": "候選分群，不是矛盾判定；期間未載明為 null，不從檔名猜期間。實體為待核對的文字啟發式。"
+}

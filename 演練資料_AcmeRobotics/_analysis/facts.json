@@ -897,5 +897,10 @@
     "single_source": 13,
     "consistent": 9,
     "unverified": 0
+  },
+  "provenance": {
+    "kind": "handwritten",
+    "run_id": null,
+    "note": "預先準備的合成示範資料；不代表本次引擎執行成果。"
   }
 }

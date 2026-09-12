@@ -3,6 +3,7 @@
 !/.gitignore
 !/AGENTS.md
 !/CODEX.md
+!/MIGRATION.md
 !/README.md
 !/HACKATHON.md
 !/ROADMAP.md
@@ -39,6 +40,18 @@ _workbench/token
 /*.xlsx
 /*.pptx
 
+**/mine-check.md
+
+!/.claude/
+!/CLAUDE.md
+_workbench/settings.json
+_workbench/settings.json.tmp
+**/_analysis/runs/
+.codex/agents/_generated/
+
+_workbench/.rule-approvals.json*
+knowledge/learned/*.tmp
+knowledge/skills/_proposed/
 # Private project conversations and disposable search databases
 **/_analysis/conversations/
 **/_analysis/retrieval/

@@ -11,7 +11,7 @@ test("memory HTTP contract persists selection, revisions and deletion and reject
     work = path.join(root, "_workbench");
   fs.mkdirSync(work);
   for (const file of [
-    "server.js",
+    "server.js", "claude-provider.js", "settings.js", "questions.js", "review.js", "rules.js",
     "codex-provider.js",
     "project-chat.js",
     "retrieval.py",

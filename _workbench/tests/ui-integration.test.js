@@ -1,0 +1,22 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const html=fs.readFileSync(path.join(__dirname,'../public/index.html'),'utf8');
+test('combined page has unique controls and settings/reviewer/learning coexist with project chat',async()=>{
+ const staticHtml=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'');
+ const ids=[...staticHtml.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,'duplicate DOM ID after UI merge');
+ const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,{value:'',style:{},classList:{set:new Set(),add(x){this.set.add(x)},remove(x){this.set.delete(x)},contains(x){return this.set.has(x)}},set innerHTML(s){this.content=s;for(const m of s.matchAll(/\bid="([^"]+)"/g))el(m[1])},get innerHTML(){return this.content||''}});return elements.get(id)};
+ ids.forEach(el);
+ const context=vm.createContext({document:{getElementById:id=>elements.get(id)||null,addEventListener(){},querySelectorAll:()=>[]},setTimeout,clearTimeout,URLSearchParams,console,window:{},localStorage:{getItem:()=>null}});
+ const inline=[...html.matchAll(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n').replace(/loadDeals\(\);\s*$/,'');
+ vm.runInContext(inline,context);
+ const defaults=require('../settings').DEFAULTS;context.config=structuredClone(defaults);
+ context.fetch=async()=>({ok:true,json:async()=>context.config});await vm.runInContext('openSettings()',context);
+ assert.ok(el('settingsOverlay').classList.contains('on'));assert.match(el('settingsBody').innerHTML,/gpt-6-astra/);
+ vm.runInContext("SETTINGS.provider='claude';renderSettings()",context);assert.match(el('settingsBody').innerHTML,/claude-fable-5-1/);assert.match(el('personaSettings').innerHTML,/data-persona="model"/);
+ vm.runInContext("hide('settingsOverlay')",context);assert.ok(!el('settingsOverlay').classList.contains('on'));
+ context.row={review:{verdict:'suppress_already_answered',reason:'已完整回答',answered_at:[]}};
+ assert.match(vm.runInContext('reviewMarkup(row,0)',context),/恢復原題/);
+ context.row={original_text:'原問題',review:{verdict:'rewrite',reason:'釐清口徑',answered_at:[],revised_question:'新問題'}};
+ assert.match(vm.runInContext('reviewMarkup(row,0)',context),/原句／改寫對照/);
+ assert.match(vm.runInContext("skillDiff('舊规则','新规则<script>')",context),/新规则&lt;script&gt;/);
+ for(const id of ['chatLog','memoryDialog','learningBody','ddQ','factsProvenance'])assert.ok(elements.has(id));
+});

@@ -3,13 +3,21 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const OpenAI = require('openai');
-const provider = require('./codex-provider');
+const providers = {codex:require('./codex-provider'),claude:require('./claude-provider')};
+const provider=providers.codex;
+const settings=require('./settings');
+const questions=require('./questions');
+const reviewer=require('./review');
+const rulesModule=require('./rules');
+const {randomUUID}=require('node:crypto');
+
+const ROOT = path.resolve(__dirname, '..');
+const ruleStore=rulesModule.createStore(ROOT);
 const chat = require('./project-chat');
 const {MemoryStore}=require('./memory-store');
 
-const ROOT = path.resolve(__dirname, '..');
 const memory=new MemoryStore(ROOT,dealPath);
 function runMemoryJobs(){const apiKey=process.env.OPENAI_API_KEY||readToken();if(!MOCK&&apiKey)memory.drain(new OpenAI({apiKey,maxRetries:0,timeout:90000}),ASK_MODEL,chat).catch(e=>console.error('Memory job failed:',e.message));}
 const PUB = path.join(__dirname, 'public');
@@ -20,7 +28,7 @@ const PY = process.env.PYTHON_BIN || 'python3';
 // Project chat uses bounded, local retrieval and explicit evidence tool calls.
 const ASK_MODEL = process.env.QLIST_ASK_MODEL || provider.DEFAULT_MODEL;
 const ASK_EFFORT = process.env.QLIST_ASK_EFFORT || 'low';
-const ASK_BUDGET = 12000; // Compatibility metadata; the enforced per-request byte limit is in project-chat.js.
+const ASK_BUDGET = Number(process.env.QLIST_ASK_BUDGET_TOKENS || 150000); // 估算 token（拉丁字元 /4、CJK ×1.2）；1M context 留餘裕
 const ASK_SYSTEM = [
   '你是 VC 盡職調查助理，正在協助分析師閱讀一間新創的 Data Room。只依據下方 <documents> 內提供的內容回答，不得用文件以外的知識補數字。',
   '回答規則：',
@@ -76,6 +84,7 @@ function listDocs(dp) {
       name: f, round, size: st.size, mtime: st.mtimeMs,
       cat: catMap[f] || guessCat(f),
       card: !!findCard(dp, f),
+      verification:readCardVerification(dp).cards?.find(c=>c.file===f)||null,
       index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
       indexing: INDEXING.has(path.join(dir, f)),
     });
@@ -148,11 +157,45 @@ function readToken() {
   // 終端機複製常把長 token 折行，清掉所有空白字元
   try { const t = fs.readFileSync(path.join(__dirname, 'token'), 'utf8').replace(/\s+/g, ''); return t || null; } catch { return null; }
 }
-function engineEnv() {
+function engineEnv(selected = "codex") {
   const env = { ...process.env };
   const key = process.env.CODEX_API_KEY || process.env.OPENAI_API_KEY || readToken();
-  if (key) env.CODEX_API_KEY = key;
+  if (key && selected === "codex") env.CODEX_API_KEY = key;
   return env;
+}
+
+function runConfig(override, model) {
+  const config=settings.readSettings();
+  if(override!==undefined){if(!['codex','claude'].includes(override))throw httpErr(400,'bad provider');config.provider=override;}
+  if(model&&model!=='default')config[config.provider].main_model=model;
+  settings.validate(config);
+  return config;
+}
+function agentDefinitions(config, runDir, deal) {
+  const resolved=settings.matrix(config), definitions={}, agentFiles={};
+  for(const [name,choice] of Object.entries(resolved.per_agent)){
+    const fp=path.join(ROOT,'.codex','agents',name+'.toml');
+    if(!fs.existsSync(fp))continue;
+    const raw=fs.readFileSync(fp,'utf8');
+    const read=k=>{const m=raw.match(new RegExp('^'+k+' = (.*)$','m'));return m?JSON.parse(m[1]):'';};
+    const body=read('developer_instructions');
+    definitions[name]={description:read('description'),prompt:body,tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
+    if(runDir){
+      const dir=path.join(runDir,'agents');fs.mkdirSync(dir,{recursive:true});
+      const file=path.join(dir,name+'.toml');
+      fs.writeFileSync(file,`model = ${JSON.stringify(choice.model)}\nmodel_reasoning_effort = ${JSON.stringify(choice.effort)}\ndeveloper_instructions = ${JSON.stringify(definitions[name].prompt)}\n`);
+      agentFiles[name]=file;
+    }
+  }
+  return {definitions,agentFiles};
+}
+function providerStatus(config,p){
+  const cli=providers[p].resolveCli();
+  return {cli:cli?.version||null,cliPath:cli?.bin||null,api:p==='codex'?!!(process.env.OPENAI_API_KEY||readToken()):!!process.env.ANTHROPIC_API_KEY,oauth:p==='claude'&&!!process.env.CLAUDE_CODE_OAUTH_TOKEN,models:settings.matrix(config,p)};
+}
+function askConfig(config) {
+  const c=config[config.provider];
+  return {model:process.env.QLIST_ASK_MODEL||c.ask_model,effort:process.env.QLIST_ASK_EFFORT||c.ask_effort,budget:Number(process.env.QLIST_ASK_BUDGET_TOKENS||c.ask_budget_tokens)};
 }
 
 // 字卡解析：先找「與原檔同名.md」，找不到就掃字卡開頭是否提到原檔名（引擎舊命名相容）
@@ -250,11 +293,78 @@ function runIndexerNow(dp, file, force) {
     });
   });
 }
+function readCardVerification(dp) {try{return JSON.parse(fs.readFileSync(path.join(dp,'_analysis','card-verify.json'),'utf8'));}catch{return {cards:[]};}}
 function readFactsJson(dp) {
   try { return JSON.parse(fs.readFileSync(path.join(dp, '_analysis', 'facts.json'), 'utf8')); } catch { return null; }
 }
 
+// ---------- 方法論 skill 登記（knowledge/skills/<id>/SKILL.md ＋ active.json） ----------
+const SKILLS_DIR = path.join(ROOT, 'knowledge', 'skills');
+const SKILLS_ACTIVE = path.join(SKILLS_DIR, 'active.json');
+function parseFrontmatter(md) {
+  const m = /^---\n([\s\S]*?)\n---\n?/.exec(md);
+  const fm = {};
+  if (m) for (const line of m[1].split('\n')) { const i = line.indexOf(':'); if (i > 0) fm[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
+  return { fm, body: m ? md.slice(m[0].length) : md };
+}
+function readActiveSkills() {
+  try { const a = JSON.parse(fs.readFileSync(SKILLS_ACTIVE, 'utf8')).active; return Array.isArray(a) ? a : []; } catch { return ['vc-senior-qlist']; }
+}
+function listSkills() {
+  const active = new Set(readActiveSkills());
+  const out = [];
+  if (!fs.existsSync(SKILLS_DIR)) return out;
+  for (const id of fs.readdirSync(SKILLS_DIR).sort().filter(id=>!id.startsWith('_'))) {
+    const fp = path.join(SKILLS_DIR, id, 'SKILL.md');
+    if (!fs.existsSync(fp)) continue;
+    const md = fs.readFileSync(fp, 'utf8');
+    const { fm, body } = parseFrontmatter(md);
+    const refs = fs.existsSync(path.join(SKILLS_DIR, id, 'references')) ? fs.readdirSync(path.join(SKILLS_DIR, id, 'references')).filter(f => !f.startsWith('.')) : [];
+    out.push({ id, name: fm.name || id, title: fm.title || fm.name || id, description: fm.description || '', version: fm.version || '', scope: fm.scope || 'persona, reviewer', anonymized: fm.anonymized === 'true', lines: md.split('\n').length, tokens: estTokens(body), refs, active: active.has(id), builtin: id === 'vc-senior-qlist' });
+  }
+  return out;
+}
+function rulesPromptLine(deal,scope){return '本案適用規則：\n'+JSON.stringify(ruleStore.active(deal,scope));}
+function readFeedback(dp){try{return fs.readFileSync(path.join(dp,'_analysis','feedback.jsonl'),'utf8').split('\n').filter(Boolean).map(JSON.parse);}catch{return [];}}
+function writeFeedback(dp,events){if(events.length)fs.appendFileSync(path.join(dp,'_analysis','feedback.jsonl'),events.map(e=>JSON.stringify(e)).join('\n')+'\n');}
+function startLearning(deal,selectedProvider){
+  if(RUNS[deal])return false;
+  const dp=dealPath(deal),round=readState(dp).round;
+  const prompt=`即時蒸餾：只派 distiller，讀 ${deal}/_analysis/feedback.jsonl、本輪 diff 與 Reviewer、knowledge/learned/rules.json 和啟用方法論；不可讀原始 Data Room。先檢查既有規則與方法論涵蓋／衝突，再提 0–3 條去個案化 proposed 規則。動機不明写 ${deal}/_analysis/distill-report-r${round}.md 的 needs_annotation。`;
+  startRun(deal,'learn',prompt,null,undefined,selectedProvider);return true;
+}
+function skillProposals(){
+  const dir=path.join(SKILLS_DIR,'_proposed');if(!fs.existsSync(dir))return [];
+  return fs.readdirSync(dir).filter(n=>/^[a-z0-9-]+@[0-9]+$/.test(n)).flatMap(ref=>{
+    try{const content=fs.readFileSync(path.join(dir,ref,'SKILL.md'),'utf8'),{fm}=parseFrontmatter(content),id=ref.split('@')[0];
+      let before='';try{before=fs.readFileSync(path.join(SKILLS_DIR,id,'SKILL.md'),'utf8');}catch{}
+      return [{ref,id,version:Number(fm.version),derived_from_rules:JSON.parse(fm.derived_from_rules||'[]'),before,content}];
+    }catch{return [];}
+  });
+}
+function scopeMatches(scope, name) {
+  const scopes=Array.isArray(scope)?scope:String(scope||'persona, reviewer').replace(/[\[\]"']/g,'').split(/[,，]/).map(x=>x.trim());
+  return scopes.includes('all')||scopes.includes(name)||(name.startsWith('persona-')&&scopes.includes('persona'))||(name==='question-reviewer'&&scopes.includes('reviewer'));
+}
+function skillsPromptLine(scope) {
+  const active=listSkills().filter(k=>k.active&&(!scope||scopeMatches(k.scope,scope)));
+  return '本案適用方法論：\n'+(active.map(k=>`[${k.id}@${k.version} scope=${k.scope}]\n`+fs.readFileSync(path.join(SKILLS_DIR,k.id,'SKILL.md'),'utf8')).join('\n\n')||'無啟用 skill。');
+}
+
 // ---------- 問 AI 的 context 組裝 ----------
+function docBlock(d, pageSet) {
+  if (d.kind === 'xlsx') {
+    const sheets = (d.sheets || []).map(s => {
+      const lines = (s.cells || []).map(c => `${c.ref}\t${c.value == null ? '' : c.value}${c.formula ? '\t' + c.formula : ''}`);
+      return `<sheet name="${s.name}" dims="${s.dims || ''}"${s.truncated ? ' truncated="true"' : ''}>\n${lines.join('\n')}\n</sheet>`;
+    });
+    return `<doc file="${d.file}" kind="xlsx" sheets="${(d.sheets || []).length}">\n${sheets.join('\n')}\n</doc>`;
+  }
+  const pages = (d.pages || []).filter(p => !pageSet || pageSet.has(p.n)).map(p =>
+    (p.needs_ocr && !(p.text || '').trim()) ? `<page n="${p.n}" scanned="true"/>` : `<page n="${p.n}">\n${p.text}\n</page>`);
+  const note = pageSet ? ` selected="${pages.length}"` : '';
+  return `<doc file="${d.file}" kind="${d.kind}" pages="${d.page_count || 0}"${note}>\n${pages.join('\n')}\n</doc>`;
+}
 function estTokens(s) {
   if (!s) return 0;
   let cjk = 0; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); if (c >= 0x3400 && c <= 0x9fff) cjk++; }
@@ -265,37 +375,166 @@ function docText(d) {
   return (d.pages || []).map(p => p.text || '').join('\n');
 }
 function docChars(d) { return estTokens(docText(d)); } // 以「估算 token」為預算單位
+function tokenize(s) {
+  const out = [];
+  const low = (s || '').toLowerCase();
+  for (const m of (low.match(/[a-z][a-z0-9&\-\.]{1,}/g) || [])) if (m.length >= 2) out.push(m);
+  for (const m of (low.match(/\d[\d,\.]{1,}/g) || [])) out.push(m.replace(/,/g, ''));
+  for (const run of (low.match(/[㐀-鿿]{2,}/g) || [])) for (let i = 0; i + 1 < run.length; i++) out.push(run.slice(i, i + 2));
+  return out;
+}
+const BM25_CACHE = new Map(); // dp -> { key, units, df, avgdl, N }
+// 檢索單位：PDF/pptx 一頁一單位；xlsx 一個 tab 一單位。key 以索引 mtime 組成，索引重建就失效。
+function bm25Index(dp) {
+  const docs = loadAllIndex(dp);
+  const key = docs.map(d => `${d.file}@${fs.statSync(path.join(indexDir(dp),d.file+'.index.json')).mtimeMs}`).join('|');
+  const hit = BM25_CACHE.get(dp);
+  if (hit && hit.key === key) return hit;
+  const units = [], df = new Map();
+  let totalLen = 0;
+  for (const d of docs) {
+    const push = (text, loc) => {
+      const toks = tokenize(text);
+      const tf = new Map(); for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
+      for (const t of tf.keys()) df.set(t, (df.get(t) || 0) + 1);
+      units.push({ d, loc, tf, len: toks.length, text }); totalLen += toks.length;
+    };
+    if (d.kind === 'xlsx') for (const sh of d.sheets || []) push(sh.text || (sh.cells || []).map(c => `${c.ref} ${c.value == null ? '' : c.value} ${c.formula || ''}`).join('\n'), { sheet: sh.name });
+    else for (const pg of d.pages || []) push(pg.text || '', { page: pg.n });
+  }
+  const idx = { key, units, df, N: units.length, avgdl: units.length ? totalLen / units.length : 1 };
+  BM25_CACHE.set(dp, idx);
+  return idx;
+}
+function bm25Scores(idx, query, k1 = 1.5, b = 0.75) {
+  const qt = [...new Set(tokenize(query))];
+  const res = [];
+  for (const u of idx.units) {
+    let score = 0;
+    for (const t of qt) {
+      const f = u.tf.get(t); if (!f) continue;
+      const n = idx.df.get(t) || 0;
+      const idf = Math.log(1 + (idx.N - n + 0.5) / (n + 0.5));
+      score += idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * u.len / idx.avgdl));
+    }
+    if (score > 0) res.push({ u, score });
+  }
+  res.sort((a, b2) => b2.score - a.score);
+  return res;
+}
+
+
+function questionTerms(q) {
+  const terms = new Set();
+  for (const m of (q.toLowerCase().match(/[a-z][a-z0-9&\-\.]{1,}/g) || [])) if (m.length >= 2) terms.add(m);
+  for (const m of (q.match(/\d[\d,\.]{1,}/g) || [])) terms.add(m.replace(/,/g, ''));
+  for (const run of (q.match(/[㐀-鿿]{2,}/g) || [])) for (let i = 0; i + 1 < run.length; i++) terms.add(run.slice(i, i + 2));
+  return [...terms];
+}
+function explicitPages(q) {
+  const out = new Set();
+  const re = /(?:第\s*(\d{1,4})\s*頁|p\.?\s*(\d{1,4})\b|page\s*(\d{1,4})\b|(\d{1,4})\s*頁)/gi;
+  let m; while ((m = re.exec(q))) out.add(Number(m[1] || m[2] || m[3] || m[4]));
+  return out;
+}
+function buildAskContext(dp, question, askBudget = ASK_BUDGET) {
+  const docs=loadAllIndex(dp), read=f=>{try{return fs.readFileSync(f,'utf8');}catch{return '';}};
+  const notes=read(path.join(dp,'_notes.md')),facts=read(path.join(dp,'_analysis','facts.md'));
+  const wrapper=parts=>`<documents>\n${parts.join('\n')}\n</documents>`;
+  const supplemental=[notes?`<notes>${notes}</notes>`:'',facts?`<facts>${facts}</facts>`:''].filter(Boolean);
+  const full=wrapper([...supplemental,...docs.map(d=>docBlock(d))]);
+  const total=estTokens(full);
+  if(total<=askBudget)return {text:full,docs:docs.length,pages:docs.reduce((n,d)=>n+(d.pages||d.sheets||[]).length,0),whole:true,retrieval:'whole',totalTokens:total,tokens:total};
+  const units=bm25Index(dp).units, selected=[],seen=new Set();
+  const block=u=>u.loc.sheet?docBlock({...u.d,sheets:u.d.sheets.filter(sh=>sh.name===u.loc.sheet)}):docBlock(u.d,new Set([u.loc.page]));
+  const add=u=>{const key=u.d.file+':'+(u.loc.sheet||u.loc.page);if(seen.has(key))return;const text=block(u);if(estTokens(wrapper([...selected,text]))<=askBudget){selected.push(text);seen.add(key);}};
+  const wanted=explicitPages(question||''),mentioned=docs.filter(d=>(question||'').includes(d.file)||(question||'').includes(d.file.replace(/\.[^.]+$/,'')));
+  const relevant=u=>!mentioned.length||mentioned.includes(u.d);
+  // Explicit pages precede neighbours and ranking; never exceed the budget silently.
+  for(const offset of [0,-1,1])for(const n of wanted)for(const u of units)if(relevant(u)&&u.loc.page===n+offset)add(u);
+  for(const {u} of bm25Scores(bm25Index(dp),question||''))if(relevant(u))add(u);
+  if(!seen.size)for(const u of units)if(relevant(u))add(u);
+  const pagesUsed=seen.size;
+  for(const text of supplemental)if(estTokens(wrapper([...selected,text]))<=askBudget)selected.push(text);
+  const text=wrapper(selected);
+  return {text,docs:docs.length,pages:pagesUsed,whole:false,retrieval:'bm25',totalTokens:total,tokens:estTokens(text)};
+}
+
 // Codex JSONL events are adapted to the existing workbench timeline contract.
 const parseStreamLine = provider.parseStreamLine;
 function mockRun(run, emit, dp, finish) {
-  const docs = listDocs(dp).slice(0, 4);
-  const steps = [
+  const docs = run.manifest.shards.length?run.manifest.shards.map(s=>({name:s.file+' · part '+s.part+' · 頁 '+s.pages.join('–')})):listDocs(dp);
+  let steps = [
     ['init', 'main', '引擎啟動 · model mock · 假引擎模式'],
+    ['text','main','載入方法論：'+run.manifest.skills.map(k=>k.id+'@'+k.version).join('、')],
     ...docs.flatMap(d => [['spawn', 'main', `派工 card-extractor：${d.name}`, 'card-extractor'], ['read', 'card-extractor', `讀 ${d.name} p.1-20`], ['write', 'card-extractor', `寫 ${d.name}.md`], ['agent_done', 'main', `✅ card-extractor 回報：字卡完成 ${d.name}`]]),
     ['spawn', 'main', '派工 reconciler：跨文件對帳', 'reconciler'], ['read', 'reconciler', '讀 knowledge/metrics.json'], ['bash', 'reconciler', '$ python3 _workbench/recompute.py …'], ['write', 'reconciler', '寫 facts.json'], ['agent_done', 'main', '✅ reconciler 回報：事實 27 列 · conflict 7'],
-    ['spawn', 'main', '派工 persona-fin', 'persona-fin'], ['spawn', 'main', '派工 persona-ops', 'persona-ops'], ['spawn', 'main', '派工 persona-ind', 'persona-ind'], ['spawn', 'main', '派工 persona-ic', 'persona-ic'],
-    ['agent_done', 'main', '✅ persona-fin 回報：12 題'], ['agent_done', 'main', '✅ persona-ops 回報：11 題'], ['agent_done', 'main', '✅ persona-ind 回報：8 題'], ['agent_done', 'main', '✅ persona-ic 回報：13 題'],
-    ['text', 'main', '匯整去重與 staple sweep…'], ['write', 'main', '寫 draft_R1.md'], ['done', 'main', '結束 · 12s · $0.00 · mock'],
+    ...run.config.personas.flatMap(p=>[['spawn','main','派工 persona-'+p,'persona-'+p],['agent_done','main','persona-'+p+' 假引擎回報']]),
+    ['text', 'main', '匯整去重與 staple sweep…'], ['spawn','main','派工 question-reviewer：獨立回原文審題','question-reviewer'], ['write', 'main', '寫 draft_R1.md'], ['done', 'main', '結束 · 12s · $0.00 · mock'],
   ];
+  if(run.kind==='review')steps=[['init','main','假引擎 Reviewer（沿用手寫 UI 範例）'],['spawn','main','派工 question-reviewer','question-reviewer'],['done','main','手寫審題結果已可檢視']];
+  if(run.kind==='learn'){
+    steps=[['init','main','假引擎蒸餾：手寫規則範例'],['spawn','main','派工 distiller','distiller'],['write','distiller','候選規則待人工核准']];
+    const feedback=readFeedback(dp), last=feedback.at(-1);
+    const existing=ruleStore.read().filter(r=>r.rule_id==='mock-review-timing');
+    const proposals=last&&!existing.length?[{rule_id:'mock-review-timing',version:1,status:'proposed',scope:'persona, reviewer',applies_when:'追問輪的靜態盤點題與本輪待解矛盾競爭篇幅時',instruction:'優先問待解矛盾；靜態盤點題移至後續波次，保留補問機會。',exceptions:['本輪明確以團隊或合規盤點為主'],kind:'timing',deal:null,folded_into:null,source_feedback_ids:[last.feedback_id],evidence_summary:'手寫假引擎範例，供測試提案→核准→注入；不代表模型已從回饋推導出此規則。',deal_anonymized:true,proposed_at:new Date().toISOString(),approved_at:null,approved_by:null}]:[];
+    fs.writeFileSync(path.join(dp,'_analysis','runs',run.manifest.run_id,'rule-proposals.json'),JSON.stringify(proposals,null,2));
+  }
+  if(['distill','round-distill','house-style'].includes(run.kind))steps=[['init','main','假引擎批次蒸餾'],['spawn','main','派工 distiller','distiller'],['done','main','假引擎未修改活題庫']];
+  if(['house-style','distill'].includes(run.kind)){
+    const approved=ruleStore.read().filter(r=>r.status==='approved'&&r.kind!=='deal_specific');
+    if(approved.length){
+      const id='team-house-style',current=listSkills().find(s=>s.id===id),version=(Number(current?.version)||0)+1;
+      const ref=id+'@'+version,dir=path.join(SKILLS_DIR,'_proposed',ref);fs.mkdirSync(dir,{recursive:true});
+      let previous='';if(current)previous=parseFrontmatter(fs.readFileSync(path.join(SKILLS_DIR,id,'SKILL.md'),'utf8')).body;
+      const content=['---','name: '+id,'title: 團隊問法（假引擎提案）','description: 手寫測試提案，待人工核准','version: '+version,'scope: persona, reviewer','anonymized: true','derived_from_rules: '+JSON.stringify(approved.map(r=>r.rule_id+'@'+r.version)),'---',previous,'# 本次折入規則（假引擎）',...approved.map(r=>`## ${r.rule_id}\n適用：${r.applies_when}\n${r.instruction}\n例外：${r.exceptions.join('；')}`)].join('\n');
+      fs.writeFileSync(path.join(dir,'SKILL.md'),content);steps.push(['write','distiller','手寫方法論升版提案（待核准）：'+ref]);
+    }
+  }
   let i = 0;
   run.timer = setInterval(() => {
     if (i >= steps.length) { clearInterval(run.timer); return finish(0); }
     const [kind, agent, text, sub] = steps[i++];
     if (kind === 'spawn') run.counts.agents++; if (kind === 'read') run.counts.reads++; if (kind === 'write') run.counts.writes++;
     emit({ kind, agent, text, sub });
-  }, 550);
+  }, Number(process.env.QLIST_MOCK_DELAY_MS||120));
 }
-function startRun(deal, kind, prompt, onDone, model) {
+function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {}) {
   const dp = dealPath(deal);
   if (RUNS[deal]) throw httpErr(409, '本案已有流程在跑');
   fs.mkdirSync(path.join(dp, '_analysis'), { recursive: true });
+  const config=runConfig(selectedProvider,model), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli();
+  const usedRules=['pipeline','ingest','merge','review'].includes(kind)?[...new Map([...config.personas.map(p=>'persona-'+p),'question-reviewer'].flatMap(scope=>ruleStore.active(deal,scope)).map(r=>[r.rule_id+'@'+r.version,r])).values()]:[];
+  if(['pipeline','ingest','merge','review'].includes(kind))prompt=skillsPromptLine()+'\n本案適用規則（依每条 scope 附給相符代理；規則 > skill > 代理預設）：\n'+JSON.stringify(usedRules)+'\n本案資料：\n'+prompt;
+  const run_id=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID().slice(0,8);
+  const runDir=path.join(dp,'_analysis','runs',run_id);fs.mkdirSync(runDir,{recursive:true});
+  let shards=[];
+  if(['pipeline','ingest'].includes(kind)&&fs.existsSync(path.join(__dirname,'shard_plan.py'))){
+    const result=spawnSync(PY,[path.join(__dirname,'shard_plan.py'),dp,...(extra.file?[extra.file]:[])],{encoding:'utf8',maxBuffer:8*1024*1024});
+    if(result.status!==0)throw httpErr(500,'分片計画失敗：'+(result.stderr||result.error));
+    shards=JSON.parse(result.stdout);
+    prompt='大檔分片（每列一次 card-extractor 派工，嚴守 output 與原始頁範圍）：'+JSON.stringify(shards)+'\n'+prompt;
+  }
+  if(kind==='learn')prompt+=`\n候選規則只寫 ${path.join(runDir,'rule-proposals.json')}（JSON 陣列，最多三條）；不能修改 rules.json status。`;
+  const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir,deal);
+  const dispatch=Object.fromEntries([...config.personas.map(p=>'persona-'+p),'question-reviewer'].map(scope=>[scope,skillsPromptLine(scope)+'\n'+rulesPromptLine(deal,scope)+'\n本案資料：'+deal+'/_analysis/；本次執行 ID：'+run_id]));
+  fs.writeFileSync(path.join(runDir,'dispatch.json'),JSON.stringify(dispatch,null,2));
+  if(['pipeline','ingest','merge','review'].includes(kind))prompt+='\n派工契約：代理 system prompt 固定。以下每個對應訊息須完整作為子代理第一則 user 訊息，再附實際資料路徑；不要把方法論與規則改寫進 system prompt。主 session 匯整取 scope=merge 的方法論。\n'+JSON.stringify(dispatch);
+
+  const args=activeProvider.cliArgs({model:models.main.model,effort:models.main.effort,writable:true,prompt,system:HEADLESS_SYS,agents:definitions,models:{sub:{model:config[selected].sub_model,effort:config[selected].effort.sub}},agentFiles});
+  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:listSkills().filter(k=>k.active).map(k=>({id:k.id,version:k.version})),rules:usedRules.map(r=>({rule_id:r.rule_id,version:r.version})),personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
+  const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
+  saveManifest();
+  if(['pipeline','ingest','merge'].includes(kind))prompt+=`\nJSON 正本：同步維護 ${deal}/_analysis/drafts/questions_R${readState(dp).round}.json。每題包含 question_id、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。既有題永遠保留 question_id；只修改 revision，新題使用不重複 q-rN-NNN。合併與 delta 都更新同一 JSON，Markdown 是人讀版。`;
+  prompt=`執行 ID：${run_id}。persona 名單以此為準：${config.personas.map(p=>'persona-'+p).join('、')}。\n`+prompt;
   const logPath = path.join(dp, '_analysis', 'run.log');
   const evPath = path.join(dp, '_analysis', 'run.events.jsonl');
-  fs.writeFileSync(logPath, `[${new Date().toISOString()}] ${kind} 啟動\n`);
+  fs.writeFileSync(logPath, JSON.stringify({run_id,provider:selected,models,argv:args})+"\n"+prompt+"\n");
   fs.writeFileSync(evPath, '');
   const append = t => { try { fs.appendFileSync(logPath, t); } catch {} };
-  const run = { proc: null, kind, started: Date.now(), events: [], agents: {}, counts: { agents: 0, reads: 0, writes: 0 }, timer: null };
+  const run = { proc: null, kind, started: Date.now(), events: [], agents: {}, counts: { agents: 0, reads: 0, writes: 0 }, timer: null, manifest, config };
   const emit = ev => {
+    if(ev.cost!=null)manifest.cost_if_known=ev.cost;
     ev.ts = Date.now(); ev.i = run.events.length;
     run.events.push(ev);
     try { fs.appendFileSync(evPath, JSON.stringify(ev) + '\n'); } catch {}
@@ -306,30 +545,46 @@ function startRun(deal, kind, prompt, onDone, model) {
     if (finished) return;
     finished = true;
     if (run.failed && code === 0) code = 1;
+    if(code===0&&!MOCK&&['pipeline','ingest','merge','review'].includes(kind)){
+      try{
+        const round=readState(dp).round,required=path.join(dp,'_analysis','drafts',`${kind==='review'?'review':'questions'}_R${round}.json`);
+        if(!fs.existsSync(required)||fs.statSync(required).mtimeMs<run.started)throw new Error('本次執行未產生新的 JSON 結果');
+        const loaded=questions.load(dp,round,parseDraftTable);
+        if(kind==='pipeline'||kind==='review'){
+          const reviewFile=path.join(dp,'_analysis','drafts',`review_R${round}.json`);
+          if(!fs.existsSync(reviewFile)||fs.statSync(reviewFile).mtimeMs<run.started)throw new Error('本次執行未完成獨立審題');
+          reviewer.attach(dp,round,loaded);
+        }
+      }catch(e){code=1;append('輸出驗證失敗：'+e.message+'\n');}
+    }
+    if(code===0&&kind==='learn'){
+      try{const fp=path.join(runDir,'rule-proposals.json');if(fs.existsSync(fp))ruleStore.propose(JSON.parse(fs.readFileSync(fp,'utf8')));}
+      catch(e){code=1;append('候選規則驗證失敗：'+e.message+'\n');}
+    }
+    ruleStore.read();
+    manifest.ended_at=new Date().toISOString();manifest.exit_code=code;
+    saveManifest();
     append(`\n[${new Date().toISOString()}] 結束，exit=${code}${code !== 0 ? '　⚠ 流程失敗，請檢查上方訊息（最常見：引擎未登入 → 見說明頁）' : ''}\n`);
     emit({ kind: 'exit', agent: 'main', text: `exit=${code}`, code });
+    fs.copyFileSync(logPath,path.join(runDir,'run.log'));
     delete RUNS[deal];
     try { if (code === 0) onDone && onDone(code); } catch {}
   };
   RUNS[deal] = run;
   if (MOCK) { mockRun(run, emit, dp, finish); return; }
-  if (!CLI) { delete RUNS[deal]; throw httpErr(500, '找不到 Codex CLI（執行 npm install，或設 CODEX_BIN）'); }
-  let args;
-  try { args = provider.cliArgs({ model, writable: true }); }
-  catch (e) { delete RUNS[deal]; throw httpErr(400, e.message); }
-  append(`模型：${provider.selectedModel(model)}｜憑證：${engineEnv().CODEX_API_KEY ? 'API key' : 'Codex 登入'}｜CLI：${CLI.bin}\n`);
-  const proc = spawn(CLI.bin, [...(CLI.prefix || []), ...args], { cwd: ROOT, env: engineEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
-  proc.stdin.on('error', e => { if (e.code !== 'EPIPE') emit({ kind: 'error', agent: 'main', text: e.message }); });
-  proc.stdin.end(`${HEADLESS_SYS}\n先讀 AGENTS.md 與 CODEX.md；使用 .codex/agents/ 中同名 Codex 代理。\n\n${prompt}`);
+  if (!cli) { finish(-1); throw httpErr(500, '找不到 '+selected+' CLI'); }
+  const proc = spawn(cli.bin, [...(cli.prefix || []), ...args], { cwd: ROOT, env: engineEnv(selected), stdio: ['pipe', 'pipe', 'pipe'] });
+  proc.stdin.on('error', e => { if (e.code !== 'EPIPE') {run.failed=true;emit({ kind: 'error', agent: 'main', text: e.message });} });
+  proc.stdin.end(`${HEADLESS_SYS}\n先讀 AGENTS.md 與 CODEX.md；使用同名代理。\n\n${prompt}`);
   run.proc = proc;
   let buf = '';
   proc.stdout.on('data', d => {
     buf += d.toString();
-    let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 1); for (const ev of parseStreamLine(line, run)) emit(ev); }
+    let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 1); for (const ev of activeProvider.parseStreamLine(line, run)) emit(ev); }
   });
   proc.stderr.on('data', d => { const t = d.toString(); if (t.trim()) emit({ kind: 'stderr', agent: 'main', text: t.trim().slice(0, 300) }); });
   proc.on('error', e => { emit({ kind: 'error', agent: 'main', text: '⚠ 無法啟動 CLI：' + e.message }); finish(-1); });
-  proc.on('close', code => { if (buf.trim()) for (const ev of parseStreamLine(buf, run)) emit(ev); finish(code); });
+  proc.on('close', code => { if (buf.trim()) for (const ev of activeProvider.parseStreamLine(buf, run)) emit(ev); finish(code); });
 }
 // 草稿表格解析：依表頭定位欄位，容忍引擎欄序 / 欄數變化；「證據」欄＝機讀引用（文件代號:位置; …）
 function parseDraftTable(text, isMerged) {
@@ -407,8 +662,8 @@ const server = http.createServer(async (req, res) => {
   try {
     // Local APIs may be called by the workbench or a local CLI, never by a foreign web origin.
     if(u.pathname.startsWith('/api/')) {
-      const host=req.headers.host;
-      if(![`127.0.0.1:${PORT}`,`localhost:${PORT}`].includes(host))throw httpErr(403,'不接受此工作台網址');
+      const host=req.headers.host,listenPort=server.address()?.port||PORT;
+      if(![`127.0.0.1:${listenPort}`,`localhost:${listenPort}`].includes(host))throw httpErr(403,'不接受此工作台網址');
       if((req.headers.origin && req.headers.origin!==`http://${host}`)||req.headers['sec-fetch-site']==='cross-site')throw httpErr(403,'不接受其他網站存取本機工作台');
     }
     // ---- API ----
@@ -426,11 +681,67 @@ const server = http.createServer(async (req, res) => {
       const f = safeJoin(path.join(dp, '_analysis', 'cards'), cf);
       return json(res, 200, { file: q.get('file'), content: fs.readFileSync(f, 'utf8') });
     }
+    if(u.pathname==='/api/rules/active'){
+      const deal=q.get('deal');dealPath(deal);return json(res,200,{rules:ruleStore.active(deal,q.get('scope')||'reviewer')});
+    }
+    if(u.pathname==='/api/rules'){
+      if(req.method==='GET'){const rules=ruleStore.read();return json(res,200,{rules,warnings:ruleStore.warnings()});}
+      if(req.method==='POST'){
+        const body=JSON.parse(await readBody(req,100000)),rule=ruleStore.mutate(body);let graduation=false;
+        if(body.action==='approve'&&body.deal&&ruleStore.read().filter(r=>r.status==='approved').length>=10&&!RUNS[body.deal]){
+          dealPath(body.deal);startRun(body.deal,'house-style','只派 distiller：已核准規則累積到門檻，提一版 house-style 方法論到 knowledge/skills/_proposed/<id>@<version>/SKILL.md；保留現行方法論並附 derived_from_rules:[rule-id@version]。不得自動啟用或 retire 規則。',null);graduation=true;
+        }
+        return json(res,200,{rule,graduation});
+      }
+      throw httpErr(405,'method not allowed');
+    }
+    if(u.pathname==='/api/learn'&&req.method==='POST'){
+      const {deal,provider:selectedProvider}=JSON.parse(await readBody(req));dealPath(deal);
+      if(!startLearning(deal,selectedProvider))throw httpErr(409,'引擎忙碌，請稍後重試');return json(res,200,{started:true});
+    }
+    if(u.pathname==='/api/learning'){
+      const dp=dealPath(q.get('deal')),feedback=readFeedback(dp),dir=path.join(dp,'_analysis','drafts');
+      const kpi=fs.existsSync(dir)?fs.readdirSync(dir).filter(f=>/^questions_R\d+\.json$/.test(f)).map(f=>{const rows=questions.normalize(JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')));return {round:Number(f.match(/R(\d+)/)[1]),human_only:rows.filter(r=>r.source==='你').length};}):[];
+      const runsDir=path.join(dp,'_analysis','runs');const runs=fs.existsSync(runsDir)?fs.readdirSync(runsDir).sort().reverse().flatMap(id=>{try{return [JSON.parse(fs.readFileSync(path.join(runsDir,id,'run.json'),'utf8'))];}catch{return [];}}):[];
+      let summary='';try{summary=fs.readFileSync(path.join(dp,'_analysis',`distill-report-r${readState(dp).round}.md`),'utf8');}catch{}
+      return json(res,200,{rules:ruleStore.read(),feedback,kpi,runs,summary,skill_proposals:skillProposals()});
+    }
+    if(u.pathname==='/api/skills/graduate'&&req.method==='POST'){
+      const {ref}=JSON.parse(await readBody(req));const proposal=skillProposals().find(p=>p.ref===ref);if(!proposal)throw httpErr(404,'找不到方法論提案');
+      if(!proposal.derived_from_rules.length||proposal.derived_from_rules.some(x=>typeof x!=='string'))throw httpErr(400,'缺少來源規則');
+      const current=listSkills().find(s=>s.id===proposal.id);if(proposal.version!==(Number(current?.version)||0)+1)throw httpErr(409,'方法論版本已改變，請重新提案');
+      const approved=ruleStore.read().filter(r=>r.status==='approved').map(r=>r.rule_id+'@'+r.version);
+      if(proposal.derived_from_rules.some(r=>!approved.includes(r)))throw httpErr(409,'來源規則已改變，請重新提案');
+      const dir=path.join(SKILLS_DIR,proposal.id);fs.mkdirSync(dir,{recursive:true});
+      if(proposal.before)fs.writeFileSync(path.join(SKILLS_DIR,'_proposed',ref,'previous.md'),proposal.before);
+      fs.writeFileSync(path.join(dir,'SKILL.md'),proposal.content);ruleStore.fold(proposal.derived_from_rules,ref);
+      fs.writeFileSync(SKILLS_ACTIVE,JSON.stringify({active:[...new Set([...readActiveSkills(),proposal.id])]},null,2));
+      fs.renameSync(path.join(SKILLS_DIR,'_proposed',ref,'SKILL.md'),path.join(SKILLS_DIR,'_proposed',ref,'approved.md'));
+      return json(res,200,{approved:ref});
+    }
+    if(u.pathname==='/api/questions/add'&&req.method==='POST'){
+      const {deal,text,cat,reason,evidence=[]}=JSON.parse(await readBody(req,100000));const dp=dealPath(deal),st=readState(dp);
+      if(st.closed)throw httpErr(409,'案件已結案');if(typeof text!=='string'||!text.trim()||typeof reason!=='string'||!reason.trim())throw httpErr(400,'新增問題與理由必填');
+      const result=questions.load(dp,st.round,parseDraftTable),question_id=`q-r${st.round}-`+randomUUID().slice(0,8);
+      const question={question_id,text:text.trim(),cat:cat||'人工新增',why:reason,evidence,wave:1,channel:'書面',source:'你',revision:1,persona:null};
+      const rows=questions.normalize([...result.questions,question]);fs.mkdirSync(path.join(dp,'_analysis','drafts'),{recursive:true});
+      fs.writeFileSync(path.join(dp,'_analysis','drafts',`questions_R${st.round}.json`),JSON.stringify(rows.map(({q,...r})=>r),null,2));
+      writeFeedback(dp,[{feedback_id:'fb-'+randomUUID(),ts:new Date().toISOString(),round:st.round,question_id,action:'add',before:null,after:question,reason,evidence,actor:'local-user'}]);
+      return json(res,200,{question});
+    }
+    if (u.pathname === '/api/settings') {
+      if(req.method==='GET')return json(res,200,settings.readSettings());
+      if(req.method==='POST')return json(res,200,settings.writeSettings(JSON.parse(await readBody(req,100000))));
+      throw httpErr(405,'method not allowed');
+    }
+    if (u.pathname === '/api/runs') {
+      const dir=path.join(dealPath(q.get('deal')),'_analysis','runs');
+      const runs=fs.existsSync(dir)?fs.readdirSync(dir).sort().reverse().flatMap(id=>{try{return [JSON.parse(fs.readFileSync(path.join(dir,id,'run.json'),'utf8'))];}catch{return [];}}):[];
+      return json(res,200,{runs});
+    }
     if (u.pathname === '/api/engine') {
-      return json(res, 200, {
-        cli: CLI ? CLI.version : null, cliPath: CLI ? CLI.bin : null, mock: MOCK, token: !!readToken(),
-        api: !!(process.env.OPENAI_API_KEY || readToken()), askModel: ASK_MODEL, askEffort: ASK_EFFORT, askBudget: ASK_BUDGET, askMaxInputBytes: chat.MAX_INPUT_BYTES, retrieval: 'local-fts5', sdk: true,
-      });
+      const config=settings.readSettings(), statuses=Object.fromEntries(['codex','claude'].map(p=>[p,providerStatus(config,p)])), selected=statuses[config.provider], ask=askConfig(config);
+      return json(res,200,{...selected,provider:config.provider,providers:statuses,mock:MOCK,token:!!readToken(),askModel:ask.model,askEffort:ask.effort,askBudget:ask.budget,sdk:true,chat:{provider:'codex',model:askConfig({...config,provider:'codex'}).model,maxInputBytes:chat.MAX_INPUT_BYTES},skills:readActiveSkills()});
     }
     if (u.pathname === '/api/token' && req.method === 'POST') {
       const { token } = JSON.parse(await readBody(req));
@@ -445,6 +756,8 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/reviewlog') {
       const dp = dealPath(q.get('deal'));
       const round = Number(q.get('round')) || 1;
+      const saved=path.join(dp,'_analysis',`review-state-r${round}.json`);
+      if(fs.existsSync(saved))return json(res,200,{decisions:JSON.parse(fs.readFileSync(saved,'utf8'))});
       const dir = path.join(dp, '_analysis', 'diff-reports');
       let latest = null;
       if (fs.existsSync(dir)) {
@@ -516,9 +829,11 @@ const server = http.createServer(async (req, res) => {
       const rd = path.join(dp, 'round' + round);
       fs.mkdirSync(rd, { recursive: true });
       const saved = safeJoin(rd, fname);
-      fs.writeFileSync(saved, await readBody(req));
+      const contents=await readBody(req),replaced=fs.existsSync(saved);
+      if(replaced){const archive=path.join(dp,'_analysis','_archive');fs.mkdirSync(archive,{recursive:true});fs.renameSync(saved,path.join(archive,Date.now()+'_'+randomUUID().slice(0,8)+'_'+fname));}
+      fs.writeFileSync(saved, contents);
       runIndexer(dp, saved, true); // 上傳即建索引（背景）
-      return json(res, 200, { saved: `round${round}/${fname}`, indexing: true });
+      return json(res, 200, { saved: `round${round}/${fname}`, indexing: true, replaced });
     }
     if (u.pathname === '/api/reindex' && req.method === 'POST') {
       const { deal, file, force } = JSON.parse(await readBody(req));
@@ -551,6 +866,10 @@ const server = http.createServer(async (req, res) => {
       if (!p) return json(res, 404, { error: `沒有第 ${n} 頁（共 ${d.page_count} 頁）` });
       return json(res, 200, { file, round: d.round, kind: d.kind, page: n, page_count: d.page_count, text: p.text, needs_ocr: !!p.needs_ocr, chars: p.chars });
     }
+    if (u.pathname === '/api/card-verify') {
+      const dp=dealPath(q.get('deal'));let content='';try{content=fs.readFileSync(path.join(dp,'_analysis','card-verify.md'),'utf8');}catch{}
+      return json(res,200,{...readCardVerification(dp),content});
+    }
     if (u.pathname === '/api/facts') {
       const dp = dealPath(q.get('deal'));
       const fj = readFactsJson(dp);
@@ -563,13 +882,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { running: !!run, kind: run ? run.kind : null, counts: run ? run.counts : null, started: run ? run.started : null, events: readRunEvents(dp, since) });
     }
     if (u.pathname === '/api/ingest-one' && req.method === 'POST') {
-      const { deal, file, round, model } = JSON.parse(await readBody(req));
+      const { deal, file, round, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
       const rel = /^R\d+$/.test(round || '') ? `round${round.slice(1)}/${path.basename(file)}` : path.basename(file);
       if (!fs.existsSync(path.join(dp, rel))) throw httpErr(404, '找不到文件');
       const prompt = `只消化 X（單檔增量）：案子「${deal}」Round ${st.round}，新文件「${deal}/${rel}」。照本專案 AGENTS.md 執行：(1) 先確認 _analysis/index/ 有此檔索引（沒有就跑 python3 _workbench/index_doc.py "${deal}" --file "${rel}"）；(2) 派 card-extractor 只為這一份文件產字卡（檔名＝原始檔名＋.md，存 _analysis/cards/）；(3) 派 reconciler 做「增量」對帳：讀既有 _analysis/facts.json 與 facts.md，只加入與此文件相關的事實列與新矛盾（同物異名對齊、口徑分 basis、有公式的填 derived），執行 python3 _workbench/recompute.py "${deal}"，更新 facts.json 與 facts.md；(4) 依新矛盾與新事實出 3–6 題（可直接由你出，或派需要的 persona），寫入「${deal}/_analysis/drafts/draft_R${st.round}_delta.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |，No. 自 901 起連號，出處與動機寫檔名＋頁碼/tab＋引用數字＋一句白話動機，證據欄寫機讀引用（文件代號:位置，分號分隔）；(5) 完成即結束，只回報一行摘要。記得先讀「${deal}/_notes.md」。`;
-      startRun(deal, 'ingest', prompt, null, model);
+      startRun(deal, 'ingest', prompt, null, model, selectedProvider, {file:path.basename(file)});
       return json(res, 200, { started: true, file: rel });
     }
     if (u.pathname === '/api/archive' && req.method === 'POST') {
@@ -602,13 +921,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { saved: fname });
     }
     if (u.pathname === '/api/merge' && req.method === 'POST') {
-      const { deal, name, model } = JSON.parse(await readBody(req));
+      const { deal, name, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
       const fname = path.basename(name || '');
       if (!fs.existsSync(path.join(dp, '_analysis', 'inbox', fname))) throw httpErr(404, '找不到你上傳的版本');
-      const prompt = `合併審核前置：案子「${deal}」Round ${st.round}。使用者的 Q-list 在「${deal}/_analysis/inbox/${fname}」（用 python3＋openpyxl 讀）。引擎草稿在「${deal}/_analysis/drafts/draft_R${st.round}.md」。照本專案 AGENTS.md 階段 2 做三類 diff：(1) 兩邊都問到（語意相同即算，措辭合併取較佳、number-anchored 版本優先）→ 來源標「共識」；(2) 只有引擎 → 來源標「Codex」；(3) 只有使用者 → 來源標「你」，一律保留，並在 _analysis/diff-reports/blindspots-r${st.round}.md 記錄為盲區訓練資料。輸出寫入「${deal}/_analysis/drafts/draft_R${st.round}_merged.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 來源 | 出處與動機 | 書面/口頭 | 波次 |（來源欄只能是「共識」「Codex」「你」三值之一），排序：共識在前、你的獨有題次之、Codex 獨有題最後。出處與動機欄必須完整可讀：資料來源寫檔名＋頁碼或 tab，加一句白話動機，不得只寫代號；使用者題目的動機用推測並標「（推測）」。完成即結束。`;
-      startRun(deal, 'merge', prompt, null, model);
+      const prompt = `合併審核前置：案子「${deal}」Round ${st.round}。使用者的 Q-list 在「${deal}/_analysis/inbox/${fname}」（用 python3＋openpyxl 讀）。引擎草稿在「${deal}/_analysis/drafts/draft_R${st.round}.md」。照本專案 AGENTS.md 階段 2 做三類 diff：(1) 兩邊都問到（語意相同即算，措辭合併取較佳、number-anchored 版本優先）→ 來源標「共識」；(2) 只有引擎 → 來源標「Codex」；(3) 只有使用者 → 來源標「你」，一律保存、Reviewer 可給建議、由人確認，並在 _analysis/diff-reports/blindspots-r${st.round}.md 記錄為盲區訓練資料。輸出寫入「${deal}/_analysis/drafts/draft_R${st.round}_merged.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 來源 | 出處與動機 | 書面/口頭 | 波次 |（來源欄只能是「共識」「Codex」「你」三值之一），排序：共識在前、你的獨有題次之、Codex 獨有題最後。出處與動機欄必須完整可讀：資料來源寫檔名＋頁碼或 tab，加一句白話動機，不得只寫代號；使用者題目的動機用推測並標「（推測）」。完成即結束。`;
+      startRun(deal, 'merge', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/notes' && req.method === 'POST') {
@@ -619,25 +938,25 @@ const server = http.createServer(async (req, res) => {
 
     // ---- 引擎 ----
     if (u.pathname === '/api/distill' && req.method === 'POST') {
-      const { deal, model } = JSON.parse(await readBody(req));
+      const { deal, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
-      const prompt = `結案蒸餾：案子「${deal}」。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則、per-deal profile 寫回「knowledge/question-bank.md」— 用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
-      startRun(deal, 'distill', prompt, null, model);
+      const prompt = `結案蒸餾：案子「${deal}」。只派 distiller，另外檢查 approved 規則是否適合折入 house-style skill，先提版本到 knowledge/skills/_proposed/，不得自動啟用。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則、per-deal profile 寫回「knowledge/question-bank.md」— 用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
+      startRun(deal, 'distill', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/run' && req.method === 'POST') {
-      const { deal, model } = JSON.parse(await readBody(req));
+      const { deal, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
       if (st.closed) throw httpErr(400, '案件已結案');
       const followup = st.round <= 1 ? '' : `這是第 ${st.round} 輪追問，多兩件必做的事：(A) 上輪回覆判定：讀「${deal}/qlist/」內上一輪最終發出版，以及「${deal}/round${st.round}/」內對方回覆的 Q-list xlsx（檔名通常含「回覆」或「Qlist」，用 python3＋openpyxl 讀回答欄），逐題判定：完整回答／部分回答／迴避／與其他資料矛盾，判定表寫入「${deal}/_analysis/reply-judgment-r${st.round - 1}.md」；後三種進本輪追問，題目中要引用對方的原回覆再往下追。(B) 新文件做增量消化並更新 facts.md，新舊矛盾（含版本 diff）為最高優先出題來源。`;
-      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（四 persona 出題、匯整），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「Acme_Robotics_FY2025_Annual_Report_Full.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——本團隊一律書面詢問，敏感題以波次 2 表達即可。完成後即結束。`;
+      const prompt = `跑 Round ${st.round}：案子「${deal}」。照本專案 AGENTS.md 的 pipeline 執行階段 1a（盤點缺件、文件字卡、跨文件對帳）與階段 1b（設定名單的 persona 出題、匯整）及階段 1c（獨立 question-reviewer 回原文審題），本輪文件在「${deal}/round${st.round}/」；記得先讀「${deal}/_notes.md」。${followup}產出寫入「${deal}/_analysis/drafts/draft_R${st.round}.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 |。硬性規範：(1) 每份文件的字卡檔名必須與原始檔名完全相同再加 .md（例：「<原始檔名>.pdf.md」），存「${deal}/_analysis/cards/」；(2) facts.md 的缺件盤點用分行列點（已收一行一項、缺件一行一項）；(3) 出處與動機欄完整可讀：檔名＋頁碼/tab＋引用數字＋一句白話動機，禁用內部代號；(4) 分類欄保持乾淨（如「財務面」「股權面」），不要夾帶「（敏感·口頭）」等通路註記——通路與波次遵循 AGENTS.md 的「書面詢問政策」。完成後即結束。`;
       startRun(deal, 'pipeline', prompt, () => {
         const s = readState(dp);
         if (fs.existsSync(path.join(dp, '_analysis', 'drafts', `draft_R${s.round}.md`))) {
           s.lifecycle = 'drafted'; writeState(dp, s);
         }
-      }, model);
+      }, model, selectedProvider);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/runlog') {
@@ -649,24 +968,41 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ---- 審核 ----
+    if(u.pathname==='/api/review-run'&&req.method==='POST'){
+      const {deal,provider:selectedProvider,model}=JSON.parse(await readBody(req));const dp=dealPath(deal),round=readState(dp).round;
+      const prompt=`只派 question-reviewer，以 fresh context 審核 ${deal}/_analysis/drafts/questions_R${round}.json，不讀 persona 推理；原文索引、對帳、上輪回覆依規範查驗。輸出 ${deal}/_analysis/drafts/review_R${round}.json；不得刪題。`;
+      startRun(deal,'review',prompt,()=>reviewer.attach(dp,round,questions.load(dp,round,parseDraftTable)),model,selectedProvider);
+      return json(res,200,{started:true});
+    }
     if (u.pathname === '/api/draft') {
       const dp = dealPath(q.get('deal'));
       const st = readState(dp);
       const round = Number(q.get('round')) || st.round;
-      const merged = path.join(dp, '_analysis', 'drafts', `draft_R${round}_merged.md`);
-      const plain = path.join(dp, '_analysis', 'drafts', `draft_R${round}.md`);
-      const f = fs.existsSync(merged) ? merged : plain;
-      const delta = path.join(dp, '_analysis', 'drafts', `draft_R${round}_delta.md`);
-      if (!fs.existsSync(f) && !fs.existsSync(delta)) return json(res, 200, { round, merged: false, questions: [] });
-      const isMerged = f === merged;
-      const rows = fs.existsSync(f) ? parseDraftTable(fs.readFileSync(f, 'utf8'), isMerged) : [];
-      if (fs.existsSync(delta)) for (const r of parseDraftTable(fs.readFileSync(delta, 'utf8'), false)) rows.push({ ...r, delta: true });
-      return json(res, 200, { round, merged: isMerged, questions: rows, hasDelta: fs.existsSync(delta) });
+      return json(res,200,reviewer.attach(dp,round,questions.load(dp,round,parseDraftTable)));
     }
     if (u.pathname === '/api/review' && req.method === 'POST') {
       const { deal, decisions } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
+      if(st.closed)throw httpErr(409,'案件已結案');
+      const current=reviewer.attach(dp,st.round,questions.load(dp,st.round,parseDraftTable)).questions;
+      const feedback=[];let previous={};try{previous=JSON.parse(fs.readFileSync(path.join(dp,'_analysis',`review-state-r${st.round}.json`),'utf8'));}catch{}
+      const byId=new Map(current.map(q=>[q.question_id,q]));
+      if(!Array.isArray(decisions))throw httpErr(400,'decisions must be an array');
+      for(const d of decisions){
+        d.question_id=d.question_id||current.find(q=>q.no===d.no)?.question_id;
+        if(!byId.has(d.question_id))throw httpErr(400,'unknown question_id');
+        const original=byId.get(d.question_id);
+        if(typeof d.keep!=='boolean')throw httpErr(400,'keep 必須為布林值');
+        if(!d.keep&&(!d.reason||!String(d.reason).trim()))throw httpErr(400,'砍題必須填寫理由');
+        if(d.override_review&&!String(d.override_reason||'').trim())throw httpErr(400,'推翻 Reviewer 必須填寫理由');
+        d.q=original.q;d.cat=original.cat;d.why=original.why;
+        const event=(action,after,reason)=>feedback.push({feedback_id:'fb-'+randomUUID(),ts:new Date().toISOString(),round:st.round,question_id:d.question_id,action,before:original,after,reason:reason||'',evidence:original.evidence,actor:'local-user'});
+        if(!d.keep&&(previous[d.question_id]?.keep!==false||previous[d.question_id]?.reason!==d.reason))event('cut',null,d.reason);
+        if(d.editedText&&d.editedText!==original.q&&d.editedText!==previous[d.question_id]?.edited)event('edit',{...original,text:d.editedText},d.edit_reason||'使用者改寫');
+        if(d.override_review&&d.override_reason!==previous[d.question_id]?.override_reason)event('override_review',{keep:d.keep,text:d.editedText||original.q},d.override_reason);
+
+      }
       const ts = new Date().toISOString().slice(0, 10);
       const rep = ['# 合併審核紀錄 — Round ' + st.round + '（' + ts + '）', ''];
       for (const d of decisions) {
@@ -692,8 +1028,11 @@ const server = http.createServer(async (req, res) => {
         py.stdin.write(JSON.stringify({ path: out, rows, sheet: 'Q-list' }));
         py.stdin.end();
       });
+      fs.writeFileSync(path.join(dp,'_analysis',`review-state-r${st.round}.json`),JSON.stringify(Object.fromEntries(decisions.map(d=>[d.question_id,{keep:d.keep,reason:d.reason,edited:d.editedText||'',override_reason:d.override_reason||''} ])),null,2));
+      writeFeedback(dp,feedback);
       st.lifecycle = 'merged'; writeState(dp, st);
-      return json(res, 200, { xlsx: `${deal}_merged Qlist_R${st.round}.xlsx` });
+      let learning=false;try{learning=startLearning(deal);}catch{}
+      return json(res, 200, { learning, xlsx: `${deal}_merged Qlist_R${st.round}.xlsx` });
     }
     if (u.pathname === '/api/download') {
       const dp = dealPath(q.get('deal'));
@@ -772,14 +1111,140 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { state: st });
     }
 
+    // ---- 方法論 skill（knowledge/skills/）----
+    if (u.pathname === '/api/skills' && req.method === 'GET') return json(res, 200, { skills: listSkills(), active: readActiveSkills() });
+    if (u.pathname === '/api/skills' && req.method === 'POST') {
+      // 只有 server 改 active.json；id 必須是實際存在的 skill 資料夾
+      const { active } = JSON.parse(await readBody(req));
+      const valid = new Set(listSkills().map(k => k.id));
+      if(!Array.isArray(active)||active.some(id=>typeof id!=='string'||!valid.has(id)))throw httpErr(400,'未知的 skill id');
+      const next = [...new Set(active)];
+      fs.mkdirSync(SKILLS_DIR, { recursive: true });
+      fs.writeFileSync(SKILLS_ACTIVE, JSON.stringify({ active: next, updated_at: new Date().toISOString(), note: '工作台側欄「方法論」勾選的 skill；派 persona／reviewer 時全文附進派工訊息' }, null, 2) + '\n');
+      return json(res, 200, { active: next, skills: listSkills() });
+    }
+    if (u.pathname === '/api/skills/read') {
+      const id = path.basename(q.get('id') || '');
+      const fp = path.join(SKILLS_DIR, id, 'SKILL.md');
+      if (!id || !fs.existsSync(fp)) throw httpErr(404, '找不到 skill');
+      const ref = q.get('ref') ? path.basename(q.get('ref')) : null;
+      const target = ref ? path.join(SKILLS_DIR, id, 'references', ref) : fp;
+      if (!fs.existsSync(target)) throw httpErr(404, '找不到檔案');
+      return json(res, 200, { id, file: ref ? `references/${ref}` : 'SKILL.md', content: fs.readFileSync(target, 'utf8') });
+    }
+    if (u.pathname === '/api/skills/upload' && req.method === 'POST') {
+      // 上傳一份 SKILL.md → knowledge/skills/<id>/SKILL.md；id 取自 ?id（預設檔名去副檔名），只允許安全字元；同名不覆蓋
+      const raw = (q.get('id') || path.basename(q.get('name') || 'my-skill').replace(/\.md$/i, ''));
+      const id = raw.replace(/[^\w\-一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      if (!id) throw httpErr(400, 'skill id 不合法');
+      const dir = path.join(SKILLS_DIR, id);
+      if (fs.existsSync(path.join(dir, 'SKILL.md'))) throw httpErr(409, `已有同名 skill「${id}」，請改名`);
+      let md = (await readBody(req, 4 * 1024 * 1024)).toString('utf8');
+      if (!/^---\n/.test(md)) md = `---\nname: ${id}\ntitle: ${id}\ndescription: 使用者上傳的方法論\nversion: 1\nscope: persona, reviewer\n---\n\n` + md;
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'SKILL.md'), md);
+      const active = [...new Set([...readActiveSkills(), id])];
+      fs.writeFileSync(SKILLS_ACTIVE, JSON.stringify({ active, updated_at: new Date().toISOString(), note: '工作台側欄「方法論」勾選的 skill；派 persona／reviewer 時全文附進派工訊息' }, null, 2) + '\n');
+      return json(res, 200, { id, active, skills: listSkills() });
+    }
+
     // ---- 搜尋＋問 AI ----
     if (u.pathname === '/api/search') {
       const dp = dealPath(q.get('deal'));
       const needle = (q.get('q') || '').toLowerCase();
       if (!needle) return json(res, 200, { hits: [] });
-      const found=await chat.retrieval(dp,{op:'search',query:needle});
-      const hits=found.matches.map(m=>({src:`${m.kind==='metadata'?'AI 導覽／描述':'內容'} · ${m.file} · ${m.location}`,text:m.snippet,evidenceId:m.id}));
-      return json(res, 200, { hits, warnings: found.warnings });
+      // 同義詞放寬：搜「財報」也命中年報/資產負債表/損益表等
+      const SYN = [
+        ['財報', '年報', '財簽', '財務報表', '資產負債表', '損益表', '現金流量', '自結', 'financial', 'audited', 'balance', 'income'],
+        ['股權', 'cap table', 'captable', '股東名簿', '股東', '持股', 'shareholder', 'equity', 'registry'],
+        ['章程', '登記', 'incorporation', 'articles'],
+        ['合約', 'contract', 'agreement', 'spa', 'sha', 'term sheet'],
+        ['簡報', 'deck', 'pitch', '介紹', 'onepager', 'one page'],
+        ['財測', 'forecast', '模型', '預估'],
+      ];
+      let terms = [needle];
+      for (const g of SYN) if (g.some(w => needle.includes(w) || w.includes(needle))) terms.push(...g);
+      terms = [...new Set(terms.map(s => s.toLowerCase()))];
+      const matches = s => { const low = s.toLowerCase(); return terms.some(t => low.includes(t)); };
+      const firstIdx = s => { const low = s.toLowerCase(); let best = -1; for (const t of terms) { const i = low.indexOf(t); if (i >= 0 && (best < 0 || i < best)) best = i; } return best; };
+      const hits = [];
+      for (const doc of listDocs(dp)) {
+        if (matches(doc.name))
+          hits.push({ src: '文件 · ' + doc.round, line: 0, text: doc.name, doc: { name: doc.name, round: doc.round } });
+      }
+      // 原文（索引層）：逐頁 / 逐格命中，附頁碼或儲存格，前端可直接開到該處。
+      // 頁面命中用 BM25 排序（大 Data Room 時先看最相關的頁，不是檔案順序前 60 頁）；xlsx 逐格仍用字串比對。
+      let rawHits = 0;
+      const allIdx = loadAllIndex(dp);
+      for (const d of allIdx) {
+        if (rawHits >= 60 || d.kind !== 'xlsx') continue;
+        const docRef = { name: d.file, round: d.round };
+        for (const s of d.sheets || []) for (const c of s.cells || []) {
+          if (rawHits >= 60) break;
+          const cellText = `${c.value == null ? '' : c.value}${c.formula ? ' ' + c.formula : ''}`;
+          if (matches(cellText)) { rawHits++; hits.push({ src: `原文 · ${d.file} · ${s.name}!${c.ref}`, line: 0, text: `${c.ref} = ${cellText}`.slice(0, 300), doc: docRef, sheet: s.name, ref: c.ref }); }
+        }
+      }
+      const ranked = bm25Scores(bm25Index(dp), q.get('q') || '');
+      const seen = new Set();
+      const pushPage = (d, p, score) => {
+        const k = d.file + '#' + p.n; if (seen.has(k)) return; seen.add(k);
+        const i = Math.max(0, firstIdx(p.text || ''));
+        const snippet = (p.text || '').slice(Math.max(0, i - 110), i + 190).replace(/\s+/g, ' ');
+        rawHits++;
+        hits.push({ src: `原文 · ${d.file} · p.${p.n}`, line: 0, text: snippet, doc: { name: d.file, round: d.round }, page: p.n, score: Math.round(score * 100) / 100 });
+      };
+      for (const r of ranked) { if (rawHits >= 60) break; const d = r.u.d; if (d.kind === 'xlsx') continue; const p = (d.pages || [])[r.u.loc.page - 1]; if (p && matches(p.text || '')) pushPage(d, p, r.score); }
+      for (const r of ranked) { if (rawHits >= 60) break; const d = r.u.d; if (d.kind === 'xlsx') continue; const p = (d.pages || [])[r.u.loc.page - 1]; if (p) pushPage(d, p, r.score); }
+      // 同義詞放寬只命中、BM25 沒分數的頁（例：搜「財報」命中 balance sheet 頁）
+      for (const d of allIdx) { if (rawHits >= 60) break; if (d.kind === 'xlsx') continue; for (const p of d.pages || []) { if (rawHits >= 60) break; if (!seen.has(d.file + '#' + p.n) && firstIdx(p.text || '') >= 0) pushPage(d, p, 0); } }
+      const scanFile = (fp, label) => {
+        let txt; try { txt = fs.readFileSync(fp, 'utf8'); } catch { return; }
+        const lines = txt.split('\n');
+        for (let i = 0; i < lines.length && hits.length < 50; i++) {
+          if (matches(lines[i])) hits.push({ src: label, line: i + 1, text: lines[i].trim().slice(0, 300) });
+        }
+      };
+      const an = path.join(dp, '_analysis');
+      const cardsDir = path.join(an, 'cards');
+      if (fs.existsSync(cardsDir)) for (const f of fs.readdirSync(cardsDir)) scanFile(path.join(cardsDir, f), '字卡 · ' + f.replace(/\.md$/, ''));
+      for (const f of ['facts.md']) scanFile(path.join(an, f), '對帳表');
+      const dr = path.join(an, 'drafts');
+      if (fs.existsSync(dr)) for (const f of fs.readdirSync(dr)) if (f.endsWith('.md')) scanFile(path.join(dr, f), '草稿 · ' + f);
+      scanFile(path.join(dp, '_notes.md'), '背景備註');
+      let warnings=[];
+      try{
+        const found=await chat.retrieval(dp,{op:'search',query:needle});warnings=found.warnings||[];
+        // Preserve Chinese routing descriptions from project chat after evidence-first BM25 hits.
+        for(const m of found.matches||[])if(m.kind==='metadata'||!hits.length)hits.push({src:`${m.kind==='metadata'?'AI 導覽／描述':'內容'} · ${m.file} · ${m.location}`,text:m.snippet,evidenceId:m.id,score:0});
+      }catch(e){warnings.push('補充搜尋暫不可用：'+e.message);}
+      return json(res, 200, { hits, warnings });
+    }
+    if (u.pathname === '/api/ask' && req.method === 'POST') {
+      // SSE 串流：{meta} → {delta}* → {usage} → {done}
+      const { deal, question, model, provider: selectedProvider } = JSON.parse(await readBody(req));
+      const config=runConfig(selectedProvider), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli(), ask=askConfig(config);
+      const dp = dealPath(deal);
+      if(model&&model!=='default'){if(typeof model!=='string'||!model.trim())throw httpErr(400,'invalid model');ask.model=model;}
+      if (!question || !String(question).trim()) throw httpErr(400, '問題不可為空');
+      res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
+      const send = o => { try { res.write(`data: ${JSON.stringify(o)}\n\n`); } catch {} };
+      try {
+        const ctx = buildAskContext(dp, question, ask.budget);
+        const mode = MOCK ? 'mock' : providerStatus(config,selected).api ? 'api' : (cli ? 'cli' : 'none');
+        send({ meta: { mode, provider:selected, model:ask.model, docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, retrieval:ctx.retrieval, totalTokens: ctx.totalTokens, budget: ask.budget } });
+        if (mode === 'mock') {
+          const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已用 BM25 挑頁）'}。正式版會由模型依此回答並標出處，格式 [檔名 p.N]／[檔名 工作表!B4]。`;
+          for (const ch of fake.match(/.{1,12}/g)) { send({ delta: ch }); await new Promise(r => setTimeout(r, 25)); }
+          send({ mode: 'mock' });
+         } else if (mode === 'api') {
+          const client=selected==='codex'?new OpenAI({apiKey:process.env.OPENAI_API_KEY||readToken()}):new (require('@anthropic-ai/sdk'))({apiKey:process.env.ANTHROPIC_API_KEY});
+          await activeProvider.askViaApi({client,ctx,question,send,system:ASK_SYSTEM,model:ask.model,effort:ask.effort});
+        } else if (mode === 'cli') await activeProvider.askViaCli({cli,cwd:ROOT,env:{...engineEnv(selected),QLIST_CODEX_EFFORT:ask.effort},ctx,question,send,system:ASK_SYSTEM,model:ask.model,effort:ask.effort});
+        else send({ error: selected+' 未設定 API key，也找不到 CLI' });
+      } catch (e) { send({ error: String(e && e.message || e) }); }
+      send({ done: true });
+      return res.end();
     }
     if(u.pathname==='/api/memory/status'){const deal=q.get('deal');dealPath(deal);const id=q.get('conversation');const job=memory.jobs(deal).filter(j=>j.conversationId===id).at(-1);return json(res,200,{status:job?.status||'none'});}
     if (u.pathname === '/api/memory') {
@@ -809,7 +1274,7 @@ const server = http.createServer(async (req, res) => {
       const result=await chat.retrieval(dealPath(q.get('deal')),{op:'read',id:q.get('id')});
       return json(res,result.error?404:200,result);
     }
-    if (u.pathname === '/api/ask' && req.method === 'POST') {
+    if (u.pathname === '/api/chat/ask' && req.method === 'POST') {
       const body=JSON.parse(await readBody(req, 16000));
       const dp=dealPath(body.deal);
       const question=typeof body.question==='string'?body.question.trim():'';
@@ -820,7 +1285,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-cache','Connection':'keep-alive','X-Accel-Buffering':'no'});
       const send=e=>{if(!res.destroyed)res.write('data: '+JSON.stringify(e)+'\n\n')};
       const apiKey=process.env.OPENAI_API_KEY||readToken();
-      await chat.run({dp,conversation,question,model:ASK_MODEL,effort:ASK_EFFORT,
+      await chat.run({dp,conversation,question,model:askConfig({...settings.readSettings(),provider:'codex'}).model,effort:askConfig({...settings.readSettings(),provider:'codex'}).effort,
         client:apiKey?new OpenAI({apiKey,maxRetries:0,timeout:90000}):null,
         mock:MOCK,memory,send,signal:abort.signal});
       res.end();
@@ -839,6 +1304,8 @@ const server = http.createServer(async (req, res) => {
     return json(res, e.status || 500, { error: e.message });
   }
 });
-server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${PORT}  root=${ROOT}  mock=${MOCK}`));
+if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${server.address().port}  root=${ROOT}  mock=${MOCK}`));
 
-setImmediate(runMemoryJobs);
+module.exports={tokenize,bm25Index,bm25Scores,server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};
+
+if (require.main === module) setImmediate(runMemoryJobs);

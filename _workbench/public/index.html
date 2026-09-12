@@ -95,6 +95,7 @@ td.file{font-family:var(--font-data);font-size:12px}
 .catgroup h3{font-size:13px;font-weight:600;margin:16px 0 6px;color:var(--ink)}
 .catgroup h3 .n{font-weight:400;color:var(--ink-3);font-size:12px}
 .qrow{display:flex;gap:12px;padding:14px 2px;border-top:1px solid var(--line);align-items:flex-start}
+.qrow.suppressed .qtext,.qrow.suppressed .why,.qrow.suppressed .reviewdetail,.qrow.suppressed .reasons{display:none}
 .qrow:first-of-type{border-top:none}
 .qrow input[type=checkbox]{width:16px;height:16px;margin-top:4px;accent-color:var(--accent)}
 .qrow .qb{flex:1;min-width:0}
@@ -197,6 +198,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
   <div class="sidelabel">投資案件</div><input id="caseFilter" class="case-filter" type="text" aria-label="搜尋案件" placeholder="搜尋案件…" oninput="filterCases()"><div id="caseFilterEmpty" class="case-filter-empty" hidden>找不到符合的案件</div>
   <div id="dealList"></div>
   <button class="newcase" onclick="show('ncOverlay')">＋ 新增案件</button>
+  <div class="sidelabel">方法論 SKILLS</div><div id="skillsList"></div><button onclick="$('skillUpload').click()">＋ 加入 skill</button><input id="skillUpload" type="file" accept=".md" hidden onchange="uploadSkill(this.files[0]);this.value=''">
 
   <details class="side-settings"><summary data-icon="settings-2">連線與設定</summary><div class="sidefoot" id="engineFoot">確認連線中…</div></details>
 </aside>
@@ -208,6 +210,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <button class="tab" data-t="docs" onclick="pickTab('docs')">資料室<span class="n num" id="tnDocs">0</span></button>
     <button class="tab" data-t="recon" onclick="pickTab('recon')">資料查核</button>
     <button class="tab" data-t="review" onclick="pickTab('review')">問題審核<span class="n num" id="tnReview">—</span></button>
+    <button class="tab" data-t="learning" onclick="pickTab('learning')">學習</button>
     <button class="tab" data-t="search" onclick="pickTab('search')">搜尋資料</button>
     <button class="tab" data-t="notes" onclick="pickTab('notes')">訪談筆記</button>
     <button class="tab" data-t="help" onclick="pickTab('help')">使用說明</button>
@@ -219,16 +222,11 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
       <div class="meta" id="dhMeta"></div>
     </div>
     <div class="header-actions">      <button class="primary" id="runBtn" data-icon="play" onclick="runPipeline()">開始盡調分析</button>
-<details class="more-menu"><summary data-icon="ellipsis">案件選項</summary><div class="more-content"><label for="modelSel">分析模型與案件管理</label>      <button id="delCaseBtn" class="delbtn" onclick="deleteCase(this)">刪除案件</button>
+<details class="more-menu"><summary data-icon="ellipsis">案件選項</summary><div class="more-content"><span>分析設定與案件管理</span>      <button id="delCaseBtn" class="delbtn" onclick="deleteCase(this)">刪除案件</button>
       <button id="reopenBtn" style="display:none" onclick="reopenDeal()">重新開啟</button>
-      <select id="modelSel" title="Codex 主 session 模型；子代理預設繼承，effort 由 QLIST_CODEX_EFFORT 設定" onchange="localStorage.setItem('qlist_model',this.value)">
-        <option value="default">模型：CLI 預設</option>
-        <option value="gpt-6-astra">模型：Astra</option>
-        <option value="gpt-5.6-sol">模型：5.6 Sol</option>
-        <option value="gpt-5.6-terra">模型：5.6 Terra</option>
-      </select>
-      <button id="closeBtn" onclick="closeDeal(this)">結案</button>
-      <button id="distillBtn" style="display:none" onclick="runDistill()">更新題庫經驗</button>
+      <button onclick="openSettings()">⚙ 進階設定</button>
+      <button id="closeBtn" onclick="closeDeal(this)">✓ 結案</button>
+      <button id="distillBtn" style="display:none" onclick="runDistill()">⚗ 跑蒸餾</button>
 </div></details>
     </div>
   </div>
@@ -242,6 +240,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
   <section id="tab-overview">
 <div class="workflow" aria-label="盡調流程"><span class="workflow-label">案件工作流程</span><button onclick="pickTab('docs')"><span class="step-no">1</span>整理資料室</button><button onclick="pickTab('recon')"><span class="step-no">2</span>查核關鍵資訊</button><button onclick="pickTab('review')"><span class="step-no">3</span>審核問題清單</button><button onclick="pickTab('review')"><span class="step-no">4</span>定稿與追蹤回覆</button></div>
     <div class="cards" id="ovCards"></div>
+    <div class="panel"><h2>最近執行設定</h2><div id="runManifest" class="mdview">尚無執行紀錄</div></div>
     <div class="panel"><h2>已發出問題清單 <span class="hint">各輪定稿版本與追蹤紀錄</span></h2><div id="ovQlists"></div></div>
     <div class="panel"><h2>分析進度 <span class="hint">查看目前處理項目與完成紀錄</span></h2>
       <div class="runstats" id="ovStats"></div>
@@ -276,7 +275,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 
   <section id="tab-recon">
     <div class="panel">
-      <h2>關鍵資訊比對 <span class="hint">先處理差異與待確認事項，展開後可逐筆核對來源</span></h2>
+      <h2>關鍵資訊比對 <span id="factsProvenance" class="chip todo"></span> <span class="hint">先處理差異與待確認事項，展開後可逐筆核對來源</span></h2>
       <div class="toolbar">
         <select id="cmFilter" aria-label="查核項目篩選" onchange="renderConflictMap()"><option value="issues">需要確認的事項</option><option value="conflict">資料不一致</option><option value="basis_mismatch">口徑待釐清</option><option value="unverified">尚待確認</option><option value="single_source">待交叉驗證</option><option value="consistent">核對一致</option><option value="">全部事項</option></select>
         <input id="cmQuery" type="search" aria-label="搜尋查核事項" placeholder="搜尋查核事項…" oninput="renderConflictMap()"><span id="cmStats" style="font-size:12px;color:var(--ink-3)"></span>
@@ -304,6 +303,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
         <select id="fSrc" aria-label="問題提出來源" onchange="applyRevFilters()"></select>
         <select id="fCat" aria-label="問題類別" onchange="applyRevFilters()"></select>
         <select id="fWave" aria-label="提問批次" onchange="applyRevFilters()"></select>
+        <select id="fVerdict" onchange="applyRevFilters()"><option value="">Reviewer：全部</option><option value="keep">keep</option><option value="rewrite">rewrite</option><option value="suppress_already_answered">suppress_already_answered</option><option value="merge_duplicate">merge_duplicate</option><option value="defer">defer</option><option value="needs_human_check">needs_human_check</option></select><button onclick="rerunReviewer()">重跑 Reviewer</button><button onclick="addQuestion()">＋ 新增問題</button>
         <button onclick="toggleAll()" id="selAllBtn">全選／取消全選</button>
         <span style="font-size:12px;color:var(--ink-3)" id="fCount"></span>
       </div>
@@ -322,6 +322,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     </div>
   </section>
 
+  <section id="tab-learning"><div class="toolbar"><button class="primary" onclick="runLearning()">⚗ 產生候選規則</button><button onclick="loadLearning()">重新整理</button></div><div id="learningBody">載入中…</div></section>
   <section id="tab-chat" class="on">
     <div class="chat-hero"><div><div class="chat-eyebrow">案件研究</div><h2>專案對話</h2><p>從資料釐清問題，讓每個判斷都有依據。</p></div><div class="conversation-toolbar"><button class="history-toggle" onclick="toggleChatHistory(this)" aria-expanded="true" aria-controls="chatHistory" data-icon="message-square">討論紀錄</button><button onclick="newChat()" data-icon="plus">新增討論</button></div></div>
     <div class="chat-layout"><div class="chat-history" id="chatHistory"></div><div class="chat-main">
@@ -332,6 +333,16 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     </div></div>
   </section>
   <section id="tab-search">
+    <div class="panel">
+      <h2>單次文件問答 <span class="hint" id="ddHint">整份 Data Room 帶頁碼進 context，串流回答並標出處；點出處開原文</span></h2>
+      <div class="toolbar">
+        <input type="text" id="ddQ" placeholder="例：第 N 頁寫了什麼？／財報附註有沒有提到質押？／某股東持股各文件對得上嗎？" onkeydown="if(event.key==='Enter')askDD()">
+        <button class="primary" id="ddBtn" onclick="askDD()">問 AI</button>
+      </div>
+      <div class="askmeta" id="ddMeta"></div>
+      <div class="mdr" id="ddA" style="display:none"></div>
+    </div>
+
     <div class="panel">
       <h2>搜尋案件資料 <span class="hint" id="kbScope"></span></h2>
       <div class="toolbar"><input type="text" id="kbQ" placeholder="輸入關鍵字或文件用途，例如：股權結構、銀行借款、客戶合約" oninput="kbSearch()"></div>
@@ -408,6 +419,8 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <div class="boxfoot"><button id="evDl">下載原始檔</button><button class="primary" onclick="hide('evOverlay')">關閉</button></div>
   </div>
 </div>
+<div class="overlay" id="settingsOverlay"><div class="box" style="width:min(920px,100%)"><h3>進階設定</h3><p class="sub">模型、effort 與 persona 設定於下次執行生效；模型名稱可自行輸入。</p><div id="settingsBody"></div><div class="boxfoot"><button onclick="hide('settingsOverlay')">取消</button><button class="primary" onclick="saveSettings()">儲存設定</button></div></div></div>
+<div class="overlay" id="ruleEditOverlay"><div class="box"><h3>編輯候選規則</h3><p>修改後產生新版本，重新核准後才生效。</p><label>適用條件<textarea id="ruleWhen" style="width:100%"></textarea></label><label>指令<textarea id="ruleInstruction" style="width:100%"></textarea></label><label>例外（每行一項）<textarea id="ruleExceptions" style="width:100%"></textarea></label><div class="boxfoot"><button onclick="hide('ruleEditOverlay')">取消</button><button class="primary" onclick="saveRuleEdit()">提出新版</button></div></div></div>
 <div class="overlay" id="inputOverlay"><form class="box" style="width:min(440px,100%)" onsubmit="event.preventDefault();finishWorkspaceInput(true)"><h3 id="inputTitle">設定</h3><p class="sub" id="inputHint"></p><label class="field-label" id="inputLabel" for="workspaceInputValue">內容</label><input id="workspaceInputValue" type="text" style="width:100%" autocomplete="off"><div class="boxfoot"><button type="button" onclick="finishWorkspaceInput(false)">取消</button><button type="submit" class="primary">儲存</button></div></form></div>
 <div id="toast" role="status"></div>
 
@@ -554,6 +567,93 @@ async function loadEvPage(n){
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
 
+function skillDiff(before,after){
+ const oldLines=(before||'').split('\n'),newLines=(after||'').split('\n');
+ // Show exact removed/added lines; repeated unchanged lines remain in the side-by-side source.
+ const removed=oldLines.filter(line=>line&&!newLines.includes(line));
+ const added=newLines.filter(line=>line&&!oldLines.includes(line));
+ return '<pre class="mdview">'+removed.map(line=>'<span style="color:var(--red)">− '+esc(line)+'</span>').concat(added.map(line=>'<span style="color:var(--green)">+ '+esc(line)+'</span>')).join('\n')+'</pre>';
+}
+let LEARNING=null,EDIT_RULE=null;
+async function loadLearning(){
+ try{
+  const data=await api('/api/learning?'+enc({deal:cur}));LEARNING=data;
+  const card=r=>{
+   const source=data.feedback.filter(f=>r.source_feedback_ids.includes(f.feedback_id));
+   const last=data.runs.find(run=>run.rules.some(x=>x.rule_id===r.rule_id&&x.version===r.version));
+   return `<div class="panel"><h2>${esc(r.rule_id)} <span class="chip ${r.status==='approved'?'ok':r.status==='retired'?'todo':'warn'}">v${r.version} · ${esc(r.status)}</span></h2><p><b>適用：</b>${esc(r.applies_when)}</p><p><b>指令：</b>${esc(r.instruction)}</p><p><b>例外：</b>${esc(r.exceptions.join('；')||'無')}</p><p style="font-size:12px;color:var(--ink-2)">${esc(r.evidence_summary)}</p><p style="font-size:12px">${esc(r.scope)}${r.deal?' · 本案限定：'+esc(r.deal):''}${r.approved_at?' · 核准：'+esc(r.approved_at):''}${last?' · 最近載入：'+esc(last.run_id):''}${r.folded_into?' · 已納入 '+esc(r.folded_into):''}</p>
+   <details><summary>來源回饋（${source.length}）</summary>${source.map(f=>`<div class="card"><b>${esc(f.action)} · ${esc(f.reason)}</b><p>原句：${esc(f.before?.text||f.before?.q||'—')}</p><p>修改：${esc(f.after?.text||'—')}</p></div>`).join('')||'<p>來源回饋位於其他案件，請回來源案件檢視。</p>'}</details>
+   <div class="boxfoot">${r.status==='proposed'?`<button class="primary" data-rule="${esc(r.rule_id)}" data-v="${r.version}" onclick="ruleAction(this,'approve')">核准</button>`:''}${r.status!=='retired'?`<button data-rule="${esc(r.rule_id)}" data-v="${r.version}" onclick="editRule(this)">編輯提新版</button><button data-rule="${esc(r.rule_id)}" data-v="${r.version}" onclick="ruleAction(this,'retire')">${r.status==='proposed'?'退回':'停用'}</button>`:''}</div></div>`;
+  };
+  $('learningBody').innerHTML=`<div class="panel"><h2>每輪只有人問到的題數</h2><table><thead><tr><th>輪次</th><th>人獨有題</th></tr></thead><tbody>${data.kpi.map(k=>`<tr><td>Round ${k.round}</td><td>${k.human_only}</td></tr>`).join('')}</tbody></table><p style="font-size:12px;color:var(--ink-2)">依題目來源「你」統計，未比較的輪次不代表沒有漏題。</p></div>
+  <h3>候選規則</h3>${data.rules.filter(r=>r.status==='proposed').map(card).join('')||'<div class="emptynote">尚無候選規則；先在審核頁送出決定與理由。</div>'}
+  <h3>已核准規則</h3>${data.rules.filter(r=>r.status==='approved').map(card).join('')||'<p>尚無已核准規則。</p>'}
+  <details><summary>已退回／停用</summary>${data.rules.filter(r=>r.status==='retired').map(card).join('')}</details>
+  ${data.skill_proposals.map(p=>`<div class="panel"><h2>方法論升版：${esc(p.ref)}</h2><h4>差異（刪除 −／新增 +）</h4>${skillDiff(p.before,p.content)}<div class="evgrid"><div><h4>目前版本</h4><pre class="mdview">${esc(p.before||'（新方法論）')}</pre></div><div><h4>提案版本</h4><pre class="mdview">${esc(p.content)}</pre></div></div><p>折入規則：${esc(p.derived_from_rules.join('、'))}</p><button data-ref="${esc(p.ref)}" onclick="approveSkill(this.dataset.ref)">核准升版並停用已納入規則</button></div>`).join('')}
+  <div class="panel"><h2>題庫最近一次蒸餾摘要</h2><div class="mdr">${mdToHtml(data.summary||'尚無本輪蒸餾紀錄')}</div></div>`;
+ }catch(e){$('learningBody').textContent='載入失敗：'+e.message;}
+}
+async function runLearning(){try{await api('/api/learn',{method:'POST',body:JSON.stringify({deal:cur})});watchRun('learn');}catch(e){toast(e.message);}}
+async function ruleAction(el,action){try{await api('/api/rules',{method:'POST',body:JSON.stringify({rule_id:el.dataset.rule,version:Number(el.dataset.v),action,deal:cur})});await loadLearning();toast(action==='approve'?'規則已核准，下次派工生效':'規則已退回／停用');}catch(e){toast(e.message);}}
+function editRule(el){
+ EDIT_RULE=LEARNING.rules.find(r=>r.rule_id===el.dataset.rule&&r.version===Number(el.dataset.v));
+ $('ruleWhen').value=EDIT_RULE.applies_when;$('ruleInstruction').value=EDIT_RULE.instruction;$('ruleExceptions').value=EDIT_RULE.exceptions.join('\n');show('ruleEditOverlay');
+}
+async function saveRuleEdit(){try{await api('/api/rules',{method:'POST',body:JSON.stringify({rule_id:EDIT_RULE.rule_id,version:EDIT_RULE.version,action:'edit',patch:{applies_when:$('ruleWhen').value.trim(),instruction:$('ruleInstruction').value.trim(),exceptions:$('ruleExceptions').value.split('\n').map(x=>x.trim()).filter(Boolean)}})});hide('ruleEditOverlay');await loadLearning();toast('已提出新版，須重新核准');}catch(e){toast(e.message);}}
+async function approveSkill(ref){try{await api('/api/skills/graduate',{method:'POST',body:JSON.stringify({ref})});await loadLearning();await refreshSkills();toast('方法論升版已核准');}catch(e){toast(e.message);}}
+async function addQuestion(){
+ const text=window.prompt('新增問題：');if(!text?.trim())return;
+ const reason=window.prompt('為什麼問這題？');if(!reason?.trim())return;
+ try{await api('/api/questions/add',{method:'POST',body:JSON.stringify({deal:cur,text,reason})});await loadDraft();toast('問題已保存，來源標記為「你」');}catch(e){toast(e.message);}
+}
+async function refreshSkills(){
+  const d=await api('/api/skills');
+  $('skillsList').innerHTML=d.skills.map(k=>`<div style="font-size:12px;padding:6px 0"><label><input type="checkbox" data-skill="${esc(k.id)}" ${k.active?'checked':''} onchange="toggleSkills()"> ${esc(k.title)}</label> ${k.anonymized?'<span class="chip ok">去識別</span>':''}<button data-id="${esc(k.id)}" onclick="viewSkill(this.dataset.id)" style="font-size:11px;padding:2px 6px">檢視</button></div>`).join('');
+}
+async function toggleSkills(){try{const active=[...document.querySelectorAll('[data-skill]:checked')].map(el=>el.dataset.skill);await api('/api/skills',{method:'POST',body:JSON.stringify({active})});toast('方法論已更新');}catch(e){toast(e.message);await refreshSkills();}}
+async function viewSkill(id,ref){try{const k=await api('/api/skills/read?'+enc({id,...(ref?{ref}:{})}));$('cardTitle').textContent=id+' / '+k.file;$('cardBody').innerHTML=mdToHtml(k.content);show('cardOverlay');}catch(e){toast(e.message);}}
+async function uploadSkill(file){if(!file)return;try{await api('/api/skills/upload?'+enc({name:file.name}),{method:'POST',body:file});await refreshSkills();toast('方法論已加入並啟用');}catch(e){toast(e.message);}}
+let SETTINGS=null;
+async function refreshEngine(){
+  const e=await api('/api/engine');ENGINE=e;
+  const m=e.models;
+  $('engineFoot').innerHTML=`<b>${esc(e.provider)}</b> ${e.mock?'<span class="chip warn">假引擎</span>':''}<br>主：${esc(m.main.model)}<br>子：${esc(m.per_agent.reconciler?.model||'—')}<br>${e.cli?'CLI 可用':'CLI 未找到'} · ${e.api?'API key 已設定':'API key 未設定'}<br><button onclick="openSettings()">⚙ 進階設定</button>${e.provider==='codex'?'<button onclick="setToken()">設定 API key</button>':''}`;
+  $('aiHint').textContent='OpenAI 專案對話 · 按需檢索與記憶';
+  $('ddHint').textContent=`${e.provider} · ${e.askModel} · 預算 ${Math.round(e.askBudget/1000)}K tokens，超過則 BM25 挑頁`;
+  $('ddBtn').textContent='問 AI';
+}
+async function openSettings(){
+  try{SETTINGS=await api('/api/settings');renderSettings();show('settingsOverlay');}catch(e){toast(e.message);}
+}
+function renderSettings(){
+  const s=SETTINGS,p=s.provider,c=s[p];
+  const effort=(id,v)=>`<select id="${id}">${['low','medium','high'].map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}</select>`;
+  const model=(id,v)=>`<input type="text" id="${id}" value="${esc(v)}" list="modelOptions" style="width:100%">`;
+  $('settingsBody').innerHTML=`<div class="toolbar">${['codex','claude'].map(x=>`<label><input type="radio" name="provider" value="${x}" ${x===p?'checked':''} onchange="captureSettings();SETTINGS.provider=this.value;renderSettings()"> ${x}</label>`).join('')}<label><input type="checkbox" id="costMode" ${s.cost_mode?'checked':''}> 成本模式</label></div>
+  <datalist id="modelOptions">${[c.main_model,c.sub_model,c.cheap_model,c.ask_model].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+  <div class="cards">${[['main','主 session','main_model'],['sub','子代理','sub_model'],['mechanical','機械型（成本模式）','cheap_model']].map(([t,label,k])=>`<div class="card"><label>${label}${model('set-'+k,c[k])}</label>${effort('eff-'+t,c.effort[t])}</div>`).join('')}</div>
+  <label>Reviewer effort ${effort('eff-reviewer',c.effort.reviewer)}</label>
+  <details style="margin:14px 0"><summary>代理個別覆寫</summary><div class="scroll-x"><table><thead><tr><th>代理</th><th>模型（留空依預設）</th><th>effort</th></tr></thead><tbody>${Object.entries(s.agents).map(([n,a])=>`<tr><td>${esc(n)}</td><td><input data-agent-model="${n}" value="${esc(a.model||'')}" placeholder="依預設"></td><td><select data-agent-effort="${n}"><option value="">依預設</option>${['low','medium','high'].map(x=>`<option${a.effort===x?' selected':''}>${x}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></details>
+  <div id="personaSettings"></div>
+  <div class="card"><label>問 AI 模型 ${model('set-ask_model',c.ask_model)}</label><label>effort ${effort('set-ask_effort',c.ask_effort)}</label><label> 預算 tokens <input type="number" id="askBudget" min="1000" max="2000000" value="${c.ask_budget_tokens}"></label></div>`;
+  if(typeof renderPersonaSettings==='function')renderPersonaSettings();
+}
+function renderPersonaSettings(){
+  $('personaSettings').innerHTML='<h4>Persona 名單</h4><div class="toolbar">'+['fin','ops','ind','ic','tech','legal','model','people'].map(p=>`<label><input type="checkbox" data-persona="${p}" ${SETTINGS.personas.includes(p)?'checked':''}> ${p}</label>`).join('')+'</div><p style="font-size:12px;color:var(--ink-2);margin-bottom:12px">原型建議：工業 AI → tech＋legal；SaaS → model；專案混合 → model＋legal。</p>';
+}
+function captureSettings(){
+  const s=SETTINGS,c=s[s.provider];s.cost_mode=$('costMode').checked;
+  for(const k of ['main_model','sub_model','cheap_model','ask_model'])c[k]=$('set-'+k).value.trim();
+  for(const k of ['main','sub','mechanical','reviewer'])c.effort[k]=$('eff-'+k).value;
+  c.ask_effort=$('set-ask_effort').value;c.ask_budget_tokens=Number($('askBudget').value);
+  document.querySelectorAll('[data-agent-model]').forEach(el=>{const a=s.agents[el.dataset.agentModel];if(el.value.trim())a.model=el.value.trim();else delete a.model;});
+  document.querySelectorAll('[data-agent-effort]').forEach(el=>{const a=s.agents[el.dataset.agentEffort];if(el.value)a.effort=el.value;else delete a.effort;});
+  const checks=[...document.querySelectorAll('[data-persona]')];if(checks.length)s.personas=checks.filter(el=>el.checked).map(el=>el.dataset.persona);
+}
+async function saveSettings(){
+  try{captureSettings();await api('/api/settings',{method:'POST',body:JSON.stringify(SETTINGS)});hide('settingsOverlay');await refreshEngine();toast('設定已儲存，下次執行生效');}catch(e){toast('設定未儲存：'+e.message);}
+}
+
 const LIFE = {collecting:'收集資料中', drafted:'問題草稿完成，待團隊審核', merged:'合併版已產出', sent:'已發出，等待回覆', closed:'已結案'};
 
 async function loadDeals(sel){
@@ -571,15 +671,7 @@ async function loadDeals(sel){
       <span class="dn"><span class="dot ${dotc}"></span><span>${esc(d.name)}</span></span><span class="ds">${esc(ds)}</span></button>
       <button class="starbtn${d.state.starred?' on':''}" data-name="${esc(d.name)}" data-s="${d.state.starred?1:0}" aria-label="${d.state.starred?'取消置頂':'置頂'} ${esc(d.name)}" onclick="toggleStar(this)">${d.state.starred?'★':'☆'}</button></div>`;
   }).join('');
-  api('/api/engine').then(e => {
-    ENGINE = e;
-    const tokenChip = e.token ? '<span class="chip ok">OpenAI API key</span>' : '<span class="chip warn">使用環境變數或 Codex 登入</span>';
-    const askChip = e.api ? `<span class="chip ok" title="${esc(e.askModel)}">對話：按需檢索</span>` : (e.cli ? '<span class="chip warn" title="設 OPENAI_API_KEY 可改走直連 API（串流、快取）">對話：需 API key</span>' : '');
-    $('engineFoot').innerHTML = e.mock
-      ? '引擎：<span class="chip warn">假引擎模式</span>'
-      : (e.cli ? `引擎：<span title="${esc(e.cliPath||'')}">${esc(e.cli)}</span> ${tokenChip}<br><span style="display:inline-block;margin-top:6px">${askChip}</span><br><button style="margin-top:8px;font-size:12px;padding:4px 10px" onclick="setToken()">設定 OpenAI API key</button>` : '引擎：<span class="chip bad">找不到 CLI（設 CODEX_BIN）</span>' + (e.api ? '<br>' + askChip : ''));
-    $('aiHint').textContent = e.mock ? '示範模式' : (e.api ? '回答附資料來源' : '請設定 API key');
-  });
+  await refreshEngine();await refreshSkills();
   if (!sel && deals.length){const saved=localStorage.getItem('dd-active-case');pickDeal(deals.some(d=>d.name===saved)?saved:deals[0].name);}
 }
 
@@ -675,6 +767,9 @@ function renderOverview(){
         <button data-f="${esc(f)}" onclick="location.href='/api/download?'+enc({deal:cur,from:'qlist',file:this.dataset.f})">下載</button></div>`).join('')
     : '<div style="color:var(--ink-3);font-size:13px">尚無正式發出版本。完成問題審核後，即可上傳定稿清單。</div>';
   refreshLog();
+  api('/api/runs?'+enc({deal:cur})).then(({runs})=>{
+    $('runManifest').textContent=runs.slice(0,5).map(r=>`${r.started_at} · ${r.kind} · ${r.provider}${r.mock?' · 假引擎':''}\n主：${r.models.main.model} / ${r.models.main.effort}\npersonas：${r.personas.join(', ')}\n規則：${JSON.stringify(r.rules)} · exit=${r.exit_code??'執行中'}`).join('\n\n')||'尚無執行紀錄';
+  }).catch(e=>{$('runManifest').textContent=e.message;});
 }
 async function refreshLog(){
   try {
@@ -716,11 +811,13 @@ function idxCell(f){
   if(i.error)return `<span class="chip warn" title="${esc(i.error)}">抽取失敗</span>`;
   return `<span class="idxcell" title="${esc((i.summary||'')+' '+(i.warnings||[]).join('；'))} ${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.status==='ready'?' · 中文索引就緒':i.status==='partial'?' · <span class="chip warn">部分完成</span>':''}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
 }
+function verifyChip(f){const v=f.verification;if(!v)return '';return `<button class="chip ${v.critical_miss?'bad':v.passed?'ok':'warn'}" onclick="showVerification()">${v.critical_miss?'✗ 關鍵漏抽':(v.passed?'✓ ':'⚠ ')+Math.round(v.hit_rate*100)+'%'}</button> `;}
+async function showVerification(){try{const v=await api('/api/card-verify?'+enc({deal:cur}));$('cardTitle').textContent='字卡逐筆核對';$('cardBody').innerHTML=mdToHtml(v.content||'尚未核對');show('cardOverlay');}catch(e){toast(e.message);}}
 function docRow(f, withRound){
   return `<tr>
     <td class="file">${esc(f.name)}${f.index?.summary?`<details style="font-size:11px;max-width:360px;white-space:normal"><summary>中文文件說明</summary>${esc(f.index.summary)}</details>`:''}</td>${withRound?`<td>${esc(f.round)}</td>`:''}<td>${catSel(f)}</td><td class="num">${humanSize(f.size)}</td>
     <td>${idxCell(f)}</td>
-    <td>${f.card ? `<button class="ibtn" title="開啟文件摘要" aria-label="開啟文件摘要" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">待分析</span> <button class="ibtn" title="分析單一文件：文件摘要 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="分析單一文件" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">分析</button>`}</td>
+    <td>${verifyChip(f)}${f.card ? `<button class="ibtn" title="開啟文件摘要" aria-label="開啟文件摘要" data-f="${esc(f.name)}" onclick="openCard(this.dataset.f)">${ICO.card}</button>` : `<span class="chip todo">待分析</span> <button class="ibtn" title="分析單一文件：文件摘要 → 增量對帳 → 新題（單檔，幾分鐘）" aria-label="分析單一文件" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="ingestOne(this.dataset.f,this.dataset.r)">分析</button>`}</td>
     <td style="white-space:nowrap"><button class="ibtn" title="開證據檢視器（翻頁＋索引文字）" aria-label="證據" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openEvidence(this.dataset.f,this.dataset.r,'p.1')">${ICO.eye}</button>
     <button class="ibtn" title="下載/開啟檔案" aria-label="下載" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="openDoc(this.dataset.f,this.dataset.r)">${ICO.dl}</button>
     <button class="ibtn delbtn" title="刪除（歸檔至 _archive/）" aria-label="刪除" data-f="${esc(f.name)}" data-r="${esc(f.round)}" onclick="archiveDoc(this)">${ICO.trash}</button></td></tr>`;
@@ -824,6 +921,8 @@ function fmtVal(v, unit){
 let cmLimit=30, cmKey="";
 function moreFindings(){cmLimit+=30;renderConflictMap();}
 function renderConflictMap(){
+  const p=FACTS.provenance;$('factsProvenance').textContent=p?.kind==='engine'?'引擎產出 · '+p.run_id:p?.kind==='handwritten'?'手寫示範':'來源未標示';
+  $('factsProvenance').title=p?.note||'來源尚未驗證';
  const el=$('cmap'),facts=FACTS.facts||[],docs=FACTS.docs||{};
  const rows=ReviewUI.findings(facts,$('cmFilter').value,$('cmQuery').value);
  const key=cur+'|'+$('cmFilter').value+'|'+$('cmQuery').value;if(key!==cmKey){cmKey=key;cmLimit=30;}
@@ -839,6 +938,7 @@ function renderConflictMap(){
 function renderNotes(){ $('notesTa').value = D.notes || ''; $('notesStatus').textContent='修改後請儲存'; }
 
 function pickTab(t){
+  if(t==='learning'&&cur)loadLearning();
   const title=document.querySelector('.tab[data-t="'+t+'"]');if(title&&$('workspaceLocation'))$('workspaceLocation').textContent=title.childNodes.length?title.textContent.replace(/\d+|—/g,'').trim():t;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   document.querySelectorAll('main > section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
@@ -848,19 +948,20 @@ async function uploadFiles(fl){
   const files = Array.from(fl || []);
   if (!files.length) return;
   const round = D.state.round;
-  let done = 0; const fail = [];
+  let done = 0,replaced = 0; const fail = [];
   toast(`上傳中… 0/${files.length}`);
   await Promise.all(files.map(async f => {
     try {
       const r = await fetch('/api/upload?' + enc({deal:cur, round, name:f.name}), {method:'POST', body:f});
       if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || r.status);
+      const result=await r.json();if(result.replaced)replaced++;
       done++;
     } catch(e) { fail.push(f.name); }
     toast(`上傳中… ${done}/${files.length}`);
   }));
   toast(fail.length
     ? `完成 ${done}/${files.length}，失敗：${fail.join('、')}（可重新上傳失敗的檔案）`
-    : `已存入 ${done} 個檔案 → ${cur}/round${round}/`);
+    : `已存入 ${done} 個檔案${replaced?`，${replaced} 份舊版已歸檔`:""} → ${cur}/round${round}/`);
   await pickDeal(cur); pickTab('docs');
 }
 function archiveDoc(btn){
@@ -906,7 +1007,7 @@ async function saveNotes(){
  catch(e){if(cur===deal)$('notesStatus').textContent='儲存失敗，內容仍保留在編輯區';toast(e.message)}finally{button.disabled=false;}
 }
 
-function curModel(){ return $('modelSel').value; }
+function curModel(){ return 'default'; }
 async function runPipeline(){
   try {
     await api('/api/run',{method:'POST',body:JSON.stringify({deal:cur,model:curModel()})});
@@ -921,7 +1022,7 @@ async function runDistill(){
   } catch(e){ toast('無法啟動：'+e.message); }
 }
 const RUN_EST = {pipeline: 12*60e3, merge: 6*60e3, distill: 6*60e3, ingest: 3*60e3, resume: 10*60e3};
-const RUN_LABEL = {pipeline: '流程', merge: '合併', distill: '題庫經驗整理', ingest: '單檔增量', resume: '流程'};
+const RUN_LABEL = {learn:'即時蒸餾',review:'獨立審題',pipeline: '流程', merge: '合併', distill: '題庫經驗整理', ingest: '單檔增量', resume: '流程'};
 let runStart = 0, evSince = 0;
 function watchRun(kind){
   kind = kind || 'resume';
@@ -979,10 +1080,26 @@ function evidenceChips(ev){
   });
   return `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:11.5px;color:var(--ink-3)">證據</span>${chips.join('')}</div>`;
 }
+const VERDICT_STYLE={keep:'ok',rewrite:'warn',suppress_already_answered:'bad',merge_duplicate:'todo',defer:'todo',needs_human_check:'run'};
+function reviewMarkup(x,i){
+  const r=x.review;if(!r)return '';
+  return `<div style="margin-top:8px"><span class="chip ${VERDICT_STYLE[r.verdict]}">${esc(r.verdict)}</span>${x.review_advisory?' <span class="chip todo">僅建議，由你確認</span>':''}<span style="font-size:12px"> ${esc(r.reason)}</span>${r.verdict==='suppress_already_answered'?` <button onclick="$('qr${i}').classList.remove('suppressed')">展開</button> <button onclick="overrideReview(${i})">恢復原題</button>`:` <button onclick="overrideReview(${i})">推翻建議</button>`}
+  ${evidenceChips(r.answered_at)}
+  <div class="reviewdetail">${r.verdict==='rewrite'?`<details open><summary>原句／改寫對照</summary><p><b>原句：</b>${esc(x.original_text)}</p><p><b>建議：</b>${citeLinks(esc(r.revised_question))}</p></details>`:''}</div></div>`;
+}
+function overrideReview(i){
+  const reason=window.prompt('請說明推翻 Reviewer 的理由：');if(!reason?.trim())return;
+  const x=draft[i];x.override_review=true;x.override_reason=reason.trim();
+  const row=$('qr'+i);row.classList.remove('suppressed','cut');row.querySelector('input[type=checkbox]').checked=true;
+  if(x.original_text){EDITS[i]=x.original_text;$('qt'+i).textContent=x.original_text;}
+  saveRevState();updateCnt();toast('已記錄，送出決定時儲存回饋');
+}
+async function rerunReviewer(){try{await api('/api/review-run',{method:'POST',body:JSON.stringify({deal:cur})});watchRun('review');}catch(e){toast(e.message);}}
 async function loadDraft(){
   const hist = viewRound != null;
   const d = await api('/api/draft?' + enc(hist ? {deal:cur, round:viewRound} : {deal:cur}));
   draft = d.questions; draftMerged = d.merged;
+  if(d.review_provenance?.kind==='handwritten')toast('Reviewer 結果為手寫 UI 示範，尚未經模型驗證');
   $('histBanner').style.display = hist ? 'flex' : 'none';
   if (hist) $('histLabel').textContent = `歷史檢視：Round ${viewRound}（已發出輪次，唯讀）`;
   if (draftMerged) {
@@ -1005,9 +1122,10 @@ async function loadDraft(){
   $('mergeHint').textContent = draftMerged ? '已合併（含來源標記），可重傳新版再合併' : '未合併：未標記作者的題目顯示為 AI';
   $('qlist').innerHTML = draft.map((x,i)=>{
     const src = x.source || 'AI';
+    const suppressed=x.review?.verdict==='suppress_already_answered'&&!x.review_advisory;
     return `
-    <div class="qrow" id="qr${i}" data-src="${esc(src)}" data-cat="${esc(x.cat)}" data-wave="${esc(x.wave)}" data-ch="${esc(x.channel)}">
-      <input type="checkbox" checked onchange="rowToggle(this,${i})" aria-label="保留第 ${i+1} 題">
+    <div class="qrow${suppressed?' suppressed cut':''}" data-verdict="${esc(x.review?.verdict||'')}" id="qr${i}" data-src="${esc(src)}" data-cat="${esc(x.cat)}" data-wave="${esc(x.wave)}" data-ch="${esc(x.channel)}">
+      <input type="checkbox" ${suppressed?'':'checked'} onchange="rowToggle(this,${i})" aria-label="保留第 ${i+1} 題">
       <div class="qb">
         <div class="qmeta"><span class="chip run">Q${x.no}</span>
           ${x.delta?'<span class="chip delta">新增（單檔增量）</span>':''}
@@ -1015,12 +1133,13 @@ async function loadDraft(){
           <span class="cat">${esc(x.cat)}</span>
           ${x.wave?`<span class="cat">波次${esc(x.wave)}</span>`:''}
           <button class="qedit" onclick="editQ(${i})">修改問法</button></div>
+        ${reviewMarkup(x,i)}
         <p class="qtext" id="qt${i}">${esc(x.q)}</p>
         ${x.why?`<details class="why"><summary>出處與動機${evidenceChips(x.evidence)?'':''}</summary><div>${citeLinks(esc(x.why))}</div></details>`:''}
         ${evidenceChips(x.evidence)}
         <div class="reasons"><span style="font-size:12px;color:var(--ink-3)">不採用原因：</span>
           ${['太早問','改口頭','不適用','重複','其他'].map(r=>`<button class="rchip" onclick="pickReason(this,${i})">${r}</button>`).join('')}
-          <input type="text" class="otherbox" id="ob${i}" placeholder="自己寫一句原因…" oninput="saveRevState()">
+          <input type="text" class="otherbox" style="display:inline-block;width:100%" id="ob${i}" value="${suppressed?esc(x.review.reason):''}" placeholder="必填：具體說明為何砍題…" oninput="saveRevState()">
         </div>
       </div>
     </div>`;}).join('');
@@ -1038,7 +1157,7 @@ async function loadDraft(){
       const {decisions} = await api('/api/reviewlog?' + enc({deal:cur, round:viewRound}));
       document.querySelectorAll('.qrow').forEach((r,i)=>{
         if (!draft[i]) return;
-        const dcx = decisions[String(draft[i].no)]; if (!dcx) return;
+        const dcx = decisions[draft[i].question_id] || decisions[String(draft[i].no)]; if (!dcx) return;
         if (!dcx.keep){
           const cb = r.querySelector('input[type=checkbox]');
           cb.checked = false; r.classList.add('cut');
@@ -1058,10 +1177,10 @@ async function loadDraft(){
   updateCnt();
 }
 function applyRevFilters(){
-  const fs2={src:$('fSrc').value,cat:$('fCat').value,wave:$('fWave').value};
+  const fs2={src:$('fSrc').value,cat:$('fCat').value,wave:$('fWave').value,verdict:$('fVerdict').value};
   let shown=0;
   document.querySelectorAll('.qrow').forEach(r=>{
-    const ok=(!fs2.src||r.dataset.src===fs2.src)&&(!fs2.cat||r.dataset.cat===fs2.cat)&&(!fs2.wave||r.dataset.wave===fs2.wave);
+    const ok=(!fs2.src||r.dataset.src===fs2.src)&&(!fs2.cat||r.dataset.cat===fs2.cat)&&(!fs2.wave||r.dataset.wave===fs2.wave)&&(!fs2.verdict||r.dataset.verdict===fs2.verdict);
     r.style.display=ok?'':'none'; if(ok)shown++;
   });
   $('fCount').textContent=`顯示 ${shown}／${draft.length} 題`;
@@ -1097,7 +1216,7 @@ function rowToggle(cb,i){ $('qr'+i).classList.toggle('cut',!cb.checked); updateC
 function pickReason(el,i){
   el.parentElement.querySelectorAll('.rchip').forEach(c=>{if(c!==el)c.classList.remove('sel')});
   el.classList.toggle('sel');
-  $('ob'+i).style.display = (el.textContent==='其他'&&el.classList.contains('sel'))?'inline-block':'none';
+  $('ob'+i).style.display = 'inline-block';
   saveRevState();
 }
 // 審核中的勾選/原因/編輯即時存 localStorage：切輪次、切案件、重新整理都不會消失
@@ -1111,8 +1230,8 @@ function saveRevState(){
     const sel = r.querySelector('.rchip.sel');
     const ob = $('ob'+i);
     const e = EDITS[i];
-    if (cb.checked && !sel && !e && !(ob && ob.value)) return;
-    st[draft[i].no] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'' };
+
+    st[draft[i].question_id] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'', override_review:draft[i].override_review||false, override_reason:draft[i].override_reason||'' };
   });
   localStorage.setItem(revKey(), JSON.stringify(st));
 }
@@ -1120,11 +1239,12 @@ function restoreRevState(){
   let st; try { st = JSON.parse(localStorage.getItem(revKey())||'{}'); } catch { st = {}; }
   document.querySelectorAll('.qrow').forEach((r,i)=>{
     if (!draft[i]) return;
-    const s = st[draft[i].no]; if (!s) return;
+    const s = st[draft[i].question_id]; if (!s) return;
     const cb = r.querySelector('input[type=checkbox]');
-    if (!s.keep && cb.checked && !cb.disabled){ cb.checked = false; r.classList.add('cut'); }
+    if(!cb.disabled){cb.checked=s.keep;r.classList.toggle('cut',!s.keep);if(s.keep)r.classList.remove('suppressed');}
+    draft[i].override_review=s.override_review;draft[i].override_reason=s.override_reason;
     if (s.reason) r.querySelectorAll('.rchip').forEach(c=>{ if (c.textContent === s.reason) c.classList.add('sel'); });
-    if (s.reason === '其他'){ const ob = $('ob'+i); if (ob){ ob.style.display='inline-block'; ob.value = s.other || ''; } }
+    if (s.other){ const ob = $('ob'+i); if (ob){ ob.style.display='inline-block'; ob.value = s.other || ''; } }
     if (s.edited){ EDITS[i] = s.edited; $('qt'+i).textContent = s.edited; }
   });
   updateCnt();
@@ -1155,10 +1275,11 @@ async function submitReview(){
     const keep=row.querySelector('input[type=checkbox]').checked;
     let reason='';
     if(!keep){const s=row.querySelector('.rchip.sel');reason=s?s.textContent:'';
-      if(reason==='其他')reason='其他：'+($('ob'+i).value.trim()||'（未填）');}
-    return {no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||''};
+      const detail=$('ob'+i).value.trim();reason=detail?([reason,detail].filter(Boolean).join('：')):'';}
+    return {question_id:x.question_id,no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||'',override_review:x.override_review||false,override_reason:x.override_reason||''};
   });
   try {
+    if(decisions.some(d=>!d.keep&&!d.reason.trim()))return toast('每一題砍題都必須填寫具體理由');
     const r = await api('/api/review',{method:'POST',body:JSON.stringify({deal:cur,decisions})});
     localStorage.removeItem(revKey());
     D.state.lifecycle='merged';
@@ -1167,7 +1288,8 @@ async function submitReview(){
       <button data-f="${esc(r.xlsx)}" onclick="location.href='/api/download?'+enc({deal:cur,file:this.dataset.f})">⬇ 下載 ${esc(r.xlsx)}</button>
       <span style="font-size:12px;color:var(--ink-3)">已存 _analysis/drafts/ · 決定已入 diff-reports/</span>`;
     $('finalBlock').style.display='flex';
-    toast('合併版已產出，拿去與同事定稿');
+    toast(r.learning?'合併版已產出，候選規則產生中':'合併版已產出；引擎忙碌時可至學習頁手動產生規則');
+    if(r.learning)watchRun('learn');
   } catch(e){ toast('失敗：'+e.message); }
 }
 async function uploadFinal(fl){
@@ -1231,6 +1353,35 @@ function kbSearch(){
     }catch(e){if(version===kbVersion&&deal===cur){$('searchStatus').textContent='搜尋暫時無法完成，請重試';$('kbHits').textContent=e.message;}}finally{if(version===kbVersion)$('kbHits').removeAttribute('aria-busy');}
   },250);
 }
+async function askDD(){
+  const qv=$('ddQ').value.trim(); if(!qv)return;
+  $('ddBtn').disabled=true;$('ddBtn').textContent='思考中…';
+  $('ddA').style.display='block';$('ddA').textContent='（組 context 中…）';
+  $('ddMeta').textContent='';
+  const t0=Date.now(); let text='', firstAt=0, meta=null;
+  const render=()=>{ $('ddA').innerHTML=citeLinks(mdToHtml(text))+(firstAt?'':''); };
+  try{
+    const r=await fetch('/api/ask',{method:'POST',body:JSON.stringify({deal:cur,question:qv,model:curModel()})});
+    if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||r.status); }
+    const reader=r.body.getReader(); const dec=new TextDecoder(); let buf='';
+    while(true){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      let i; while((i=buf.indexOf('\n\n'))>=0){
+        const chunk=buf.slice(0,i); buf=buf.slice(i+2);
+        const line=chunk.split('\n').find(l=>l.startsWith('data: ')); if(!line) continue;
+        let ev; try{ ev=JSON.parse(line.slice(6)); }catch{ continue; }
+        if(ev.meta){ meta=ev.meta; $('ddMeta').textContent=`${meta.provider} · ${meta.mode==='api'?'直連 API · '+meta.model:meta.mode==='cli'?'CLI':'假引擎'} · ${meta.retrieval} · ${meta.docs} 份文件 · ${meta.pages} 頁 · 約 ${((meta.tokens||0)/1000).toFixed(0)}K tokens${meta.whole?'（整份 Data Room 進 context）':`（全案約 ${((meta.totalTokens||0)/1000).toFixed(0)}K 超過預算 ${((meta.budget||0)/1000).toFixed(0)}K，BM25 挑頁）`}`; }
+        if(ev.delta){ if(!firstAt) firstAt=Date.now(); text+=ev.delta; render(); }
+        if(ev.error){ text+=`\n\n**錯誤：**${ev.error}`; render(); }
+        if(ev.usage){ const u=ev.usage; const cr=u.cache_read_input_tokens??u.input_tokens_details?.cached_tokens??u.cached_input_tokens??null, cw=u.cache_creation_input_tokens||0; $('ddMeta').textContent += ` · 首字 ${firstAt?((firstAt-t0)/1000).toFixed(1):'—'}s · 總 ${((Date.now()-t0)/1000).toFixed(1)}s · in ${(u.input_tokens||0).toLocaleString()} / cache 讀 ${cr==null?"未知":cr.toLocaleString()} 寫 ${cw.toLocaleString()} / out ${(u.output_tokens||0).toLocaleString()}`; }
+      }
+    }
+    if(!text) $('ddA').textContent='（沒有回答）';
+  }catch(e){$('ddA').textContent='失敗：'+e.message;}
+  $('ddBtn').disabled=false;$('ddBtn').textContent='問 AI';
+}
+
 
 const HELP = `## 開始一個盡調案件
 1. **整理資料室**：上傳財報、股權表、簡報或合約。系統會抽取內容並建立中文搜尋索引；可在文件清單查看處理狀態。
@@ -1245,6 +1396,12 @@ const HELP = `## 開始一個盡調案件
 - **搜尋資料**：以中文關鍵字或用途找文件，直接查閱原文。
 - AI 文件說明協助找資料，不等同原文證據；重要數字與條款仍應核對來源。
 
+## 方法論、審題與學習
+側欄可啟用方法論；Reviewer 建議可恢復或改寫，砍題需填理由。學習頁核准規則後，下次派工附上；規則也可提案升版為方法論。
+
+## 單次文件問答
+搜尋資料頁提供雙 provider 問答，依進階設定選模型、effort 與預算，超預算使用 BM25 挑頁。專案對話另保留 OpenAI 的片段檢索、討論紀錄與記憶。
+
 ## 文件處理狀態
 - **中文索引就緒**：可搜尋抽取文字與中文文件說明。
 - **部分完成**：部分文字、圖片或摘要尚未完整處理，查看原因後再決定是否重試。
@@ -1255,7 +1412,5 @@ const HELP = `## 開始一個盡調案件
 模型、結案與重新開啟收在右上角「案件選項」。結案會同步整理題庫經驗。連線設定在左側「連線與設定」。
 刪除文件會保留封存副本；案件刪除請謹慎操作。技術紀錄可在案件總覽展開。`;
 $('helpBody').innerHTML = mdToHtml(HELP);
-const savedModel = localStorage.getItem('qlist_model') || 'default';
-$('modelSel').value = [...$('modelSel').options].some(o => o.value === savedModel) ? savedModel : 'default';
 loadDeals();
 </script>

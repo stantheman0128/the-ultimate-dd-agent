@@ -230,7 +230,7 @@ async function askAI() {
     if (c.messages.length === 2) c.title = question.slice(0, 44);
     $("aiQ").value = "";
     renderChat();
-    const r = await fetch("/api/ask", {
+    const r = await fetch("/api/chat/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
