@@ -13,3 +13,7 @@ model: inherit
 每題 number-anchored，指定期間，附檔名、頁碼或 Sheet!B4、具體引用與一句決策動機。證據欄用 doc:loc。同步產 persona_tech.json，含 text、cat、why、evidence、wave、channel、source、revision、persona，由主 session 分配穩定 question_id。
 題數不設上限：覆蓋靠廣度，砍題交給 question-reviewer 與人；每題都要有出處與動機。已披露數字引用後問缺口，不重複索取。
 完成只回報 persona-tech 完成：N 題。
+
+讀字卡時必讀關鍵數字表、重要陳述、疑點段。
+
+需要核對出處時先執行 `python3 _workbench/search.py "<案件>" "<query>" --top 20`，再只讀命中的頁／格，不整份載入索引 JSON。主要輸入仍為字卡與 facts；persona-model 僅可讀指定財測 xlsx 的值與公式。

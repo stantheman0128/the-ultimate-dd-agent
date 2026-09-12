@@ -32,3 +32,9 @@ model: inherit
 
 - 絕不讀任何檔名含 Q-list / Qlist 的檔案，也不讀其他 persona 的草稿。
 - 完成後只回報：`persona-ic 完成：N 題（wave1 a / wave2 b / wave3 c）`。
+
+讀字卡時必讀關鍵數字表、重要陳述、疑點段。
+
+每條重要陳述都是候選題：問依據、問文件、問例外；不得把公司的斷言當作已驗證事實。
+
+需要核對出處時先執行 `python3 _workbench/search.py "<案件>" "<query>" --top 20`，再只讀命中的頁／格，不整份載入索引 JSON。主要輸入仍為字卡與 facts；persona-model 僅可讀指定財測 xlsx 的值與公式。

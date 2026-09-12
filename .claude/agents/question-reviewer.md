@@ -11,7 +11,7 @@ model: inherit
 
 - `<案件>/_analysis/drafts/questions_RN.json`（沒有就讀 `draft_RN.md` 的表格）。
 - `<案件>/_analysis/facts.json`、`facts.md`：對帳結果與矛盾清單。
-- `<案件>/_analysis/index/*.index.json`：原文逐頁 / 逐格，用 Grep 或 python3 讀特定頁；不要整份載入。
+- `<案件>/_analysis/index/*.index.json`：原文逐頁 / 逐格，先 `python3 _workbench/search.py "<案件>" "<query>" --top 20`，再用 python3 只輸出命中的頁／格；不要整份載入。
 - `<案件>/_analysis/cards/*.md`：字卡，用 Grep 找關鍵字。
 - `<案件>/qlist/`：歷輪最終發出版；`<案件>/roundN/` 內公司回覆的 Q-list xlsx（用 python3＋openpyxl 讀回答欄）。追問輪（round ≥ 2）這兩項必讀。
 - `<案件>/_notes.md`。
