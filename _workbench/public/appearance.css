@@ -1,0 +1,116 @@
+/* Shared controls; the classic skin below never hides or replaces functionality. */
+.appearance-picker { display:grid; gap:6px; margin:0 0 16px; min-width:0; }
+.appearance-picker label { font-size:12px; color:var(--ink-2); }
+.appearance-picker select { width:100%; min-width:0; max-width:100%; font-size:12px; }
+
+:root[data-ui="classic"] {
+  color-scheme:light;
+  --bg:#F2F3EF; --surface:#FFFFFF; --surface-2:#FAFBF8;
+  --ink:#20261F; --ink-2:#5A635B; --ink-3:#707B71;
+  --line:#E3E6DF; --line-2:#D3D8CF;
+  --accent:#2E6B4E; --accent-ink:#FFFFFF; --accent-soft:#E7F0EA; --accent-line:#BCD4C6;
+  --warn:#A8761C; --warn-soft:#F6EEDC;
+  --danger:#AC3E2C; --danger-soft:#F7E7E3;
+  --info:#395F86; --info-soft:#E7EEF5;
+  --font-ui:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;
+}
+@media (prefers-color-scheme:dark) {
+  :root[data-ui="classic"] {
+    color-scheme:dark;
+    --bg:#151816; --surface:#1D211F; --surface-2:#232826;
+    --ink:#E4E8E1; --ink-2:#A9B3AB; --ink-3:#98A29A;
+    --line:#2C332E; --line-2:#3A423C;
+    --accent:#63AF87; --accent-ink:#10241A; --accent-soft:#24352C; --accent-line:#3D5A4B;
+    --warn:#D6A94E; --warn-soft:#332B18;
+    --danger:#D97663; --danger-soft:#33201C;
+    --info:#7FA6C9; --info-soft:#20303F;
+  }
+}
+:root[data-ui="classic"] body { font-size:14px; letter-spacing:normal; }
+:root[data-ui="classic"] .app { max-width:1280px; margin:0 auto; }
+:root[data-ui="classic"] .app>aside { width:232px; background:var(--bg); padding:20px 14px; }
+:root[data-ui="classic"] .app>main { padding:24px 28px 60px; display:flex; flex-direction:column; }
+:root[data-ui="classic"] .app>main>section { order:4; }
+:root[data-ui="classic"] .dealhead { order:0; padding:0; }
+:root[data-ui="classic"] .dealhead h1 { font-size:21px; font-weight:600; letter-spacing:normal; }
+:root[data-ui="classic"] .dealhead .meta { font-size:12.5px; color:var(--ink-2); }
+:root[data-ui="classic"] .roundbar { order:1; margin:14px 0 0; }
+:root[data-ui="classic"] #workspaceNav { order:2; margin:18px 0 22px; padding:0; min-height:0; background:var(--bg); gap:2px; }
+:root[data-ui="classic"] #runbar { order:3; }
+:root[data-ui="classic"] #workspaceNav .tab { font-size:13.5px; padding:8px 12px; border-radius:0; background:none; border-bottom:2px solid transparent; color:var(--ink-2); box-shadow:none; }
+:root[data-ui="classic"] #workspaceNav .tab.on { color:var(--ink); border-bottom-color:var(--accent); }
+:root[data-ui="classic"] #workspaceNav .tab .n { border:1px solid var(--line); border-radius:999px; padding:0 6px; background:var(--surface-2); }
+:root[data-ui="classic"] .brand { font-size:15px; padding:2px 8px 18px; }
+:root[data-ui="classic"] .brand-mark { background:var(--accent); color:var(--accent-ink); }
+:root[data-ui="classic"] .sidelabel { font-size:12px; color:var(--ink-3); }
+:root[data-ui="classic"] .deal { border:1px solid transparent; border-radius:10px; }
+:root[data-ui="classic"] .deal.on { background:var(--surface); border-color:var(--line); }
+:root[data-ui="classic"] .deal .dn { font-size:13.5px; }
+:root[data-ui="classic"] .deal .ds { font-size:12px; }
+:root[data-ui="classic"] .rpill { border-radius:999px; font-size:12.5px; padding:4px 14px; background:var(--surface); }
+:root[data-ui="classic"] .rpill.cur { color:var(--accent-ink); background:var(--accent); border-color:var(--accent); }
+:root[data-ui="classic"] .rpill.done { color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line); }
+:root[data-ui="classic"] button { font-size:13px; border-radius:8px; }
+:root[data-ui="classic"] button:hover { background:var(--surface-2); border-color:var(--ink-3); }
+:root[data-ui="classic"] button.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+:root[data-ui="classic"] :is(input,textarea,select) { background:var(--surface); color:var(--ink); border-color:var(--line-2); font-size:13px; accent-color:var(--accent); }
+:root[data-ui="classic"] .case-filter { background:var(--surface)!important; font-size:12px!important; }
+:root[data-ui="classic"] :is(button,summary,input,textarea,select,[tabindex]):focus-visible { outline-color:var(--accent); }
+:root[data-ui="classic"] :is(.panel,.box,.chat-main,.finding-source,.memory-entry,#memoryDialog,.more-content) { background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--ink); }
+:root[data-ui="classic"] .panel { padding:18px 20px; margin-bottom:16px; }
+:root[data-ui="classic"] .panel h2 { font-size:15px; letter-spacing:normal; }
+:root[data-ui="classic"] .panel h2 .hint { font-size:12px; color:var(--ink-3); }
+:root[data-ui="classic"] .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; border:0; margin-bottom:20px; }
+:root[data-ui="classic"] .card { border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--surface); }
+:root[data-ui="classic"] .card .k { font-size:12px; }
+:root[data-ui="classic"] .card .v { font-size:22px; font-weight:600; letter-spacing:normal; }
+:root[data-ui="classic"] .card .v small { font-size:12px; }
+:root[data-ui="classic"] table { font-size:13px; }
+:root[data-ui="classic"] th { font-size:12px; color:var(--ink-3); background:var(--surface-2); }
+:root[data-ui="classic"] td { padding:9px 12px; border-color:var(--line); }
+:root[data-ui="classic"] :is(tbody tr:hover,.qrow:hover,.qrow:focus-within,.deal:hover) { background:var(--surface-2); }
+:root[data-ui="classic"] :is(.chip,.cat) { border-radius:999px; font-size:11.5px; }
+:root[data-ui="classic"] :is(.toolbar select,.idxcell,.why summary,.qedit,.finding-heading small,.finding-doc,.finding-location) { font-size:12px; }
+:root[data-ui="classic"] :is(.dropzone,.mdr,.mline,.emptynote,.evnav,.runlog,.finding-body,#memoryEditor,.chat-topline,.memory-bar,.chat-source,.why div) { background:var(--surface-2); color:var(--ink-2); border-color:var(--line); }
+:root[data-ui="classic"] :is(.dropzone:hover,.dropzone.drag,.workflow .current,.chat-history button.on,.chat-message.user,.conversation-emblem,.starter-icon,.message-avatar) { background:var(--accent-soft); color:var(--accent); border-color:var(--accent-line); }
+:root[data-ui="classic"] .chat-history button.on { border-left-color:var(--accent)!important; }
+:root[data-ui="classic"] .finding-conflict { border-left-color:var(--danger); }
+:root[data-ui="classic"] :is(.finding,.finding>summary,.chat-composer,.chat-live,.conversation-toolbar button,.more-menu>summary,.app>aside>.newcase,#jumpLatest) { background:var(--surface); color:var(--ink); border-color:var(--line); }
+:root[data-ui="classic"] .finding-status { background:var(--surface-2); color:var(--ink-2); }
+:root[data-ui="classic"] .finding-conflict .finding-status { background:var(--danger-soft); color:var(--danger); }
+:root[data-ui="classic"] .chat-main { box-shadow:none; }
+:root[data-ui="classic"] .chat-log { background:var(--surface); }
+:root[data-ui="classic"] .chat-message details { background:var(--surface-2); color:var(--ink-2); border-color:var(--line); font-size:12px; }
+:root[data-ui="classic"] .chat-message details summary { color:var(--ink-2); }
+:root[data-ui="classic"] .chat-message .mdr th { background:var(--surface-2); }
+:root[data-ui="classic"] .chat-error { background:var(--danger-soft); border-color:var(--danger); }
+:root[data-ui="classic"] .chat-message .mdr { background:transparent; color:var(--ink); font-size:14px; }
+:root[data-ui="classic"] .chat-message.user { background:var(--accent-soft); }
+:root[data-ui="classic"] .chat-composer textarea { background:var(--surface); color:var(--ink); font-size:14px; }
+:root[data-ui="classic"] .chat-starters button { background:var(--surface); color:var(--ink); border-color:var(--line); }
+:root[data-ui="classic"] .chat-starters button:hover { background:var(--accent-soft); border-color:var(--accent-line); }
+:root[data-ui="classic"] :is(.chat-empty h3,.chat-starters strong,.chat-who,.finding-heading strong) { color:var(--ink); }
+:root[data-ui="classic"] :is(.chat-empty p,.chat-starters button>span:last-child,.chat-history h3,.chat-history time,.history-empty,.history-empty small,.conversation-kicker,.conversation-scope,.chat-copy,.chat-usage,.context-icon,.finding-note,.finding-doc,.finding-location,.finding-source small,.finding-calculation,.memory-bar button,.memory-dialog-head p,.memory-selection p,.memory-selection small,.memory-entry small,.memory-empty,.memory-muted) { color:var(--ink-2); }
+:root[data-ui="classic"] :is(#chatTitle,#aiHint,#memoryJob,#memoryLearning,#memorySource,#memoryVersions),
+:root[data-ui="classic"] #tab-chat .chat-hero p { color:var(--ink-2); }
+:root[data-ui="classic"] #memoryDialog :is(button,summary):focus-visible { outline-color:var(--accent); }
+:root[data-ui="classic"] #memoryDialog input[type="search"],
+:root[data-ui="classic"] :is(#cmQuery,#notesTa) { background:var(--surface); color:var(--ink); border-color:var(--line-2); }
+:root[data-ui="classic"] ::placeholder,
+:root[data-ui="classic"] .chat-composer textarea::placeholder { color:var(--ink-3); }
+:root[data-ui="classic"] :is(.reviewfoot,.mdr table) { background:var(--surface); border-color:var(--line); }
+:root[data-ui="classic"] :is(.run-diagnostics,.qrow.cut) { background:var(--warn-soft); border-color:var(--line-2); color:var(--ink); }
+:root[data-ui="classic"] :is(.run-diagnostics summary,.run-diagnostics p) { color:var(--ink-2); }
+:root[data-ui="classic"] .run-state.success { color:var(--accent); }
+:root[data-ui="classic"] .finding-conflict { border-left-color:var(--danger); }
+:root[data-ui="classic"] :is(.run-state.error,#memoryDeleteConfirm,.chat-error) { color:var(--danger); }
+:root[data-ui="classic"] :is(#docQ:focus,#kbQ:focus) { border-color:var(--accent); }
+@media (max-width:760px) {
+  .appearance-picker { flex:1 1 100%; grid-template-columns:auto minmax(0,1fr); align-items:center; margin:0; }
+  :root[data-ui="classic"] .app>aside { width:100%; padding:12px 16px; }
+  :root[data-ui="classic"] .app>main { padding:18px 16px 40px; }
+  :root[data-ui="classic"] #workspaceNav { margin:14px 0 18px; }
+  :root[data-ui="classic"] #workspaceNav .tab { font-size:12px; padding:8px; }
+  :root[data-ui="classic"] .panel { padding:14px; }
+  :root[data-ui="classic"] .dealhead h1 { font-size:19px; }
+}
