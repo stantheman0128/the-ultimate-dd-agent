@@ -5,7 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const OpenAI = require('openai');
-const provider = require('./codex-provider');
+const providers = {codex:require('./codex-provider'),claude:require('./claude-provider')};
+const provider=providers.codex;
+const settings=require('./settings');
+const {randomUUID}=require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const PUB = path.join(__dirname, 'public');
@@ -16,7 +19,7 @@ const PY = process.env.PYTHON_BIN || 'python3';
 // 問 AI（互動層）設定：整份文件帶頁碼進 context，用 prompt caching 固定住；超過預算才挑頁
 const ASK_MODEL = process.env.QLIST_ASK_MODEL || provider.DEFAULT_MODEL;
 const ASK_EFFORT = process.env.QLIST_ASK_EFFORT || 'low';
-const ASK_BUDGET = Number(process.env.QLIST_ASK_BUDGET_TOKENS || 450000); // 估算 token（拉丁字元 /4、CJK ×1.2）；1M context 留餘裕
+const ASK_BUDGET = Number(process.env.QLIST_ASK_BUDGET_TOKENS || 150000); // 估算 token（拉丁字元 /4、CJK ×1.2）；1M context 留餘裕
 const ASK_SYSTEM = [
   '你是 VC 盡職調查助理，正在協助分析師閱讀一間新創的 Data Room。只依據下方 <documents> 內提供的內容回答，不得用文件以外的知識補數字。',
   '回答規則：',
@@ -144,11 +147,45 @@ function readToken() {
   // 終端機複製常把長 token 折行，清掉所有空白字元
   try { const t = fs.readFileSync(path.join(__dirname, 'token'), 'utf8').replace(/\s+/g, ''); return t || null; } catch { return null; }
 }
-function engineEnv() {
+function engineEnv(selected = "codex") {
   const env = { ...process.env };
   const key = process.env.CODEX_API_KEY || process.env.OPENAI_API_KEY || readToken();
-  if (key) env.CODEX_API_KEY = key;
+  if (key && selected === "codex") env.CODEX_API_KEY = key;
   return env;
+}
+
+function runConfig(override, model) {
+  const config=settings.readSettings();
+  if(override!==undefined){if(!['codex','claude'].includes(override))throw httpErr(400,'bad provider');config.provider=override;}
+  if(model&&model!=='default')config[config.provider].main_model=model;
+  settings.validate(config);
+  return config;
+}
+function agentDefinitions(config, runDir) {
+  const resolved=settings.matrix(config), definitions={}, agentFiles={};
+  for(const [name,choice] of Object.entries(resolved.per_agent)){
+    const fp=path.join(ROOT,'.codex','agents',name+'.toml');
+    if(!fs.existsSync(fp))continue;
+    const raw=fs.readFileSync(fp,'utf8');
+    const read=k=>{const m=raw.match(new RegExp('^'+k+' = (.*)$','m'));return m?JSON.parse(m[1]):'';};
+    const body=read('developer_instructions');
+    definitions[name]={description:read('description'),prompt:body,tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
+    if(runDir){
+      const dir=path.join(runDir,'agents');fs.mkdirSync(dir,{recursive:true});
+      const file=path.join(dir,name+'.toml');
+      fs.writeFileSync(file,`model = ${JSON.stringify(choice.model)}\nmodel_reasoning_effort = ${JSON.stringify(choice.effort)}\ndeveloper_instructions = ${JSON.stringify(body)}\n`);
+      agentFiles[name]=file;
+    }
+  }
+  return {definitions,agentFiles};
+}
+function providerStatus(config,p){
+  const cli=providers[p].resolveCli();
+  return {cli:cli?.version||null,cliPath:cli?.bin||null,api:p==='codex'?!!(process.env.OPENAI_API_KEY||readToken()):!!process.env.ANTHROPIC_API_KEY,oauth:p==='claude'&&!!process.env.CLAUDE_CODE_OAUTH_TOKEN,models:settings.matrix(config,p)};
+}
+function askConfig(config) {
+  const c=config[config.provider];
+  return {model:process.env.QLIST_ASK_MODEL||c.ask_model,effort:process.env.QLIST_ASK_EFFORT||c.ask_effort,budget:Number(process.env.QLIST_ASK_BUDGET_TOKENS||c.ask_budget_tokens)};
 }
 
 // 字卡解析：先找「與原檔同名.md」，找不到就掃字卡開頭是否提到原檔名（引擎舊命名相容）
@@ -271,7 +308,7 @@ function explicitPages(q) {
   let m; while ((m = re.exec(q))) out.add(Number(m[1] || m[2] || m[3] || m[4]));
   return out;
 }
-function buildAskContext(dp, question) {
+function buildAskContext(dp, question, askBudget = ASK_BUDGET) {
   const docs = loadAllIndex(dp);
   const read = f => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
   const notes = read(path.join(dp, '_notes.md')).trim();
@@ -280,7 +317,7 @@ function buildAskContext(dp, question) {
   if (notes) parts.push(`<notes file="_notes.md">\n${notes}\n</notes>`);
   if (facts) parts.push(`<facts file="_analysis/facts.md">\n${facts.slice(0, 60000)}\n</facts>`);
   const total = docs.reduce((s, d) => s + docChars(d), 0) + estTokens(notes) + estTokens(facts.slice(0, 60000));
-  const whole = total <= ASK_BUDGET;
+  const whole = total <= askBudget;
   let pagesUsed = 0;
   if (whole) {
     for (const d of docs) { parts.push(docBlock(d, null)); pagesUsed += (d.pages || []).length || (d.sheets || []).length; }
@@ -290,7 +327,7 @@ function buildAskContext(dp, question) {
     const terms = questionTerms(q);
     const wantPages = explicitPages(q);
     const mentioned = docs.filter(d => q.includes(d.file.replace(/\.[^.]+$/, '')) || q.includes(d.file));
-    let budget = ASK_BUDGET - estTokens(parts.join('\n'));
+    let budget = askBudget - estTokens(parts.join('\n'));
     const chosen = new Map(); // file -> Set(page)
     const pcost = p => estTokens(p.text || '') + 12;
     const add = (d, n, cost) => { if (!chosen.has(d.file)) chosen.set(d.file, new Set()); if (!chosen.get(d.file).has(n)) { chosen.get(d.file).add(n); budget -= cost; } };
@@ -318,14 +355,6 @@ function buildAskContext(dp, question) {
   const text = `<documents whole_corpus="${whole}">\n${parts.join('\n')}\n</documents>`;
   return { text, docs: docs.length, pages: pagesUsed, whole, totalTokens: total, tokens: estTokens(text) };
 }
-async function askViaApi(ctx, question, send) {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || readToken() });
-  return provider.askViaApi({ client, ctx, question, send, system: ASK_SYSTEM, model: ASK_MODEL, effort: ASK_EFFORT });
-}
-function askViaCli(ctx, question, send, model) {
-  return provider.askViaCli({ cli: CLI, cwd: ROOT, env: engineEnv(), ctx, question, send, model, system: HEADLESS_SYS + '\n' + ASK_SYSTEM });
-}
-
 // Codex JSONL events are adapted to the existing workbench timeline contract.
 const parseStreamLine = provider.parseStreamLine;
 function mockRun(run, emit, dp, finish) {
@@ -346,17 +375,27 @@ function mockRun(run, emit, dp, finish) {
     emit({ kind, agent, text, sub });
   }, 550);
 }
-function startRun(deal, kind, prompt, onDone, model) {
+function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {}) {
   const dp = dealPath(deal);
   if (RUNS[deal]) throw httpErr(409, '本案已有流程在跑');
   fs.mkdirSync(path.join(dp, '_analysis'), { recursive: true });
+  const config=runConfig(selectedProvider,model), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli();
+  const run_id=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID().slice(0,8);
+  const runDir=path.join(dp,'_analysis','runs',run_id);fs.mkdirSync(runDir,{recursive:true});
+  const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir);
+  const args=activeProvider.cliArgs({model:models.main.model,effort:models.main.effort,writable:true,prompt,system:HEADLESS_SYS,agents:definitions,models:{sub:{model:config[selected].sub_model,effort:config[selected].effort.sub}},agentFiles});
+  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:[],rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards:[],started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
+  const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
+  saveManifest();
+  prompt=`執行 ID：${run_id}。persona 名單以此為準：${config.personas.map(p=>'persona-'+p).join('、')}。\n`+prompt;
   const logPath = path.join(dp, '_analysis', 'run.log');
   const evPath = path.join(dp, '_analysis', 'run.events.jsonl');
-  fs.writeFileSync(logPath, `[${new Date().toISOString()}] ${kind} 啟動\n`);
+  fs.writeFileSync(logPath, JSON.stringify({run_id,provider:selected,models,argv:args})+"\n"+prompt+"\n");
   fs.writeFileSync(evPath, '');
   const append = t => { try { fs.appendFileSync(logPath, t); } catch {} };
-  const run = { proc: null, kind, started: Date.now(), events: [], agents: {}, counts: { agents: 0, reads: 0, writes: 0 }, timer: null };
+  const run = { proc: null, kind, started: Date.now(), events: [], agents: {}, counts: { agents: 0, reads: 0, writes: 0 }, timer: null, manifest, config };
   const emit = ev => {
+    if(ev.cost!=null)manifest.cost_if_known=ev.cost;
     ev.ts = Date.now(); ev.i = run.events.length;
     run.events.push(ev);
     try { fs.appendFileSync(evPath, JSON.stringify(ev) + '\n'); } catch {}
@@ -367,6 +406,9 @@ function startRun(deal, kind, prompt, onDone, model) {
     if (finished) return;
     finished = true;
     if (run.failed && code === 0) code = 1;
+    manifest.ended_at=new Date().toISOString();manifest.exit_code=code;
+    saveManifest();
+    fs.copyFileSync(logPath,path.join(runDir,'run.log'));
     append(`\n[${new Date().toISOString()}] 結束，exit=${code}${code !== 0 ? '　⚠ 流程失敗，請檢查上方訊息（最常見：引擎未登入 → 見說明頁）' : ''}\n`);
     emit({ kind: 'exit', agent: 'main', text: `exit=${code}`, code });
     delete RUNS[deal];
@@ -374,23 +416,19 @@ function startRun(deal, kind, prompt, onDone, model) {
   };
   RUNS[deal] = run;
   if (MOCK) { mockRun(run, emit, dp, finish); return; }
-  if (!CLI) { delete RUNS[deal]; throw httpErr(500, '找不到 Codex CLI（執行 npm install，或設 CODEX_BIN）'); }
-  let args;
-  try { args = provider.cliArgs({ model, writable: true }); }
-  catch (e) { delete RUNS[deal]; throw httpErr(400, e.message); }
-  append(`模型：${provider.selectedModel(model)}｜憑證：${engineEnv().CODEX_API_KEY ? 'API key' : 'Codex 登入'}｜CLI：${CLI.bin}\n`);
-  const proc = spawn(CLI.bin, [...(CLI.prefix || []), ...args], { cwd: ROOT, env: engineEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
-  proc.stdin.on('error', e => { if (e.code !== 'EPIPE') emit({ kind: 'error', agent: 'main', text: e.message }); });
-  proc.stdin.end(`${HEADLESS_SYS}\n先讀 AGENTS.md 與 CODEX.md；使用 .codex/agents/ 中同名 Codex 代理。\n\n${prompt}`);
+  if (!cli) { finish(-1); throw httpErr(500, '找不到 '+selected+' CLI'); }
+  const proc = spawn(cli.bin, [...(cli.prefix || []), ...args], { cwd: ROOT, env: engineEnv(selected), stdio: ['pipe', 'pipe', 'pipe'] });
+  proc.stdin.on('error', e => { if (e.code !== 'EPIPE') {run.failed=true;emit({ kind: 'error', agent: 'main', text: e.message });} });
+  proc.stdin.end(`${HEADLESS_SYS}\n先讀 AGENTS.md 與 CODEX.md；使用同名代理。\n\n${prompt}`);
   run.proc = proc;
   let buf = '';
   proc.stdout.on('data', d => {
     buf += d.toString();
-    let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 1); for (const ev of parseStreamLine(line, run)) emit(ev); }
+    let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 1); for (const ev of activeProvider.parseStreamLine(line, run)) emit(ev); }
   });
   proc.stderr.on('data', d => { const t = d.toString(); if (t.trim()) emit({ kind: 'stderr', agent: 'main', text: t.trim().slice(0, 300) }); });
   proc.on('error', e => { emit({ kind: 'error', agent: 'main', text: '⚠ 無法啟動 CLI：' + e.message }); finish(-1); });
-  proc.on('close', code => { if (buf.trim()) for (const ev of parseStreamLine(buf, run)) emit(ev); finish(code); });
+  proc.on('close', code => { if (buf.trim()) for (const ev of activeProvider.parseStreamLine(buf, run)) emit(ev); finish(code); });
 }
 // 草稿表格解析：依表頭定位欄位，容忍引擎欄序 / 欄數變化；「證據」欄＝機讀引用（文件代號:位置; …）
 function parseDraftTable(text, isMerged) {
@@ -481,11 +519,19 @@ const server = http.createServer(async (req, res) => {
       const f = safeJoin(path.join(dp, '_analysis', 'cards'), cf);
       return json(res, 200, { file: q.get('file'), content: fs.readFileSync(f, 'utf8') });
     }
+    if (u.pathname === '/api/settings') {
+      if(req.method==='GET')return json(res,200,settings.readSettings());
+      if(req.method==='POST')return json(res,200,settings.writeSettings(JSON.parse(await readBody(req,100000))));
+      throw httpErr(405,'method not allowed');
+    }
+    if (u.pathname === '/api/runs') {
+      const dir=path.join(dealPath(q.get('deal')),'_analysis','runs');
+      const runs=fs.existsSync(dir)?fs.readdirSync(dir).sort().reverse().flatMap(id=>{try{return [JSON.parse(fs.readFileSync(path.join(dir,id,'run.json'),'utf8'))];}catch{return [];}}):[];
+      return json(res,200,{runs});
+    }
     if (u.pathname === '/api/engine') {
-      return json(res, 200, {
-        cli: CLI ? CLI.version : null, cliPath: CLI ? CLI.bin : null, mock: MOCK, token: !!readToken(),
-        api: !!(process.env.OPENAI_API_KEY || readToken()), askModel: ASK_MODEL, askEffort: ASK_EFFORT, askBudget: ASK_BUDGET, sdk: true,
-      });
+      const config=settings.readSettings(), statuses=Object.fromEntries(['codex','claude'].map(p=>[p,providerStatus(config,p)])), selected=statuses[config.provider], ask=askConfig(config);
+      return json(res,200,{...selected,provider:config.provider,providers:statuses,mock:MOCK,token:!!readToken(),askModel:ask.model,askEffort:ask.effort,askBudget:ask.budget,sdk:true});
     }
     if (u.pathname === '/api/token' && req.method === 'POST') {
       const { token } = JSON.parse(await readBody(req));
@@ -618,13 +664,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { running: !!run, kind: run ? run.kind : null, counts: run ? run.counts : null, started: run ? run.started : null, events: readRunEvents(dp, since) });
     }
     if (u.pathname === '/api/ingest-one' && req.method === 'POST') {
-      const { deal, file, round, model } = JSON.parse(await readBody(req));
+      const { deal, file, round, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
       const rel = /^R\d+$/.test(round || '') ? `round${round.slice(1)}/${path.basename(file)}` : path.basename(file);
       if (!fs.existsSync(path.join(dp, rel))) throw httpErr(404, '找不到文件');
       const prompt = `只消化 X（單檔增量）：案子「${deal}」Round ${st.round}，新文件「${deal}/${rel}」。照本專案 AGENTS.md 執行：(1) 先確認 _analysis/index/ 有此檔索引（沒有就跑 python3 _workbench/index_doc.py "${deal}" --file "${rel}"）；(2) 派 card-extractor 只為這一份文件產字卡（檔名＝原始檔名＋.md，存 _analysis/cards/）；(3) 派 reconciler 做「增量」對帳：讀既有 _analysis/facts.json 與 facts.md，只加入與此文件相關的事實列與新矛盾（同物異名對齊、口徑分 basis、有公式的填 derived），執行 python3 _workbench/recompute.py "${deal}"，更新 facts.json 與 facts.md；(4) 依新矛盾與新事實出 3–6 題（可直接由你出，或派需要的 persona），寫入「${deal}/_analysis/drafts/draft_R${st.round}_delta.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 出處與動機 | 書面/口頭 | 波次 | 證據 |，No. 自 901 起連號，出處與動機寫檔名＋頁碼/tab＋引用數字＋一句白話動機，證據欄寫機讀引用（文件代號:位置，分號分隔）；(5) 完成即結束，只回報一行摘要。記得先讀「${deal}/_notes.md」。`;
-      startRun(deal, 'ingest', prompt, null, model);
+      startRun(deal, 'ingest', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true, file: rel });
     }
     if (u.pathname === '/api/archive' && req.method === 'POST') {
@@ -657,13 +703,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { saved: fname });
     }
     if (u.pathname === '/api/merge' && req.method === 'POST') {
-      const { deal, name, model } = JSON.parse(await readBody(req));
+      const { deal, name, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
       const fname = path.basename(name || '');
       if (!fs.existsSync(path.join(dp, '_analysis', 'inbox', fname))) throw httpErr(404, '找不到你上傳的版本');
       const prompt = `合併審核前置：案子「${deal}」Round ${st.round}。使用者的 Q-list 在「${deal}/_analysis/inbox/${fname}」（用 python3＋openpyxl 讀）。引擎草稿在「${deal}/_analysis/drafts/draft_R${st.round}.md」。照本專案 AGENTS.md 階段 2 做三類 diff：(1) 兩邊都問到（語意相同即算，措辭合併取較佳、number-anchored 版本優先）→ 來源標「共識」；(2) 只有引擎 → 來源標「Codex」；(3) 只有使用者 → 來源標「你」，一律保留，並在 _analysis/diff-reports/blindspots-r${st.round}.md 記錄為盲區訓練資料。輸出寫入「${deal}/_analysis/drafts/draft_R${st.round}_merged.md」，表格表頭必須逐字為：| No. | 分類 | 問題 | 來源 | 出處與動機 | 書面/口頭 | 波次 |（來源欄只能是「共識」「Codex」「你」三值之一），排序：共識在前、你的獨有題次之、Codex 獨有題最後。出處與動機欄必須完整可讀：資料來源寫檔名＋頁碼或 tab，加一句白話動機，不得只寫代號；使用者題目的動機用推測並標「（推測）」。完成即結束。`;
-      startRun(deal, 'merge', prompt, null, model);
+      startRun(deal, 'merge', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/notes' && req.method === 'POST') {
@@ -674,14 +720,14 @@ const server = http.createServer(async (req, res) => {
 
     // ---- 引擎 ----
     if (u.pathname === '/api/distill' && req.method === 'POST') {
-      const { deal, model } = JSON.parse(await readBody(req));
+      const { deal, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const prompt = `結案蒸餾：案子「${deal}」。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則、per-deal profile 寫回「knowledge/question-bank.md」— 用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
-      startRun(deal, 'distill', prompt, null, model);
+      startRun(deal, 'distill', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/run' && req.method === 'POST') {
-      const { deal, model } = JSON.parse(await readBody(req));
+      const { deal, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
       if (st.closed) throw httpErr(400, '案件已結案');
@@ -692,7 +738,7 @@ const server = http.createServer(async (req, res) => {
         if (fs.existsSync(path.join(dp, '_analysis', 'drafts', `draft_R${s.round}.md`))) {
           s.lifecycle = 'drafted'; writeState(dp, s);
         }
-      }, model);
+      }, model, selectedProvider);
       return json(res, 200, { started: true });
     }
     if (u.pathname === '/api/runlog') {
@@ -891,22 +937,25 @@ const server = http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/ask' && req.method === 'POST') {
       // SSE 串流：{meta} → {delta}* → {usage} → {done}
-      const { deal, question, model } = JSON.parse(await readBody(req));
+      const { deal, question, provider: selectedProvider } = JSON.parse(await readBody(req));
+      const config=runConfig(selectedProvider), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli(), ask=askConfig(config);
       const dp = dealPath(deal);
       if (!question || !String(question).trim()) throw httpErr(400, '問題不可為空');
       res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
       const send = o => { try { res.write(`data: ${JSON.stringify(o)}\n\n`); } catch {} };
       try {
-        const ctx = buildAskContext(dp, question);
-        const mode = MOCK ? 'mock' : (process.env.OPENAI_API_KEY || readToken()) ? 'api' : (CLI ? 'cli' : 'none');
-        send({ meta: { mode, model: mode === 'api' ? ASK_MODEL : (model || 'CLI 預設'), docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, totalTokens: ctx.totalTokens, budget: ASK_BUDGET } });
+        const ctx = buildAskContext(dp, question, ask.budget);
+        const mode = MOCK ? 'mock' : providerStatus(config,selected).api ? 'api' : (cli ? 'cli' : 'none');
+        send({ meta: { mode, provider:selected, model:ask.model, docs: ctx.docs, pages: ctx.pages, chars: ctx.text.length, tokens: ctx.tokens, whole: ctx.whole, totalTokens: ctx.totalTokens, budget: ask.budget } });
         if (mode === 'mock') {
           const fake = `（假引擎）已組好 context：${ctx.docs} 份文件、${ctx.pages} 頁、約 ${ctx.tokens.toLocaleString()} tokens${ctx.whole ? '（整份進 context）' : '（超過預算，已依關鍵字挑頁）'}。正式版會由模型依此回答並標出處，格式 [檔名 p.N]／[檔名 工作表!B4]。`;
           for (const ch of fake.match(/.{1,12}/g)) { send({ delta: ch }); await new Promise(r => setTimeout(r, 25)); }
           send({ mode: 'mock' });
-        } else if (mode === 'api') await askViaApi(ctx, question, send);
-        else if (mode === 'cli') await askViaCli(ctx, question, send, model);
-        else send({ error: '沒有 OPENAI_API_KEY，也找不到 Codex CLI（執行 npm install 或設 CODEX_BIN）' });
+         } else if (mode === 'api') {
+          const client=selected==='codex'?new OpenAI({apiKey:process.env.OPENAI_API_KEY||readToken()}):new (require('@anthropic-ai/sdk'))({apiKey:process.env.ANTHROPIC_API_KEY});
+          await activeProvider.askViaApi({client,ctx,question,send,system:ASK_SYSTEM,model:ask.model,effort:ask.effort});
+        } else if (mode === 'cli') await activeProvider.askViaCli({cli,cwd:ROOT,env:{...engineEnv(selected),QLIST_CODEX_EFFORT:ask.effort},ctx,question,send,system:ASK_SYSTEM,model:ask.model,effort:ask.effort});
+        else send({ error: selected+' 未設定 API key，也找不到 CLI' });
       } catch (e) { send({ error: String(e && e.message || e) }); }
       send({ done: true });
       return res.end();
@@ -923,4 +972,6 @@ const server = http.createServer(async (req, res) => {
     return json(res, e.status || 500, { error: e.message });
   }
 });
-server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${PORT}  root=${ROOT}  mock=${MOCK}`));
+if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${PORT}  root=${ROOT}  mock=${MOCK}`));
+
+module.exports={server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};

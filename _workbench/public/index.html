@@ -202,12 +202,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button id="delCaseBtn" class="delbtn" onclick="deleteCase(this)">刪除案件</button>
       <button id="reopenBtn" style="display:none" onclick="reopenDeal()">重新開啟</button>
-      <select id="modelSel" title="Codex 主 session 模型；子代理預設繼承，effort 由 QLIST_CODEX_EFFORT 設定" onchange="localStorage.setItem('qlist_model',this.value)">
-        <option value="default">模型：CLI 預設</option>
-        <option value="gpt-6-astra">模型：Astra</option>
-        <option value="gpt-5.6-sol">模型：5.6 Sol</option>
-        <option value="gpt-5.6-terra">模型：5.6 Terra</option>
-      </select>
+      <button onclick="openSettings()">⚙ 進階設定</button>
       <button id="closeBtn" onclick="closeDeal(this)">✓ 結案</button>
       <button id="distillBtn" style="display:none" onclick="runDistill()">⚗ 跑蒸餾</button>
       <button class="primary" id="runBtn" onclick="runPipeline()">▶ 跑流程</button>
@@ -228,6 +223,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
 
   <section id="tab-overview" class="on">
     <div class="cards" id="ovCards"></div>
+    <div class="panel"><h2>最近執行設定</h2><div id="runManifest" class="mdview">尚無執行紀錄</div></div>
     <div class="panel"><h2>已發出的 Q-list <span class="hint">qlist/ 內容（每輪正式版）</span></h2><div id="ovQlists"></div></div>
     <div class="panel"><h2>引擎活動 <span class="hint">run.events.jsonl：哪個代理在讀哪份文件、第幾頁</span></h2>
       <div class="runstats" id="ovStats"></div>
@@ -395,6 +391,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <div class="boxfoot"><button id="evDl">下載原始檔</button><button class="primary" onclick="hide('evOverlay')">關閉</button></div>
   </div>
 </div>
+<div class="overlay" id="settingsOverlay"><div class="box" style="width:min(920px,100%)"><h3>進階設定</h3><p class="sub">模型、effort 與 persona 設定於下次執行生效；模型名稱可自行輸入。</p><div id="settingsBody"></div><div class="boxfoot"><button onclick="hide('settingsOverlay')">取消</button><button class="primary" onclick="saveSettings()">儲存設定</button></div></div></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -532,6 +529,43 @@ async function loadEvPage(n){
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
 
+let SETTINGS=null;
+async function refreshEngine(){
+  const e=await api('/api/engine');ENGINE=e;
+  const m=e.models;
+  $('engineFoot').innerHTML=`<b>${esc(e.provider)}</b> ${e.mock?'<span class="chip warn">假引擎</span>':''}<br>主：${esc(m.main.model)}<br>子：${esc(m.per_agent.reconciler?.model||'—')}<br>${e.cli?'CLI 可用':'CLI 未找到'} · ${e.api?'API key 已設定':'API key 未設定'}<br><button onclick="openSettings()">⚙ 進階設定</button>${e.provider==='codex'?'<button onclick="setToken()">設定 API key</button>':''}`;
+  $('aiHint').textContent=`${e.provider} · ${e.askModel} · 預算 ${Math.round(e.askBudget/1000)}K tokens，超過則 BM25 挑頁`;
+  $('aiBtn').textContent='問 AI';
+}
+async function openSettings(){
+  try{SETTINGS=await api('/api/settings');renderSettings();show('settingsOverlay');}catch(e){toast(e.message);}
+}
+function renderSettings(){
+  const s=SETTINGS,p=s.provider,c=s[p];
+  const effort=(id,v)=>`<select id="${id}">${['low','medium','high'].map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}</select>`;
+  const model=(id,v)=>`<input type="text" id="${id}" value="${esc(v)}" list="modelOptions" style="width:100%">`;
+  $('settingsBody').innerHTML=`<div class="toolbar">${['codex','claude'].map(x=>`<label><input type="radio" name="provider" value="${x}" ${x===p?'checked':''} onchange="captureSettings();SETTINGS.provider=this.value;renderSettings()"> ${x}</label>`).join('')}<label><input type="checkbox" id="costMode" ${s.cost_mode?'checked':''}> 成本模式</label></div>
+  <datalist id="modelOptions">${[c.main_model,c.sub_model,c.cheap_model,c.ask_model].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+  <div class="cards">${[['main','主 session','main_model'],['sub','子代理','sub_model'],['mechanical','機械型（成本模式）','cheap_model']].map(([t,label,k])=>`<div class="card"><label>${label}${model('set-'+k,c[k])}</label>${effort('eff-'+t,c.effort[t])}</div>`).join('')}</div>
+  <label>Reviewer effort ${effort('eff-reviewer',c.effort.reviewer)}</label>
+  <details style="margin:14px 0"><summary>代理個別覆寫</summary><div class="scroll-x"><table><thead><tr><th>代理</th><th>模型（留空依預設）</th><th>effort</th></tr></thead><tbody>${Object.entries(s.agents).map(([n,a])=>`<tr><td>${esc(n)}</td><td><input data-agent-model="${n}" value="${esc(a.model||'')}" placeholder="依預設"></td><td><select data-agent-effort="${n}"><option value="">依預設</option>${['low','medium','high'].map(x=>`<option${a.effort===x?' selected':''}>${x}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></details>
+  <div id="personaSettings"></div>
+  <div class="card"><label>問 AI 模型 ${model('set-ask_model',c.ask_model)}</label><label>effort ${effort('set-ask_effort',c.ask_effort)}</label><label> 預算 tokens <input type="number" id="askBudget" min="1000" max="2000000" value="${c.ask_budget_tokens}"></label></div>`;
+  if(typeof renderPersonaSettings==='function')renderPersonaSettings();
+}
+function captureSettings(){
+  const s=SETTINGS,c=s[s.provider];s.cost_mode=$('costMode').checked;
+  for(const k of ['main_model','sub_model','cheap_model','ask_model'])c[k]=$('set-'+k).value.trim();
+  for(const k of ['main','sub','mechanical','reviewer'])c.effort[k]=$('eff-'+k).value;
+  c.ask_effort=$('set-ask_effort').value;c.ask_budget_tokens=Number($('askBudget').value);
+  document.querySelectorAll('[data-agent-model]').forEach(el=>{const a=s.agents[el.dataset.agentModel];if(el.value.trim())a.model=el.value.trim();else delete a.model;});
+  document.querySelectorAll('[data-agent-effort]').forEach(el=>{const a=s.agents[el.dataset.agentEffort];if(el.value)a.effort=el.value;else delete a.effort;});
+  const checks=[...document.querySelectorAll('[data-persona]')];if(checks.length)s.personas=checks.filter(el=>el.checked).map(el=>el.dataset.persona);
+}
+async function saveSettings(){
+  try{captureSettings();await api('/api/settings',{method:'POST',body:JSON.stringify(SETTINGS)});hide('settingsOverlay');await refreshEngine();toast('設定已儲存，下次執行生效');}catch(e){toast('設定未儲存：'+e.message);}
+}
+
 const LIFE = {collecting:'收集資料中', drafted:'草稿完成，等待審核', merged:'合併版已產出', sent:'已發出，等待回覆', closed:'已結案'};
 
 async function loadDeals(sel){
@@ -550,15 +584,7 @@ async function loadDeals(sel){
         <span class="starbtn${d.state.starred?' on':''}" data-name="${esc(d.name)}" data-s="${d.state.starred?1:0}" role="button" title="置頂" onclick="event.stopPropagation();toggleStar(this)">${d.state.starred?'★':'☆'}</span></span>
       <span class="ds">${esc(ds)}</span></button>`;
   }).join('');
-  api('/api/engine').then(e => {
-    ENGINE = e;
-    const tokenChip = e.token ? '<span class="chip ok">OpenAI API key</span>' : '<span class="chip warn">使用環境變數或 Codex 登入</span>';
-    const askChip = e.api ? `<span class="chip ok" title="${esc(e.askModel)}">問 AI：直連 API</span>` : (e.cli ? '<span class="chip warn" title="設 OPENAI_API_KEY 可改走直連 API（串流、快取）">問 AI：走 CLI</span>' : '');
-    $('engineFoot').innerHTML = e.mock
-      ? '引擎：<span class="chip warn">假引擎模式</span>'
-      : (e.cli ? `引擎：<span title="${esc(e.cliPath||'')}">${esc(e.cli)}</span> ${tokenChip}<br><span style="display:inline-block;margin-top:6px">${askChip}</span><br><button style="margin-top:8px;font-size:12px;padding:4px 10px" onclick="setToken()">設定 OpenAI API key</button>` : '引擎：<span class="chip bad">找不到 CLI（設 CODEX_BIN）</span>' + (e.api ? '<br>' + askChip : ''));
-    $('aiHint').textContent = e.api ? `直連 ${e.askModel} · 整份 Data Room 帶頁碼進 context（預算約 ${Math.round(e.askBudget/1000)}K tokens，超過就挑頁）· 串流 · 點出處開原文` : (e.mock ? '假引擎模式：只示範串流與 context 組裝' : '走 Codex CLI（設 OPENAI_API_KEY 可改直連 API）· 帶頁碼出處');
-  });
+  await refreshEngine();
   if (!sel && deals.length) pickDeal(deals[0].name);
 }
 
@@ -650,6 +676,9 @@ function renderOverview(){
         <button data-f="${esc(f)}" onclick="location.href='/api/download?'+enc({deal:cur,from:'qlist',file:this.dataset.f})">下載</button></div>`).join('')
     : '<div style="color:var(--ink-3);font-size:13px">尚未發出任何 Q-list。</div>';
   refreshLog();
+  api('/api/runs?'+enc({deal:cur})).then(({runs})=>{
+    $('runManifest').textContent=runs.slice(0,5).map(r=>`${r.started_at} · ${r.kind} · ${r.provider}${r.mock?' · 假引擎':''}\n主：${r.models.main.model} / ${r.models.main.effort}\npersonas：${r.personas.join(', ')}\n規則：${JSON.stringify(r.rules)} · exit=${r.exit_code??'執行中'}`).join('\n\n')||'尚無執行紀錄';
+  }).catch(e=>{$('runManifest').textContent=e.message;});
 }
 async function refreshLog(){
   try {
@@ -886,7 +915,7 @@ async function saveNotes(){
   toast('備註已存檔，下次跑流程會讀');
 }
 
-function curModel(){ return $('modelSel').value; }
+function curModel(){ return 'default'; }
 async function runPipeline(){
   try {
     await api('/api/run',{method:'POST',body:JSON.stringify({deal:cur,model:curModel()})});
@@ -1230,7 +1259,7 @@ async function askAI(){
     }
     if(!text) $('aiA').textContent='（沒有回答）';
   }catch(e){$('aiA').textContent='失敗：'+e.message;}
-  $('aiBtn').disabled=false;$('aiBtn').textContent='問 Codex';
+  $('aiBtn').disabled=false;$('aiBtn').textContent='問 AI';
 }
 
 const HELP = `## 一個案子的完整流程
@@ -1279,7 +1308,5 @@ const HELP = `## 一個案子的完整流程
 - OPENAI_API_KEY：OpenAI Responses API；QLIST_ASK_MODEL（預設 gpt-6-astra）、QLIST_ASK_EFFORT（low）、QLIST_ASK_BUDGET_TOKENS（450000，超過就挑頁）；QLIST_CODEX_MODEL（gpt-6-astra）、QLIST_CODEX_EFFORT（medium）控制 headless。
 - QLIST_MOCK=1：假引擎；PYTHON_BIN：python3 路徑`;
 $('helpBody').innerHTML = mdToHtml(HELP);
-const savedModel = localStorage.getItem('qlist_model') || 'default';
-$('modelSel').value = [...$('modelSel').options].some(o => o.value === savedModel) ? savedModel : 'default';
 loadDeals();
 </script>

@@ -40,3 +40,10 @@ _workbench/token
 /*.pptx
 
 **/mine-check.md
+
+!/.claude/
+!/CLAUDE.md
+_workbench/settings.json
+_workbench/settings.json.tmp
+**/_analysis/runs/
+.codex/agents/_generated/

@@ -21,10 +21,15 @@ function selectedModel(model, env = process.env) {
   return model && model !== 'default' ? model : (env.QLIST_CODEX_MODEL || DEFAULT_MODEL);
 }
 
-function cliArgs({ model, writable = false, env = process.env } = {}) {
-  return ['exec', '--json', '--ephemeral', '--sandbox', writable ? 'workspace-write' : 'read-only',
-    '--model', selectedModel(model, env), '-c',
-    'model_reasoning_effort=' + JSON.stringify(env.QLIST_CODEX_EFFORT || 'medium'), '-'];
+function cliArgs({ model, effort, models, agentFiles={}, writable = false, env = process.env } = {}) {
+  const args = ['exec', '--json', '--ephemeral', '--sandbox', writable ? 'workspace-write' : 'read-only',
+    '--model', selectedModel(model, env), '-c', 'model='+JSON.stringify(selectedModel(model,env)), '-c',
+    'model_reasoning_effort=' + JSON.stringify(effort || env.QLIST_CODEX_EFFORT || 'medium')];
+  if(models){
+    args.push('-c','agents.default_subagent_model='+JSON.stringify(models.sub.model),'-c','agents.default_subagent_reasoning_effort='+JSON.stringify(models.sub.effort));
+    for(const [name,file] of Object.entries(agentFiles))args.push('-c',`agents.${name}.config_file=${JSON.stringify(file)}`);
+  }
+  return [...args,'-'];
 }
 
 function errorMessage(e) { return typeof e === 'string' ? e : e?.message || JSON.stringify(e); }
@@ -106,8 +111,8 @@ function askViaCli({ cli, cwd, env, ctx, question, system, send, model, timeoutM
       else if (code !== 0 || !completed) reject(new Error(stderr || `Codex 未成功完成，exit=${code}`));
       else resolve();
     });
-    // Preserve the existing CLI context cap; do not change DD retrieval policy in this migration.
-    proc.stdin.end(`${system}\n\n${ctx.text.slice(0, 220000)}\n\n問題：${question}`);
+    // The shared retrieval budget bounds the context; do not silently truncate citations.
+    proc.stdin.end(`${system}\n\n${ctx.text}\n\n問題：${question}`);
   });
 }
 
