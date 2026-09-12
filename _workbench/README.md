@@ -9,6 +9,7 @@
 在專案根目錄執行：
 ```sh
 python3 -m pip install -r _workbench/requirements.txt
+python3 _workbench/setup_ocr.py
 (cd _workbench && npm install)
 node _workbench/server.js
 ```
@@ -47,14 +48,22 @@ QLIST_MOCK=1 node _workbench/server.js
 | ⟳ 重建索引 | `python3 _workbench/index_doc.py <案件> --force` |
 | 對帳分頁的矛盾圖 | 讀 `_analysis/facts.json`（reconciler 產出、`recompute.py` 驗算） |
 | 點任何出處 [檔名 p.N] | 證據檢視器：原檔翻頁＋該頁索引文字 |
-| 問 AI | `/api/ask` SSE 串流；有 `OPENAI_API_KEY` 直連 API（整份帶頁碼進 context＋快取），否則 `codex exec --json` 讀 stdin |
+| 專案對話 | `/api/ask` SSE 多輪對話；文件導覽 → 搜尋片段 → 按需讀取原文。需要 OpenAI API key；詳見 [對話設計](CHAT_DESIGN.md) |
 | ⚡ 只消化這份 | `/api/ingest-one`：單檔字卡 → 增量對帳 → `drafts/draft_RN_delta.md` |
 | 總覽的引擎活動 | `_analysis/run.events.jsonl`（Codex JSONL 適配事件流） |
 
-環境變數：`CODEX_BIN`、`OPENAI_API_KEY`、`QLIST_ASK_MODEL`、`QLIST_ASK_EFFORT`、`QLIST_ASK_BUDGET_TOKENS`、`QLIST_CODEX_MODEL`、`QLIST_CODEX_EFFORT`、`PYTHON_BIN`、`QLIST_MOCK`。
+環境變數：`CODEX_BIN`、`OPENAI_API_KEY`、`QLIST_ASK_MODEL`、`QLIST_ASK_EFFORT`、`QLIST_CODEX_MODEL`、`QLIST_CODEX_EFFORT`、`PYTHON_BIN`、`QLIST_MOCK`。
 
 ## 模型選擇
 
 標題列控制 Codex 主 session 的模型，子代理預設繼承。主流程 effort 由 `QLIST_CODEX_EFFORT` 控制，即時問答由 `QLIST_ASK_MODEL`／`QLIST_ASK_EFFORT` 分開設定。模型可用性依帳號權限。
 
 引擎規範見專案根目錄 AGENTS.md；活題庫在 knowledge/question-bank.md。
+
+多格式中文索引：PDF、XLSX/XLSM、CSV/TSV、PPTX/DOCX、PNG/JPEG/WebP/TIFF/BMP/GIF 與純文字；用途摘要、OCR、視覺描述、失敗狀態及驗收詳見 [CHAT_DESIGN.md](CHAT_DESIGN.md)。
+
+額外驗證：`python3 _workbench/tests/preprocessing_test.py`（先安裝依賴與 OCR 語言資料）。
+
+## 對話記憶
+
+輸入框上方「使用記憶」可調整跨案範圍、管理條目與查看來源。團隊通則及本案預設可用；背景整理另有模型用量。記憶位於 Git 忽略的 `_private_memory/`，詳見 [記憶設計與限制](MEMORY_DESIGN.md)。
