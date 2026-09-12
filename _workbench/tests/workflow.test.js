@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {spawn}=require('node:child_process');
+const {spawn,spawnSync}=require('node:child_process');
 test('HTTP review → feedback → proposal → approval → scoped next-run injection, settings, skills and stable IDs',async t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'dd-workflow-')),work=path.join(root,'_workbench'),source=path.resolve(__dirname,'..');
  fs.mkdirSync(work);for(const f of fs.readdirSync(source))if(/\.(js|py)$/.test(f))fs.copyFileSync(path.join(source,f),path.join(work,f));
@@ -9,6 +9,11 @@ test('HTTP review → feedback → proposal → approval → scoped next-run inj
  const qs=[1,2].map(n=>({question_id:`q-r1-00${n}`,text:'測試問題 '+n,cat:'財務',why:'決策需要',evidence:[{doc:'sample.pdf',loc:'p.1'}],wave:1,channel:'書面',source:'AI',revision:1,persona:'fin'}));
  const file=path.join(an,'drafts','questions_R1.json');fs.writeFileSync(file,JSON.stringify(qs));
  fs.writeFileSync(path.join(an,'index','sample.pdf.index.json'),JSON.stringify({file:'sample.pdf',kind:'pdf',page_count:1,mtime:1,pages:[{n:1,text:'Revenue 100; evidence for question.'}]}));
+ const imageSource=path.join(root,'TestDeal','photo.jpg');
+ const imageFixture=spawnSync('python3',['-c',"from PIL import Image;import sys;Image.new('RGB',(80,50),'navy').save(sys.argv[1])",imageSource],{encoding:'utf8'});assert.equal(imageFixture.status,0,imageFixture.stderr);
+ const indexed=spawnSync('python3',[path.join(work,'index_doc.py'),path.join(root,'TestDeal'),'--file','photo.jpg'],{encoding:'utf8',env:{...process.env,QLIST_INDEX_AI:'0'}});assert.equal(indexed.status,0,indexed.stderr);
+ assert.ok(fs.existsSync(path.join(an,'index/_render/photo.jpg/1.png')));
+ fs.writeFileSync(path.join(an,'index','model.xlsx.index.json'),JSON.stringify({file:'model.xlsx',round:'R1',kind:'xlsx',sheets:[{name:'Forecast',text:'B4 Revenue 275',cells:[{ref:'B4',value:'Revenue',formula:null}]}]}));
  const proc=spawn(process.execPath,[path.join(work,'server.js')],{env:{...process.env,PORT:'0',QLIST_MOCK:'1',QLIST_MOCK_DELAY_MS:'1',QLIST_PROVIDER:'codex'},stdio:['ignore','pipe','pipe']});
  t.after(async()=>{proc.kill();if(proc.exitCode===null)await new Promise(r=>proc.once('close',r));fs.rmSync(root,{recursive:true,force:true});});
  let stderr='';proc.stderr.on('data',d=>stderr+=d);
@@ -49,6 +54,12 @@ test('HTTP review → feedback → proposal → approval → scoped next-run inj
  const askResult=await post('/api/ask',{deal:'TestDeal',provider:'claude',question:'sample.pdf p.1'});assert.equal(askResult.status,200);const askEvents=(await askResult.text()).split('\n').filter(l=>l.startsWith('data: ')).map(l=>JSON.parse(l.slice(6)));assert.equal(askEvents[0].meta.provider,'claude');assert.equal(askEvents[0].meta.retrieval,'whole');
  const conversation=await (await post('/api/conversations',{deal:'TestDeal'})).json();const chatResult=await post('/api/chat/ask',{deal:'TestDeal',conversationId:conversation.id,question:'請概述資料'});assert.equal(chatResult.status,200);assert.match(await chatResult.text(),/data: /);assert.equal((await get('/api/conversation?deal=TestDeal&id='+conversation.id)).messages.length,2);
  const search=await get('/api/search?deal=TestDeal&q=Revenue');assert.ok(search.hits.some(h=>h.page===1&&h.score>0));
+ const sheetSearch=await get('/api/search?deal=TestDeal&q='+encodeURIComponent('營收'));assert.ok(sheetSearch.hits.some(h=>h.sheet==='Forecast'&&h.ref==='B4'&&h.score>0));
+ const visuals=await get('/api/visual-pages?deal=TestDeal&file=photo.jpg');assert.equal(visuals.pages[0].n,1);
+ const page=await get('/api/page?deal=TestDeal&file=photo.jpg&page=1');assert.equal(page.needs_visual,true);
+ const renderResponse=await fetch(url+'/api/render?deal=TestDeal&file=photo.jpg&page=1');assert.equal(renderResponse.status,200);assert.equal(renderResponse.headers.get('content-type'),'image/png');assert.equal(Buffer.from(await renderResponse.arrayBuffer()).subarray(1,4).toString(),'PNG');
+ assert.equal((await fetch(url+'/api/render?deal=TestDeal&file=photo.jpg&page=2')).status,422);
+ fs.appendFileSync(imageSource,'changed');assert.equal((await fetch(url+'/api/render?deal=TestDeal&file=photo.jpg&page=1')).status,422);
  const add=await post('/api/questions/add',{deal:'TestDeal',text:'人工補題',reason:'原清單漏掉'});assert.equal(add.status,200);assert.equal((await get('/api/learning?deal=TestDeal')).kpi[0].human_only,1);
  for(const content of ['old version','new version'])assert.equal((await fetch(url+'/api/upload?deal=TestDeal&round=1&name=test.txt',{method:'POST',body:content})).status,200);
  assert.ok(fs.readdirSync(path.join(an,'_archive')).some(f=>f.endsWith('test.txt')));

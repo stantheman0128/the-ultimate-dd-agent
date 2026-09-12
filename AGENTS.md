@@ -53,12 +53,13 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 
 ### 階段 1a：消化
 1. **盤點缺件**：對照標準文件清單（財簽、章程、SPA/SHA、Cap Table、組織圖、Term Sheet、財測模型、股東名簿、變更登記）→ 缺件直接生成「文件請求」題。
-2. **文件字卡**（每檔一張，派 `card-extractor` 子代理，多份文件平行派；先看 `_analysis/index/` 有無索引，沒有就先跑 `python3 _workbench/index_doc.py <案件>`）。固定四段結構：
+2. **文件字卡**（每檔一張，派 `card-extractor` 子代理，多份文件平行派；先看 `_analysis/index/` 有無索引，沒有就先跑 `python3 _workbench/index_doc.py <案件>`）。固定五段結構：
    - 摘要（≤3 句）
    - 關鍵數字表 `| 項目 | 數值 | 出處 |` — **機械式抽取、不判斷重要性、全部撈**，每筆附頁碼或 tab/儲存格
+   - 重要陳述（非數字） `| 陳述 | 原文摘錄 | 出處 |` — 競爭、承諾、法遵、依賴、因果與前瞻宣稱；原文逐字摘錄 ≤60 字
    - 未明名詞與疑點（附出處；含附註中的質押/擔保/終止/關係人）
    - 覆蓋聲明（共 X 頁/tab，是否全數處理）
-   - xlsx 一律用 python3＋openpyxl 讀「值＋公式」；掃描 PDF 逐頁視覺讀（≤20 頁/次，大檔分段）
+   - xlsx 一律用 python3＋openpyxl 讀「值＋公式」；所有 needs_visual 頁另外讀渲染 PNG（≤20 頁/次）；其他頁讀完整索引文字，docx／純文字引用段號
    - 大檔依 server 分片表派工；分片完成後執行 `python3 _workbench/merge_cards.py <案件> <檔>`，再執行 `python3 _workbench/verify_cards.py <案件>`。未達 95% 或 critical_miss 的字卡重抽一次、再驗；仍失敗明列未驗證，不能宣稱通過。之後才派 qc-sampler。
 3. **跨文件對帳**（派 `reconciler`）→ `facts.md`＋`facts.json`：事實矩陣＋不一致清單（每筆附兩邊出處與嚴重度）。同物異名對成一列（aliases_seen）、同名不同口徑分 basis、有公式的指標填 derived 交給 `recompute.py` 重算，模型不心算。**不一致＝最高優先問題來源**。
 4. **字卡抽查**（派 `qc-sampler`）→ `qc-report.md`：漏抽率 > 20% 或漏掉質押/終止/關係人條款的字卡重抽。

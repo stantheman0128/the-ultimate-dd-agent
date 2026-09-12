@@ -62,3 +62,6 @@ _workbench/.tessdata/
 
 # Private learned memory, summaries, background jobs, rebuildable FTS index
 /_private_memory/
+
+# Reproducible visual-page cache
+**/_analysis/index/_render/

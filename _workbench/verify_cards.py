@@ -18,15 +18,17 @@ def norm(text):
         result.append((value,pct))
     return result
 
-def card_rows(text):
+def card_rows(text, include_statements=False):
     active=False
+    statement=False
     for line in text.splitlines():
         if line.startswith('## '):
-            active='關鍵數字' in line
+            statement='重要陳述' in line
+            active='關鍵數字' in line or (include_statements and statement)
         if not active or not line.strip().startswith('|'): continue
         cells=[c.strip() for c in re.split(r'(?<!\\)\|',line.strip().strip('|'))]
-        if len(cells)<3 or cells[0] in ('項目','指標') or re.fullmatch(r'[- :]+',cells[0]): continue
-        yield {'item':cells[0], 'value':cells[1], 'loc':cells[2]}
+        if len(cells)<3 or cells[0] in ('項目','指標','陳述') or re.fullmatch(r'[- :]+',cells[0]): continue
+        yield {'item':cells[0], 'value':cells[1].replace('\\|','|'), 'loc':cells[2], 'kind':'statement' if statement else 'value'}
 
 def source_text(index, loc):
     if index.get('kind')=='xlsx':
@@ -40,7 +42,7 @@ def source_text(index, loc):
                     if c['ref']==ref: chunks.append(str(c.get('value',''))+' '+str(c.get('formula') or ''))
         return '\n'.join(chunks)
     pages={p['n']:p.get('text','') for p in index.get('pages',index.get('slides',[]))}
-    refs=re.findall(r'(?:p\.\s*|slide\s*)(\d+)',loc,re.I)
+    refs=re.findall(r'(?:p\.\s*|slide\s*|段\s*)(\d+)',loc,re.I)
     return '\n'.join(pages.get(int(n),'') for n in refs)
 
 def verify(deal, only=None):
@@ -52,7 +54,7 @@ def verify(deal, only=None):
         ip=an/'index'/(file+'.index.json')
         index=json.loads(ip.read_text()) if ip.exists() else {}
         text=card.read_text()
-        rows=list(card_rows(text)); hit=[]; miss=[]
+        rows=list(card_rows(text,include_statements=True)); hit=[]; miss=[]
         expected=index.get('page_count') or index.get('sheet_count') or 0
         marker=re.search(r'<!--\s*coverage:\s*(\{.*?\})\s*-->',text,re.S)
         declaration=re.search(r'共\s*(\d+)\s*(?:個\s*)?(?:頁|tab)',text.split('## 覆蓋聲明')[-1])
@@ -66,15 +68,19 @@ def verify(deal, only=None):
             evidence=source_text(index,row['loc']); values=norm(row['value']); found=norm(evidence)
             # Numeric tokens match exactly, never 12 inside 120. Permit the equivalent
             # decimal for a percent only when the source actually contains that number.
-            if values:
+            if row['kind']=='statement':
+                compact=lambda s:re.sub(r'\s+','',s)
+                quote=compact(row['value'])
+                valid=bool(quote) and len(row['value'])<=60 and quote in compact(evidence)
+            elif values:
                 valid=bool(evidence.strip()) and all((v,pct) in found or (pct and (v/100,False) in found) for v,pct in values)
             else:
                 compact=lambda s:re.sub(r'\s+','',unicodedata.normalize('NFKC',s)).casefold()
                 valid=bool(evidence.strip()) and compact(row['value']) in compact(evidence)
             (hit if valid else miss).append(row)
-        critical=[r for r in miss if any(k in r['item'].lower() for k in CRITICAL)]
+        critical=[r for r in miss if any(k in (r['item']+' '+r['value']).lower() for k in CRITICAL)]
         rate=len(hit)/len(rows) if rows else 0
-        reports.append({'file':file,'rows':len(rows),'hit':len(hit),'miss':miss,'hit_rate':rate,'critical_miss':len(critical),'critical_rows':critical,'coverage_ok':coverage_ok,'passed':bool(rows) and rate>=.95 and not critical and coverage_ok})
+        reports.append({'file':file,'rows':len(rows),'statement_rows':sum(r['kind']=='statement' for r in rows),'hit':len(hit),'miss':miss,'hit_rate':rate,'critical_miss':len(critical),'critical_rows':critical,'coverage_ok':coverage_ok,'passed':bool(rows) and rate>=.95 and not critical and coverage_ok})
     # A single-file check updates that card without discarding other results.
     if only and (an/'card-verify.json').exists():
         old=json.loads((an/'card-verify.json').read_text()).get('cards',[])

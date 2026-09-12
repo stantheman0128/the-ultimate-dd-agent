@@ -8,7 +8,7 @@ def merge(deal, filename):
     idx=json.loads((an/'index'/(filename+'.index.json')).read_text())
     parts=sorted(cards.glob(filename+'.part-*.md'))
     if not parts: raise ValueError('no shards found')
-    summaries=[]; rows=[]; issues=[]; covered=[]; sheets=[]; unknown=[]
+    summaries=[]; rows=[]; statements=[]; issues=[]; covered=[]; sheets=[]; unknown=[]
     for p in parts:
         text=p.read_text(); m=re.search(r'<!--\s*coverage:\s*(\{.*?\})\s*-->',text,re.S)
         if not m: raise ValueError('missing coverage marker: '+p.name)
@@ -22,6 +22,7 @@ def merge(deal, filename):
         if summary: summaries.append(re.split(r'[。!?]\s*',summary)[0])
         for k,v in sections.items():
             if '關鍵數字' in k: rows.extend(l for l in v.splitlines() if l.strip().startswith('|') and not re.search(r'項目|^\|[- :|]+$',l))
+            if '重要陳述' in k: statements.extend(l for l in v.splitlines() if l.strip().startswith('|') and not re.search(r'^\|\s*陳述\s*\||^\|[- :|]+$',l))
             if '疑點' in k: issues.extend(v.splitlines())
     count=idx.get('page_count') or idx.get('sheet_count') or 0
     missing=sorted(set(range(1,count+1))-set(covered))
@@ -31,7 +32,7 @@ def merge(deal, filename):
     if idx.get('kind')=='xlsx' and set(sheets)!=set(sh['name'] for sh in idx.get('sheets',[])):
         raise ValueError('sheet coverage does not match index')
     coverage={'pages':[1,count],'sheets':sheets,'unreadable':unknown}
-    out=f'# 字卡：{filename}\n\n## 摘要\n'+ '。'.join(summaries[:3])+'。\n\n## 關鍵數字表\n| 項目 | 數值 | 出處 |\n|---|---|---|\n'+'\n'.join(dict.fromkeys(rows))+'\n\n## 未明名詞與疑點\n'+'\n'.join(dict.fromkeys(issues))+'\n\n## 覆蓋聲明\n'+f'共 {count} 頁 / tab，分片連續覆蓋；未辨識頁：{unknown}。\n<!-- coverage: '+json.dumps(coverage,ensure_ascii=False)+' -->\n'
+    out=f'# 字卡：{filename}\n\n## 摘要\n'+ '。'.join(summaries[:3])+'。\n\n## 關鍵數字表\n| 項目 | 數值 | 出處 |\n|---|---|---|\n'+'\n'.join(dict.fromkeys(rows))+'\n\n## 重要陳述（非數字）\n| 陳述 | 原文摘錄 | 出處 |\n|---|---|---|\n'+'\n'.join(dict.fromkeys(statements))+'\n\n## 未明名詞與疑點\n'+'\n'.join(dict.fromkeys(issues))+'\n\n## 覆蓋聲明\n'+f'共 {count} 頁 / tab，分片連續覆蓋；未辨識頁：{unknown}。\n<!-- coverage: '+json.dumps(coverage,ensure_ascii=False)+' -->\n'
     target=cards/(filename+'.md');target.write_text(out)
     archive=cards/'_parts';archive.mkdir(exist_ok=True)
     for p in parts:

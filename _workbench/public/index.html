@@ -500,14 +500,14 @@ let FACTS = { facts: [], docs: {} };
 const EDITS = {};
 
 // ---- 出處連結：[檔名 p.N] / [檔名 工作表!B4] / [檔名 slide N] → 可點的 cite ----
-const CITE_RE = /\[([^\[\]\n]+?\.(?:pdf|xlsx|xlsm|pptx|docx|PDF|XLSX|PPTX))\s+((?:p\.?|page\s*|第\s*)\s*\d{1,4}(?:\s*頁)?|slide\s*\d{1,4}|[^\]\n!]+![A-Z]{1,3}\d{1,6}(?::[A-Z]{1,3}\d{1,6})?)\]/g;
+const CITE_RE = /\[([^\[\]\n]+?\.(?:pdf|xlsx|xlsm|pptx|docx|txt|md|csv|tsv|jpg|jpeg|png|heic|heif|webp|tiff?|bmp|gif))\s+((?:p\.?|page\s*|第\s*|段\s*|slide\s*)\s*\d{1,4}(?:\s*頁)?(?:（圖）)?|[^\]\n!]+![A-Z]{1,3}\d{1,6}(?::[A-Z]{1,3}\d{1,6})?)\]/gi;
 function citeLinks(html){
   return String(html).replace(CITE_RE,(m,f,l)=>`<span class="cite" data-f="${esc(f)}" data-l="${esc(l)}" title="開原文">[${esc(f)} ${esc(l)}]</span>`);
 }
 function docRoundOf(file){ const d=(D&&D.docs||[]).find(x=>x.name===file); return d?d.round:''; }
 function parseLoc(loc){
-  loc=String(loc||'').trim();
-  let m=loc.match(/^(?:p\.?|page\s*|第\s*)?\s*(\d{1,4})\s*(?:頁)?$/i); if(m) return {page:Number(m[1])};
+  loc=String(loc||'').trim().replace(/（圖）$/, '');
+  let m=loc.match(/^(?:p\.?|page\s*|第\s*|段\s*)?\s*(\d{1,4})\s*(?:頁)?$/i); if(m) return {page:Number(m[1])};
   m=loc.match(/^slide\s*(\d{1,4})$/i); if(m) return {page:Number(m[1])};
   m=loc.match(/^(.+?)!([A-Z]{1,3}\d{1,6})(?::([A-Z]{1,3}\d{1,6}))?$/); if(m) return {sheet:m[1],ref:m[2],ref2:m[3]||''};
   m=loc.match(/^([A-Z]{1,3}\d{1,6})(?::([A-Z]{1,3}\d{1,6}))?$/); if(m) return {ref:m[1],ref2:m[2]||''};
@@ -544,7 +544,7 @@ async function openEvidence(file, round, loc){
       $('evNav').innerHTML=`<span>工作表：</span>${d.sheets.map(n=>`<button data-n="${esc(n)}" ${n===s.name?'class="primary"':''} onclick="openEvidence(EV.file,EV.round,this.dataset.n+'!'+(EV.ref||'A1'))">${esc(n)}</button>`).join('')}`;
       EV={file,round,sheet:s.name,ref:p.ref||''};
       const target=p.ref?cells.get(p.ref):null;
-      $('evText').textContent=target?`${s.name}!${p.ref} = ${target.value==null?'':target.value}${target.formula?'\n公式：'+target.formula:''}`:`${s.name}（${s.dims||''}）共 ${s.cells.length} 格`;
+      $('evText').textContent=target?`${s.name}!${p.ref} = ${target.value==null?(target.formula?'值未快取':''):target.value}${target.formula?'\n公式：'+target.formula:''}`:`${s.name}（${s.dims||''}）共 ${s.cells.length} 格`;
       const hlEl=$('evLeft').querySelector('td.hl'); if(hlEl) hlEl.scrollIntoView({block:'center'});
     }catch(e){$('evLeft').innerHTML=`<div style="padding:16px;color:var(--danger)">${esc(e.message)}</div>`;}
     return;
@@ -563,6 +563,11 @@ async function loadEvPage(n){
     let t=esc(d.text||'（此頁無文字）');
     if(q){const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); t=t.replace(re,'<mark>$1</mark>');}
     $('evText').innerHTML=t;
+    if(d.needs_visual){
+      $('evLeft').innerHTML=`<img style="width:100%;object-fit:contain" alt="第 ${d.page} 頁渲染圖" src="/api/render?${enc({deal:cur,file:EV.file,page:d.page})}" onerror="this.replaceWith(Object.assign(document.createElement('p'),{textContent:'渲染失敗；請下載原檔或確認 LibreOffice／圖片解碼器已安裝。'}))">`;
+    }else if(EV.file.toLowerCase().endsWith('.pdf')){
+      $('evLeft').innerHTML=`<iframe title="PDF" src="/api/download?${enc({deal:cur,from:'doc',round:EV.round,file:EV.file})}#page=${d.page}&zoom=page-width"></iframe>`;
+    }else $('evLeft').textContent='此段無視覺頁，右側為索引文字。';
     const ifr=$('evLeft').querySelector('iframe'); if(ifr&&ifr.src.includes('#')) ifr.src=ifr.src.replace(/#page=\d+/,'#page='+d.page);
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
@@ -807,9 +812,12 @@ function catSel(f){
 function idxCell(f){
   if (f.indexing) return '<span class="chip run">索引中…</span>';
   if (!f.index) return `<button class="idxcell" style="padding:2px 8px" data-f="${esc(f.name)}" onclick="reindexOne(this.dataset.f)" title="建立逐頁 / 逐格索引">建索引</button>`;
-  const i=f.index; const unit = i.kind==='xlsx' ? 'tab' : '頁';
+  const i=f.index; const unit = i.kind==='xlsx' ? 'tab' : ['docx','text'].includes(i.kind)?'段':'頁';
   if(i.error)return `<span class="chip warn" title="${esc(i.error)}">抽取失敗</span>`;
-  return `<span class="idxcell" title="${esc((i.summary||'')+' '+(i.warnings||[]).join('；'))} ${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.status==='ready'?' · 中文索引就緒':i.status==='partial'?' · <span class="chip warn">部分完成</span>':''}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
+  return `<span class="idxcell" title="${esc((i.summary||'')+' '+(i.warnings||[]).join('；'))} ${i.chars.toLocaleString()} 字元${i.stale?'（原檔已變動，請重建）':''}">${i.pages} ${unit}${i.status==='ready'?' · 索引就緒':i.status==='partial'?' · <span class="chip warn">部分完成</span>':''}${i.needsOcr?` · <span class="chip warn" style="font-size:10.5px">掃描 ${i.needsOcr}</span>`:''}${i.needsVisual?` · <button class="chip warn" data-f="${esc(f.name)}" onclick="showVisualPages(this.dataset.f)">圖 ${i.needsVisual} 頁</button>`:''}${i.formulaCache?.missing?' · <span class="chip warn">公式無快取值</span>':''}${i.stale?' <span class="chip warn" style="font-size:10.5px">過期</span>':''}</span>`;
+}
+async function showVisualPages(file){
+ try{const data=await api('/api/visual-pages?'+enc({deal:cur,file}));$('cardTitle').textContent=file+' · 視覺頁';$('cardBody').innerHTML=data.pages.map(p=>`<button data-f="${esc(file)}" data-n="${p.n}" onclick="hide('cardOverlay');openEvidence(this.dataset.f,docRoundOf(this.dataset.f),'p.'+this.dataset.n)">圖 ${p.n} 頁${p.render_error?' · 渲染待重試':''}</button>`).join(' ');show('cardOverlay');}catch(e){toast(e.message);}
 }
 function verifyChip(f){const v=f.verification;if(!v)return '';return `<button class="chip ${v.critical_miss?'bad':v.passed?'ok':'warn'}" onclick="showVerification()">${v.critical_miss?'✗ 關鍵漏抽':(v.passed?'✓ ':'⚠ ')+Math.round(v.hit_rate*100)+'%'}</button> `;}
 async function showVerification(){try{const v=await api('/api/card-verify?'+enc({deal:cur}));$('cardTitle').textContent='字卡逐筆核對';$('cardBody').innerHTML=mdToHtml(v.content||'尚未核對');show('cardOverlay');}catch(e){toast(e.message);}}
@@ -1403,7 +1411,7 @@ const HELP = `## 開始一個盡調案件
 搜尋資料頁提供雙 provider 問答，依進階設定選模型、effort 與預算，超預算使用 BM25 挑頁。專案對話另保留 OpenAI 的片段檢索、討論紀錄與記憶。
 
 ## 文件處理狀態
-- **中文索引就緒**：可搜尋抽取文字與中文文件說明。
+- **索引就緒**：可搜尋原生抽取文字；額外 AI 文件說明須另行啟用。
 - **部分完成**：部分文字、圖片或摘要尚未完整處理，查看原因後再決定是否重試。
 - **抽取失敗**：可能是不支援、損毀或加密的檔案，請確認原件。
 - 需要重試時，展開資料室的「資料處理工具」。

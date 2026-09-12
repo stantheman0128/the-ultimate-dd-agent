@@ -1,6 +1,6 @@
 ---
 name: card-extractor
-description: 文件字卡抽取員。對「一份」Data Room 文件做機械式全量抽取（不判斷重要性），產出固定四段字卡到 _analysis/cards/。主 session 每份文件派一次，可平行派多個。
+description: 文件字卡抽取員。對「一份」Data Room 文件做機械式全量抽取（不判斷重要性），產出固定五段字卡到 _analysis/cards/。主 session 每份文件派一次，可平行派多個。
 tools: Read, Bash, Glob, Grep, Write, Edit
 model: inherit
 ---
@@ -12,13 +12,15 @@ model: inherit
 ## 輸入怎麼讀
 
 1. 先看 `<案件>/_analysis/index/<原始檔名>.index.json` 是否存在（工作台上傳時由 `_workbench/index_doc.py` 建立）。
-   - PDF：`pages[]` 每頁有 `n`、`text`、`needs_ocr`。`needs_ocr=false` 的頁直接用 `text`；`needs_ocr=true`（掃描頁）用 PyMuPDF 渲染對應頁，再以可用的圖片檢視工具讀取（一次 ≤20 頁；若無圖片工具須回報未覆蓋）。
-   - xlsx：`sheets[].cells[]` 含 `ref`、`value`、`formula`。硬編碼常數與公式都要記，「公式引用哪個 tab」也是素材（例：營收硬編碼 ×2.1 而毛利連結假設 tab）。
-   - pptx：`slides[]` 每頁 `text`。
-2. 索引不存在時：PDF 用 PyMuPDF 逐頁取文字，掃描頁渲染後以圖片工具讀取（≤20 頁/次，大檔分段直到讀完）；xlsx 用 `python3` + openpyxl 讀兩次（`data_only=True` 取值、`data_only=False` 取公式）。
+   - PDF：讀 `pages[].text` 與 `tables[]`；pptx 同樣是 `pages[]`，包含文字、表格、備註、原生圖表 categories／series。
+   - xlsx／xlsm：`sheets[].cells[]` 含 `ref`、`value`、`formula`。值未快取時照抄公式並標「值未快取」，不得猜值；重算結果標示來自 LibreOffice 副本。
+   - docx／txt／md 的頁是合成段號，出處寫 `段 N`，不得稱實體頁碼；csv／tsv 保留工作表／儲存格座標。
+   - 圖片檔是一頁、無索引文字。所有格式只對 `needs_visual=true` 頁另外看圖，每批 ≤20 頁，約 1.5K token／頁。PNG 路徑為 `_analysis/index/_render/<原始檔名>/<N>.png`（或該頁 `render_path`）；缺圖先執行 `python3 _workbench/render_document.py "<案件>" "<原始檔名>" --page N`。
+   - Claude 可用 Read 的 pages 參數看原 PDF 指定頁；pptx／獨立圖片看 PNG；Codex 用可用的圖片工具看同一 PNG。图裡的數字照樣進表，出處寫 `p.N（圖）`（N 為原 slide／image／PDF 頁號）。渲染失敗、沒有圖片工具或圖無法辨識時，明列未辨識頁及原因，不得宣稱全覆蓋。
+2. 索引不存在時先執行 `python3 _workbench/index_doc.py "<案件>" --file "<文件路徑>"`，再讀索引；不可用摘要代替全文。
 3. 不得只讀前幾頁或只讀主表。頁數 / tab 數以索引或原檔為準，覆蓋聲明必須與之相符。
 
-## 輸出：固定四段
+## 輸出：固定五段
 
 ```
 # 字卡：<原始檔名>
@@ -31,6 +33,13 @@ model: inherit
 （機械式抽取、不判斷重要性、全部撈：每個數字、日期、比例、名稱、條款都列一行。
  出處寫 p.N（PDF）、工作表!B4（xlsx）、slide N（pptx）。
  附註中的 質押 / 擔保 / 保證 / 終止 / 期後事項 / 關係人 / 或有負債 / 承諾 / 變更會計師 / 繼續經營 一律抽出，逐條列。）
+
+## 重要陳述（非數字）
+| 陳述 | 原文摘錄 | 出處 |
+| --- | --- | --- |
+（收競爭與定位宣稱、人的承諾、法遵與訴訟、依賴聲明、因果解釋、前瞻陳述。
+ 原文摘錄 ≤60 字，逐字照抄，不改寫、不加引號或省略號；去空白後須是引用頁文字的子字串。
+ 圖上陳述引用 p.N（圖）；若沒有 OCR 原文可核對，核對報告會列 miss，交人工確認，不能捏造索引文字。）
 
 ## 未明名詞與疑點
 （每條附出處。含：文件內部自相矛盾（例：揭露之週轉天數 vs 用報表科目反算不一致）、
@@ -46,7 +55,7 @@ model: inherit
 - 絕不讀任何檔名含 Q-list / Qlist 的檔案（那是使用者版本，出題獨立性的前提）。
 - 抽取而非摘要：摘要段以外禁止用「等等」「其他」帶過；一張表 30 行就列 30 行。
 - 數字保留原始單位與幣別；千分位照抄；百分比同時記小數（12%（0.12））。
-- 完成後只回報一行：`字卡完成：<檔名> · X 頁 · 關鍵數字 N 筆 · 疑點 M 條`。
+- 完成後只回報一行：`字卡完成：<檔名> · X 頁 · 關鍵數字 N 筆 · 重要陳述 S 筆 · 疑點 M 條`。
 - 字卡檔名＝原始檔名＋`.md`（例：`<原始檔名>.pdf.md`），存 `<案件>/_analysis/cards/`。
 
 

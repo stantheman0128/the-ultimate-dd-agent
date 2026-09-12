@@ -73,3 +73,47 @@ QLIST_MOCK=1 node _workbench/server.js
 進階設定為雙 provider 模型／effort／persona 的唯一入口。搜尋頁的「單次文件問答」使用 `/api/ask`，超預算用 BM25 挑頁；專案對話的記憶與工具檢索仍獨立運作。
 
 Reviewer 給建議，人審砍題需附理由。候選規則需在學習頁核准，下次派工才生效；升版方法論也需核准。每次執行的設定、規則與派工訊息保存在案件 runs 目錄。完整驗證與未驗證事項見根目錄 MIGRATION.md。
+
+## DELTA：全文、視覺頁與陳述核對
+
+原生索引預設零模型 token。PyMuPDF／openpyxl／python-pptx／python-docx 直接產生全文 JSON，保留頁、slide、儲存格與公式；沒有 PDF 轉 Markdown 步驟。`QLIST_INDEX_AI=1` 才額外產生 AI 導覽摘要，這是另計費的選用步驟，不取代原文。既有專案聊天與 FTS5 保留；本次未新增向量庫。
+
+| 格式 | 索引與座標 | 圖片／特殊處理 |
+|---|---|---|
+| PDF | `pages[].text`、`tables[]` 列陣列，`p.N` | 文字 <30 字且有圖判掃描頁；可用時本地 Tesseract OCR；圖片聯集面積比 ≥0.20 或掃描頁標 `needs_visual` |
+| PPTX | `pages[]`，文字／表格／備註／圖表 categories 與 series，`slide N` | picture 與圖表頁標視覺核對；LibreOffice → PDF → PNG |
+| XLSX／XLSM | `sheets[].cells[]` 的值＋公式，`Sheet!B4` | 缺快取值用 LibreOffice 重算暫存副本；原檔與原公式保留，值標 `cache_source`；失敗顯示「公式無快取值」 |
+| DOCX | 段落與表格，每 3,000 字一段，`段 N` | 非實體頁；嵌入圖片僅保留既有本地 OCR，完整圖片定位為 P2 |
+| TXT／MD | 每 5,000 字一段，`段 N` | 全文保留 |
+| CSV／TSV | 延用結構化儲存格，`資料!B4` | 保留既有可點擊格座標 |
+| JPG／PNG／HEIC／WebP | `kind:image`，無文字，標 `needs_visual` | 解碼並依 EXIF 轉正為 PNG；HEIC 需 pillow-heif |
+
+安裝 `_workbench/requirements.txt`；PPTX 渲染與公式重算另需 LibreOffice（可用 `LIBREOFFICE_BIN` 指定）。轉換使用暫存副本與獨立 profile，停用巨集與外部連結更新。缺轉換器時文字／原公式仍可用，視覺覆蓋不得冒稱完成。
+
+`index_doc.py` 會為標記頁產生 `_analysis/index/_render/<檔名>/<N>.png`；文件頁的「圖 N 頁」可開圖。也可執行 `python3 _workbench/render_document.py "<案件>" "<檔名>" --page N`。渲染快取比對來源時間、大小與 schema；原檔變更須先重建索引。快取不進版控。
+
+字卡固定五段：摘要、關鍵數字表、重要陳述（非數字）、未明名詞與疑點、覆蓋聲明。重要陳述表頭為 `| 陳述 | 原文摘錄 | 出處 |`，摘錄 ≤60 字；去空白後必須逐字存在於所引用頁，改寫即列 miss。合併保留並去重陳述列；產業與 IC persona 對每條陳述問依據、文件與例外，QC 將陳述漏抽計入漏抽率。沒有 OCR 可對照的圖上數字／陳述仍列 miss，須人工核對，不能把視覺模型的文字回填索引以自證正確。
+
+## DELTA：代理搜尋與參數
+
+```bash
+python3 _workbench/search.py "<案件>" "毛利率" --top 20
+python3 _workbench/search.py "<案件>" "related party" --top 5 --json
+```
+
+CLI 直接呼叫 server 的同一個評分函式，不需啟動 HTTP server（需 Node 與 npm dependencies）。輸出檔名、頁／格座標、分數、片段；reviewer 與 persona 先搜尋，再讀命中的頁／格。搜尋、CLI 與問 AI 共用 `metrics.json` 別名及既有同義詞；原詞權重 1、擴展詞 0.6，英文短別名採詞界匹配，避免把 Hardware 的 ar 當應收款。BM25 以一頁／工作表為單位；搜尋先排直接字串命中，再排其餘相關結果。
+
+| 參數 | 值 |
+|---|---|
+| 掃描頁文字門檻／視覺圖面積比 | 30 字／0.20 |
+| 視覺讀取批次 | 只讀標記頁，每次 ≤20 頁；估 1.5K token／頁 |
+| 分片上限 | `QLIST_SHARD_TOKENS=60000` |
+| token 估算式 | 拉丁字元 ÷3.2＋CJK ×1.2 |
+| 核對門檻 | 命中率 ≥0.95，關鍵條款 miss=0，覆蓋完整 |
+| QC | 每檔 3 頁，附註頁至少 1；xlsx 每 tab 20 格 |
+| BM25 | k1=1.5、b=0.75；依索引 mtime 快取 |
+| 搜尋上限／CLI 預設 | 60／20 |
+| 問 AI 預算 | Claude 450,000；OpenAI 150,000，可在設定調整 |
+| 問 AI 快取 | Claude ephemeral 1h；OpenAI 自動快取不可保證 |
+
+Token 帳只作容量估算，不是實測用量：以約 41 萬原文 token 的案件，抽取約 41 萬＋每片約 3K prompt；QC 約 2–3 萬；對帳約 3–6 萬；4 個 persona 約 20 萬；reviewer 約 3–6 萬；主 session 約 5–10 萬，粗估全輪約 80–95 萬，視覺頁另加。索引、merge／verify／candidates 為程式，零模型 token。抽取全讀一次；其他代理通常只讀字卡／facts，QC 抽頁、reviewer 搜特定頁；下一輪只增量抽新文件。問 AI 另計，全案超預算時指名頁 ±1 加 BM25 挑頁。

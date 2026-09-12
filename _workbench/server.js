@@ -85,7 +85,7 @@ function listDocs(dp) {
       cat: catMap[f] || guessCat(f),
       card: !!findCard(dp, f),
       verification:readCardVerification(dp).cards?.find(c=>c.file===f)||null,
-      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
+      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, needsVisual: im.needs_visual_pages || 0, formulaCache: im.formula_cache || null, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
       indexing: INDEXING.has(path.join(dir, f)),
     });
   };
@@ -258,7 +258,7 @@ function indexMeta(dp) {
     let d;
     try {const m=JSON.parse(fs.readFileSync(ip+'.meta','utf8'));if(m.indexSize===st.size&&Math.abs(m.indexMtime-st.mtimeMs/1000)<.001)d=m;}catch{}
     if(!d)d=loadIndex(dp,name);
-    if(d){const meta={kind:d.kind,page_count:d.page_count,sheet_count:d.sheet_count,needs_ocr_pages:d.needs_ocr_pages,total_chars:d.total_chars,mtime:d.mtime,preprocess_status:d.preprocess_status,warnings:d.warnings,error:d.error,enrichment:d.enrichment};out[name]=meta;INDEX_META_CACHE.set(ip,{mtime:st.mtimeMs,meta});}
+    if(d){const meta={kind:d.kind,page_count:d.page_count,sheet_count:d.sheet_count,needs_ocr_pages:d.needs_ocr_pages,needs_visual_pages:d.needs_visual_pages,formula_cache:d.formula_cache,total_chars:d.total_chars,mtime:d.mtime,preprocess_status:d.preprocess_status,warnings:d.warnings,error:d.error,enrichment:d.enrichment};out[name]=meta;INDEX_META_CACHE.set(ip,{mtime:st.mtimeMs,meta});}
     if(INDEX_META_CACHE.size>5000)INDEX_META_CACHE.delete(INDEX_META_CACHE.keys().next().value);
   }
   return out;
@@ -406,16 +406,50 @@ function bm25Index(dp) {
   BM25_CACHE.set(dp, idx);
   return idx;
 }
+const SEARCH_SYNONYMS = [
+        ['財報', '年報', '財簽', '財務報表', '資產負債表', '損益表', '現金流量', '自結', 'financial', 'audited', 'balance', 'income'],
+        ['股權', 'cap table', 'captable', '股東名簿', '股東', '持股', 'shareholder', 'equity', 'registry'],
+        ['章程', '登記', 'incorporation', 'articles'],
+        ['合約', 'contract', 'agreement', 'spa', 'sha', 'term sheet'],
+        ['簡報', 'deck', 'pitch', '介紹', 'onepager', 'one page'],
+        ['財測', 'forecast', '模型', '預估'],
+      ];
+let METRIC_ALIASES_CACHE={mtime:0,groups:[]};
+function queryGroups(){
+  const file=path.join(ROOT,'knowledge','metrics.json');let stamp=0;try{stamp=fs.statSync(file).mtimeMs}catch{}
+  if(stamp!==METRIC_ALIASES_CACHE.mtime){
+    let groups=[];try{groups=JSON.parse(fs.readFileSync(file,'utf8')).metrics.map(m=>m.aliases)}catch{}
+    METRIC_ALIASES_CACHE={mtime:stamp,groups};
+  }
+  return [...METRIC_ALIASES_CACHE.groups,...SEARCH_SYNONYMS];
+}
+function expandQuery(query){
+  const text=String(query||'').toLowerCase(),weights=new Map(tokenize(text).map(t=>[t,1])),matches=[];
+  for(const [groupId,aliases] of queryGroups().entries())for(const alias of aliases){
+    if(typeof alias!=='string'||!alias.trim())continue;
+    const word=alias.toLowerCase();let start=text.indexOf(word);
+    while(start>=0){
+      const end=start+word.length;
+      if(!(/[a-z0-9]/.test(word[0])&&/[a-z0-9]/.test(text[start-1]||''))&&!(/[a-z0-9]/.test(word.at(-1))&&/[a-z0-9]/.test(text[end]||'')))matches.push({start,end,groupId,aliases});
+      start=text.indexOf(word,start+1);
+    }
+  }
+  // A longer exact alias wins over a contained alias for a different metric.
+  for(const hit of matches)if(!matches.some(other=>other.groupId!==hit.groupId&&other.start<=hit.start&&other.end>=hit.end&&other.end-other.start>hit.end-hit.start)){
+    for(const alias of hit.aliases)for(const token of tokenize(alias))if(!weights.has(token))weights.set(token,.6);
+  }
+  return weights;
+}
 function bm25Scores(idx, query, k1 = 1.5, b = 0.75) {
-  const qt = [...new Set(tokenize(query))];
+  const qt = expandQuery(query);
   const res = [];
   for (const u of idx.units) {
     let score = 0;
-    for (const t of qt) {
+    for (const [t,weight] of qt) {
       const f = u.tf.get(t); if (!f) continue;
       const n = idx.df.get(t) || 0;
       const idf = Math.log(1 + (idx.N - n + 0.5) / (n + 0.5));
-      score += idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * u.len / idx.avgdl));
+      score += weight * idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * u.len / idx.avgdl));
     }
     if (score > 0) res.push({ u, score });
   }
@@ -423,6 +457,18 @@ function bm25Scores(idx, query, k1 = 1.5, b = 0.75) {
   return res;
 }
 
+
+function searchIndex(dp,query,top=20) {
+  const direct=String(query).toLowerCase(),ranked=bm25Scores(bm25Index(dp),query),terms=[...expandQuery(query).keys()];
+  ranked.sort((a,b)=>Number(b.u.text.toLowerCase().includes(direct))-Number(a.u.text.toLowerCase().includes(direct))||b.score-a.score);
+  return ranked.slice(0,top).map(({u,score})=>{
+    const positions=terms.map(t=>u.text.toLowerCase().indexOf(t)).filter(i=>i>=0),at=Math.max(0,positions.length?Math.min(...positions):0);
+    const sheet=u.loc.sheet, cells=sheet?(u.d.sheets.find(s=>s.name===sheet)?.cells||[]):[];
+    const ref=(cells.find(c=>terms.some(t=>String(c.value??c.formula??'').toLowerCase().includes(t)))||cells[0])?.ref;
+    const loc=sheet?(ref?sheet+'!'+ref:'sheet '+sheet):(u.d.kind==='pptx'?'slide ':['docx','text'].includes(u.d.kind)?'段 ':'p.')+u.loc.page;
+    return {file:u.d.file,round:u.d.round,loc,page:u.loc.page,sheet,ref,score,snippet:u.text.slice(Math.max(0,at-80),at+200).replace(/\s+/g,' ')};
+  });
+}
 
 function questionTerms(q) {
   const terms = new Set();
@@ -846,6 +892,22 @@ const server = http.createServer(async (req, res) => {
       const total = Object.values(meta).reduce((s,d)=>s+Math.ceil((d.total_chars||0)/3),0);
       return json(res, 200, { docs, totalTokens: total, budget: ASK_BUDGET, wholeCorpus: false });
     }
+    if(u.pathname==='/api/visual-pages'){
+      const d=loadIndex(dealPath(q.get('deal')),path.basename(q.get('file')||''));if(!d)throw httpErr(404,'尚未索引');
+      return json(res,200,{pages:(d.pages||[]).filter(p=>p.needs_visual).map(p=>({n:p.n,render_error:p.render_error||null}))});
+    }
+    if(u.pathname==='/api/render'){
+      const dp=dealPath(q.get('deal')),file=q.get('file')||'',page=Number(q.get('page'));
+      if(path.basename(file)!==file||!Number.isSafeInteger(page)||page<1)throw httpErr(400,'invalid visual page');
+      const result=await new Promise((resolve,reject)=>{
+        const proc=spawn(PY,[path.join(__dirname,'render_document.py'),dp,file,'--page',String(page)],{cwd:ROOT});let out='',err='';
+        const timer=setTimeout(()=>{proc.kill();reject(httpErr(504,'渲染逾時'));},120000);
+        proc.stdout.on('data',d=>out+=d);proc.stderr.on('data',d=>err+=d);
+        proc.on('error',e=>{clearTimeout(timer);reject(e)});proc.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(out.trim());if(code||result.error)reject(httpErr(422,result.error||'渲染失敗'));else resolve(result)}catch{reject(httpErr(422,err.slice(-300)||'渲染失敗'))}});
+      });
+      const rendered=result.pages.find(p=>p.page===page);if(!rendered)throw httpErr(404,'無渲染頁');
+      const fp=safeJoin(dp,rendered.path);res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'no-store'});return fs.createReadStream(fp).pipe(res);
+    }
     if (u.pathname === '/api/page') {
       const dp = dealPath(q.get('deal'));
       const file = path.basename(q.get('file') || '');
@@ -860,7 +922,7 @@ const server = http.createServer(async (req, res) => {
       const n = Math.max(1, Number(q.get('page')) || 1);
       const p = (d.pages || [])[n - 1];
       if (!p) return json(res, 404, { error: `沒有第 ${n} 頁（共 ${d.page_count} 頁）` });
-      return json(res, 200, { file, round: d.round, kind: d.kind, page: n, page_count: d.page_count, text: p.text, needs_ocr: !!p.needs_ocr, chars: p.chars });
+      return json(res, 200, { file, round: d.round, kind: d.kind, page: n, page_count: d.page_count, text: p.text, needs_ocr: !!p.needs_ocr, needs_visual:!!p.needs_visual, loc_kind:p.loc_kind, tables:p.tables||[], render_error:p.render_error||null, chars: p.chars });
     }
     if (u.pathname === '/api/card-verify') {
       const dp=dealPath(q.get('deal'));let content='';try{content=fs.readFileSync(path.join(dp,'_analysis','card-verify.md'),'utf8');}catch{}
@@ -1151,16 +1213,8 @@ const server = http.createServer(async (req, res) => {
       const needle = (q.get('q') || '').toLowerCase();
       if (!needle) return json(res, 200, { hits: [] });
       // 同義詞放寬：搜「財報」也命中年報/資產負債表/損益表等
-      const SYN = [
-        ['財報', '年報', '財簽', '財務報表', '資產負債表', '損益表', '現金流量', '自結', 'financial', 'audited', 'balance', 'income'],
-        ['股權', 'cap table', 'captable', '股東名簿', '股東', '持股', 'shareholder', 'equity', 'registry'],
-        ['章程', '登記', 'incorporation', 'articles'],
-        ['合約', 'contract', 'agreement', 'spa', 'sha', 'term sheet'],
-        ['簡報', 'deck', 'pitch', '介紹', 'onepager', 'one page'],
-        ['財測', 'forecast', '模型', '預估'],
-      ];
       let terms = [needle];
-      for (const g of SYN) if (g.some(w => needle.includes(w) || w.includes(needle))) terms.push(...g);
+      for (const g of SEARCH_SYNONYMS) if (g.some(w => needle.includes(w) || w.includes(needle))) terms.push(...g);
       terms = [...new Set(terms.map(s => s.toLowerCase()))];
       const matches = s => { const low = s.toLowerCase(); return terms.some(t => low.includes(t)); };
       const firstIdx = s => { const low = s.toLowerCase(); let best = -1; for (const t of terms) { const i = low.indexOf(t); if (i >= 0 && (best < 0 || i < best)) best = i; } return best; };
@@ -1169,32 +1223,12 @@ const server = http.createServer(async (req, res) => {
         if (matches(doc.name))
           hits.push({ src: '文件 · ' + doc.round, line: 0, text: doc.name, doc: { name: doc.name, round: doc.round } });
       }
-      // 原文（索引層）：逐頁 / 逐格命中，附頁碼或儲存格，前端可直接開到該處。
-      // 頁面命中用 BM25 排序（大 Data Room 時先看最相關的頁，不是檔案順序前 60 頁）；xlsx 逐格仍用字串比對。
-      let rawHits = 0;
-      const allIdx = loadAllIndex(dp);
-      for (const d of allIdx) {
-        if (rawHits >= 60 || d.kind !== 'xlsx') continue;
-        const docRef = { name: d.file, round: d.round };
-        for (const s of d.sheets || []) for (const c of s.cells || []) {
-          if (rawHits >= 60) break;
-          const cellText = `${c.value == null ? '' : c.value}${c.formula ? ' ' + c.formula : ''}`;
-          if (matches(cellText)) { rawHits++; hits.push({ src: `原文 · ${d.file} · ${s.name}!${c.ref}`, line: 0, text: `${c.ref} = ${cellText}`.slice(0, 300), doc: docRef, sheet: s.name, ref: c.ref }); }
-        }
-      }
-      const ranked = bm25Scores(bm25Index(dp), q.get('q') || '');
-      const seen = new Set();
-      const pushPage = (d, p, score) => {
-        const k = d.file + '#' + p.n; if (seen.has(k)) return; seen.add(k);
-        const i = Math.max(0, firstIdx(p.text || ''));
-        const snippet = (p.text || '').slice(Math.max(0, i - 110), i + 190).replace(/\s+/g, ' ');
-        rawHits++;
-        hits.push({ src: `原文 · ${d.file} · p.${p.n}`, line: 0, text: snippet, doc: { name: d.file, round: d.round }, page: p.n, score: Math.round(score * 100) / 100 });
-      };
-      for (const r of ranked) { if (rawHits >= 60) break; const d = r.u.d; if (d.kind === 'xlsx') continue; const p = (d.pages || [])[r.u.loc.page - 1]; if (p && matches(p.text || '')) pushPage(d, p, r.score); }
-      for (const r of ranked) { if (rawHits >= 60) break; const d = r.u.d; if (d.kind === 'xlsx') continue; const p = (d.pages || [])[r.u.loc.page - 1]; if (p) pushPage(d, p, r.score); }
-      // 同義詞放寬只命中、BM25 沒分數的頁（例：搜「財報」命中 balance sheet 頁）
-      for (const d of allIdx) { if (rawHits >= 60) break; if (d.kind === 'xlsx') continue; for (const p of d.pages || []) { if (rawHits >= 60) break; if (!seen.has(d.file + '#' + p.n) && firstIdx(p.text || '') >= 0) pushPage(d, p, 0); } }
+      // CLI、搜尋頁與問 AI 共用 BM25＋別名權重；原文結果優先。
+      const raw = searchIndex(dp, q.get('q') || '', 60).map(h => ({
+        src: `原文 · ${h.file} · ${h.loc}`, line:0, text:h.snippet,
+        doc:{name:h.file,round:h.round}, page:h.page, sheet:h.sheet, ref:h.ref, score:h.score
+      }));
+      hits.unshift(...raw);
       const scanFile = (fp, label) => {
         let txt; try { txt = fs.readFileSync(fp, 'utf8'); } catch { return; }
         const lines = txt.split('\n');
@@ -1215,7 +1249,7 @@ const server = http.createServer(async (req, res) => {
         // Preserve Chinese routing descriptions from project chat after evidence-first BM25 hits.
         for(const m of found.matches||[])if(m.kind==='metadata'||!hits.length)hits.push({src:`${m.kind==='metadata'?'AI 導覽／描述':'內容'} · ${m.file} · ${m.location}`,text:m.snippet,evidenceId:m.id,score:0});
       }catch(e){warnings.push('補充搜尋暫不可用：'+e.message);}
-      return json(res, 200, { hits, warnings });
+      return json(res, 200, { hits:hits.slice(0,60).map(h=>({score:0,...h})), warnings });
     }
     if (u.pathname === '/api/ask' && req.method === 'POST') {
       // SSE 串流：{meta} → {delta}* → {usage} → {done}
@@ -1303,6 +1337,6 @@ const server = http.createServer(async (req, res) => {
 });
 if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${server.address().port}  root=${ROOT}  mock=${MOCK}`));
 
-module.exports={tokenize,bm25Index,bm25Scores,server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};
+module.exports={expandQuery,searchIndex,tokenize,bm25Index,bm25Scores,server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};
 
 if (require.main === module) setImmediate(runMemoryJobs);

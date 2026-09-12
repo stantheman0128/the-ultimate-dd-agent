@@ -18,5 +18,10 @@ test('combined page has unique controls and settings/reviewer/learning coexist w
  context.row={original_text:'原問題',review:{verdict:'rewrite',reason:'釐清口徑',answered_at:[],revised_question:'新問題'}};
  assert.match(vm.runInContext('reviewMarkup(row,0)',context),/原句／改寫對照/);
  assert.match(vm.runInContext("skillDiff('舊规则','新规则<script>')",context),/新规则&lt;script&gt;/);
- for(const id of ['chatLog','memoryDialog','learningBody','ddQ','factsProvenance'])assert.ok(elements.has(id));
+ assert.equal(vm.runInContext("parseLoc('p.2（圖）').page",context),2);
+ assert.equal(vm.runInContext("parseLoc('段 3').page",context),3);
+ assert.match(vm.runInContext("citeLinks('[photo.jpg p.1（圖）]')",context),/data-l="p.1（圖）"/);
+ context.doc={name:'sample.pptx',index:{kind:'pptx',chars:42,pages:1,needsVisual:1,formulaCache:{missing:1}}};
+ assert.match(vm.runInContext('idxCell(doc)',context),/圖 1 頁/);assert.match(vm.runInContext('idxCell(doc)',context),/公式無快取值/);
+ for(const id of ['chatLog' ,'memoryDialog','learningBody','ddQ','factsProvenance'])assert.ok(elements.has(id));
 });
