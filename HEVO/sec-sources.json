@@ -1,0 +1,147 @@
+[
+  {
+    "file": "primary_doc.html",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/xslC_X01/primary_doc.xml",
+    "expected_bytes": null,
+    "sha256": "53cf5f8a931c7149fb502bc3366ce8398c0679900623e8d0543d1aba17a20f04",
+    "bytes": 29273,
+    "stored_path": "round1/SEC-2025-07-07/primary_doc.html"
+  },
+  {
+    "file": "primary_doc.xml",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/primary_doc.xml",
+    "expected_bytes": 10648,
+    "sha256": "17e67f0597f7fa1ca774f5b9eaa8d25ff6d66300e9405122337e44c1230d6b9b",
+    "bytes": 10648,
+    "stored_path": "round1/SEC-2025-07-07/primary_doc.xml"
+  },
+  {
+    "file": "document_1.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_1.pdf",
+    "expected_bytes": 10691248,
+    "sha256": "798147a4df355b17d81fb152540612e6969c76d3f6eca8930e4b820af7b617ae",
+    "bytes": 10691248,
+    "stored_path": "round1/SEC-2025-07-07/document_1.pdf"
+  },
+  {
+    "file": "document_2.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_2.pdf",
+    "expected_bytes": 11347292,
+    "sha256": "8e3a5eb1969b4ea7ddef7ce5e06ed945131fe1417cdcebe56b9bb74f2977b2d5",
+    "bytes": 11347292,
+    "stored_path": "round1/SEC-2025-07-07/document_2.pdf"
+  },
+  {
+    "file": "document_3.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_3.pdf",
+    "expected_bytes": 12471903,
+    "sha256": "52119a47478daef1db202aed96e68eef453bf12bdd3d7fb7c5c6ad6f05ac7689",
+    "bytes": 12471903,
+    "stored_path": "round1/SEC-2025-07-07/document_3.pdf"
+  },
+  {
+    "file": "document_4.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_4.pdf",
+    "expected_bytes": 10124338,
+    "sha256": "22b7ec44d7d05e14427169ff33c18c8db1a3343d010686c847a6f7c0ad49c36b",
+    "bytes": 10124338,
+    "stored_path": "round1/SEC-2025-07-07/document_4.pdf"
+  },
+  {
+    "file": "document_5.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_5.pdf",
+    "expected_bytes": 28416956,
+    "sha256": "ef815b593a30241ce8088e37b317023690e37ecec45d0c7fae9870e5f331c04a",
+    "bytes": 28416956,
+    "stored_path": "round1/SEC-2025-07-07/document_5.pdf"
+  },
+  {
+    "file": "document_6.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_6.pdf",
+    "expected_bytes": 1624237,
+    "sha256": "c4db2d7eab1f3f1c6d58d0c7e327bd1e46aff2e5994371d02a87d431e901b3e3",
+    "bytes": 1624237,
+    "stored_path": "round1/SEC-2025-07-07/document_6.pdf"
+  },
+  {
+    "file": "document_7.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_7.pdf",
+    "expected_bytes": 1375644,
+    "sha256": "3b164afec972746bfb867ab16a0db8f35cccdd13dca69c624cc57003d7292fdd",
+    "bytes": 1375644,
+    "stored_path": "round1/SEC-2025-07-07/document_7.pdf"
+  },
+  {
+    "file": "document_8.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_8.pdf",
+    "expected_bytes": 2702945,
+    "sha256": "11d22e0f3be679b7e9f33d2afac3c421a9dd06bd64b44c541358b14de9b521a1",
+    "bytes": 2702945,
+    "stored_path": "round1/SEC-2025-07-07/document_8.pdf"
+  },
+  {
+    "file": "document_9.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_9.pdf",
+    "expected_bytes": 22929480,
+    "sha256": "d2488821929c6a5fea2750482d54ed0cc7152851fc4371726c8ff34702c59207",
+    "bytes": 22929480,
+    "stored_path": "round1/SEC-2025-07-07/document_9.pdf"
+  },
+  {
+    "file": "document_10.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_10.pdf",
+    "expected_bytes": 8990748,
+    "sha256": "cd335d7a81baf8ce32fee86cd3ff21cc111e5e9f5c4d530669a0c880422ec8b0",
+    "bytes": 8990748,
+    "stored_path": "round1/SEC-2025-07-07/document_10.pdf"
+  },
+  {
+    "file": "document_11.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_11.pdf",
+    "expected_bytes": 18489068,
+    "sha256": "33d64c07030f8eb748946e9065dc08aaacd2ea8ad9096442cca6bf1634decc61",
+    "bytes": 18489068,
+    "stored_path": "round1/SEC-2025-07-07/document_11.pdf"
+  },
+  {
+    "file": "document_12.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_12.pdf",
+    "expected_bytes": 15329563,
+    "sha256": "94bcc99809f38d8576c9e74419bb0e8ae3205cddbbbf70f95b682c793dc8e9b3",
+    "bytes": 15329563,
+    "stored_path": "round1/SEC-2025-07-07/document_12.pdf"
+  },
+  {
+    "file": "document_13.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_13.pdf",
+    "expected_bytes": 1674623,
+    "sha256": "93290521466b1b46446461af39c52b5985a8af2cb5690c04f3b8bbc5a48fa36c",
+    "bytes": 1674623,
+    "stored_path": "round1/SEC-2025-07-07/document_13.pdf"
+  },
+  {
+    "file": "document_14.pdf",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/document_14.pdf",
+    "expected_bytes": 1031522,
+    "sha256": "d4806e9a71dda1c2d2c385b1554eef2bb0daa6088155a4fb29c469ddf04b78c2",
+    "bytes": 1031522,
+    "stored_path": "round1/SEC-2025-07-07/document_14.pdf"
+  },
+  {
+    "file": "documents_list.htm",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/documents_list.htm",
+    "expected_bytes": 123,
+    "sha256": "6fbe46b950f19407284de1e15202b96d5f488f80bdbf2a0fd2dd0f4d4b87a7e2",
+    "bytes": 123,
+    "stored_path": "round1/SEC-2025-07-07/documents_list.htm"
+  },
+  {
+    "file": "0001670254-25-000685.txt",
+    "url": "https://www.sec.gov/Archives/edgar/data/1587317/000167025425000685/0001670254-25-000685.txt",
+    "expected_bytes": 199458673,
+    "sha256": "da52ec181b972f0d4778279dba7bda6c052b08de4b4cbcdcb05bd291955b9f37",
+    "bytes": 199458673,
+    "stored_path": "round1/SEC-2025-07-07/0001670254-25-000685.txt.gz",
+    "encoding": "gzip; gunzip restores the exact original bytes"
+  }
+]
