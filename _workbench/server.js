@@ -10,9 +10,11 @@ const provider=providers.codex;
 const settings=require('./settings');
 const questions=require('./questions');
 const reviewer=require('./review');
+const rulesModule=require('./rules');
 const {randomUUID}=require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
+const ruleStore=rulesModule.createStore(ROOT);
 const PUB = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT || 8765);
 const MOCK = process.env.QLIST_MOCK === '1';
@@ -164,7 +166,7 @@ function runConfig(override, model) {
   settings.validate(config);
   return config;
 }
-function agentDefinitions(config, runDir) {
+function agentDefinitions(config, runDir, deal) {
   const resolved=settings.matrix(config), definitions={}, agentFiles={};
   for(const [name,choice] of Object.entries(resolved.per_agent)){
     const fp=path.join(ROOT,'.codex','agents',name+'.toml');
@@ -172,7 +174,7 @@ function agentDefinitions(config, runDir) {
     const raw=fs.readFileSync(fp,'utf8');
     const read=k=>{const m=raw.match(new RegExp('^'+k+' = (.*)$','m'));return m?JSON.parse(m[1]):'';};
     const body=read('developer_instructions');
-    definitions[name]={description:read('description'),prompt:body+((name.startsWith('persona-')||name==='question-reviewer')?'\n'+skillsPromptLine(name):''),tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
+    definitions[name]={description:read('description'),prompt:body+((name.startsWith('persona-')||name==='question-reviewer')?'\n'+skillsPromptLine(name)+'\n'+rulesPromptLine(deal,name):''),tools:['Read','Bash','Glob','Grep','Write','Edit'],model:choice.model,effort:choice.effort};
     if(runDir){
       const dir=path.join(runDir,'agents');fs.mkdirSync(dir,{recursive:true});
       const file=path.join(dir,name+'.toml');
@@ -301,6 +303,24 @@ function listSkills() {
   }
   return out;
 }
+function rulesPromptLine(deal,scope){return '本案適用規則：\n'+JSON.stringify(ruleStore.active(deal,scope));}
+function readFeedback(dp){try{return fs.readFileSync(path.join(dp,'_analysis','feedback.jsonl'),'utf8').split('\n').filter(Boolean).map(JSON.parse);}catch{return [];}}
+function writeFeedback(dp,events){if(events.length)fs.appendFileSync(path.join(dp,'_analysis','feedback.jsonl'),events.map(e=>JSON.stringify(e)).join('\n')+'\n');}
+function startLearning(deal,selectedProvider){
+  if(RUNS[deal])return false;
+  const dp=dealPath(deal),round=readState(dp).round;
+  const prompt=`即時蒸餾：只派 distiller，讀 ${deal}/_analysis/feedback.jsonl、本輪 diff 與 Reviewer、knowledge/learned/rules.json 和啟用方法論；不可讀原始 Data Room。先檢查既有規則與方法論涵蓋／衝突，再提 0–3 條去個案化 proposed 規則。動機不明写 ${deal}/_analysis/distill-report-r${round}.md 的 needs_annotation。`;
+  startRun(deal,'learn',prompt,null,undefined,selectedProvider);return true;
+}
+function skillProposals(){
+  const dir=path.join(SKILLS_DIR,'_proposed');if(!fs.existsSync(dir))return [];
+  return fs.readdirSync(dir).filter(n=>/^[a-z0-9-]+@[0-9]+$/.test(n)).flatMap(ref=>{
+    try{const content=fs.readFileSync(path.join(dir,ref,'SKILL.md'),'utf8'),{fm}=parseFrontmatter(content),id=ref.split('@')[0];
+      let before='';try{before=fs.readFileSync(path.join(SKILLS_DIR,id,'SKILL.md'),'utf8');}catch{}
+      return [{ref,id,version:Number(fm.version),derived_from_rules:JSON.parse(fm.derived_from_rules||'[]'),before,content}];
+    }catch{return [];}
+  });
+}
 function scopeMatches(scope, name) {
   const scopes=Array.isArray(scope)?scope:String(scope||'persona, reviewer').replace(/[\[\]"']/g,'').split(/[,，]/).map(x=>x.trim());
   return scopes.includes('all')||scopes.includes(name)||(name.startsWith('persona-')&&scopes.includes('persona'))||(name==='question-reviewer'&&scopes.includes('reviewer'));
@@ -423,7 +443,7 @@ function buildAskContext(dp, question, askBudget = ASK_BUDGET) {
 const parseStreamLine = provider.parseStreamLine;
 function mockRun(run, emit, dp, finish) {
   const docs = run.manifest.shards.length?run.manifest.shards.map(s=>({name:s.file+' · part '+s.part+' · 頁 '+s.pages.join('–')})):listDocs(dp);
-  const steps = [
+  let steps = [
     ['init', 'main', '引擎啟動 · model mock · 假引擎模式'],
     ['text','main','載入方法論：'+run.manifest.skills.map(k=>k.id+'@'+k.version).join('、')],
     ...docs.flatMap(d => [['spawn', 'main', `派工 card-extractor：${d.name}`, 'card-extractor'], ['read', 'card-extractor', `讀 ${d.name} p.1-20`], ['write', 'card-extractor', `寫 ${d.name}.md`], ['agent_done', 'main', `✅ card-extractor 回報：字卡完成 ${d.name}`]]),
@@ -432,20 +452,30 @@ function mockRun(run, emit, dp, finish) {
     ['agent_done', 'main', '✅ persona-fin 回報：12 題'], ['agent_done', 'main', '✅ persona-ops 回報：11 題'], ['agent_done', 'main', '✅ persona-ind 回報：8 題'], ['agent_done', 'main', '✅ persona-ic 回報：13 題'],
     ['text', 'main', '匯整去重與 staple sweep…'], ['spawn','main','派工 question-reviewer：獨立回原文審題','question-reviewer'], ['write', 'main', '寫 draft_R1.md'], ['done', 'main', '結束 · 12s · $0.00 · mock'],
   ];
+  if(run.kind==='review')steps=[['init','main','假引擎 Reviewer（沿用手寫 UI 範例）'],['spawn','main','派工 question-reviewer','question-reviewer'],['done','main','手寫審題結果已可檢視']];
+  if(run.kind==='learn'){
+    steps=[['init','main','假引擎蒸餾：手寫規則範例'],['spawn','main','派工 distiller','distiller'],['write','distiller','候選規則待人工核准']];
+    const feedback=readFeedback(dp), last=feedback.at(-1);
+    const existing=ruleStore.read().filter(r=>r.rule_id==='mock-review-timing');
+    const proposals=last&&!existing.length?[{rule_id:'mock-review-timing',version:1,status:'proposed',scope:'persona, reviewer',applies_when:'追問輪的靜態盤點題與本輪待解矛盾競爭篇幅時',instruction:'優先問待解矛盾；靜態盤點題移至後續波次，保留補問機會。',exceptions:['本輪明確以團隊或合規盤點為主'],kind:'timing',deal:null,folded_into:null,source_feedback_ids:[last.feedback_id],evidence_summary:'手寫假引擎範例，供測試提案→核准→注入；不代表模型已從回饋推導出此規則。',deal_anonymized:true,proposed_at:new Date().toISOString(),approved_at:null,approved_by:null}]:[];
+    fs.writeFileSync(path.join(dp,'_analysis','runs',run.manifest.run_id,'rule-proposals.json'),JSON.stringify(proposals,null,2));
+  }
+  if(['distill','round-distill'].includes(run.kind))steps=[['init','main','假引擎批次蒸餾'],['spawn','main','派工 distiller','distiller'],['done','main','假引擎未修改活題庫']];
   let i = 0;
   run.timer = setInterval(() => {
     if (i >= steps.length) { clearInterval(run.timer); return finish(0); }
     const [kind, agent, text, sub] = steps[i++];
     if (kind === 'spawn') run.counts.agents++; if (kind === 'read') run.counts.reads++; if (kind === 'write') run.counts.writes++;
     emit({ kind, agent, text, sub });
-  }, 550);
+  }, Number(process.env.QLIST_MOCK_DELAY_MS||120));
 }
 function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {}) {
   const dp = dealPath(deal);
   if (RUNS[deal]) throw httpErr(409, '本案已有流程在跑');
   fs.mkdirSync(path.join(dp, '_analysis'), { recursive: true });
   const config=runConfig(selectedProvider,model), selected=config.provider, activeProvider=providers[selected], cli=activeProvider.resolveCli();
-  if(['pipeline','ingest','merge','review'].includes(kind))prompt=skillsPromptLine()+'\n'+prompt;
+  const usedRules=['pipeline','ingest','merge','review'].includes(kind)?[...new Map([...config.personas.map(p=>'persona-'+p),'question-reviewer'].flatMap(scope=>ruleStore.active(deal,scope)).map(r=>[r.rule_id+'@'+r.version,r])).values()]:[];
+  if(['pipeline','ingest','merge','review'].includes(kind))prompt=skillsPromptLine()+'\n本案適用規則（依每条 scope 附給相符代理；規則 > skill > 代理預設）：\n'+JSON.stringify(usedRules)+'\n本案資料：\n'+prompt;
   const run_id=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID().slice(0,8);
   const runDir=path.join(dp,'_analysis','runs',run_id);fs.mkdirSync(runDir,{recursive:true});
   let shards=[];
@@ -455,9 +485,10 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
     shards=JSON.parse(result.stdout);
     prompt='大檔分片（每列一次 card-extractor 派工，嚴守 output 與原始頁範圍）：'+JSON.stringify(shards)+'\n'+prompt;
   }
-  const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir);
+  if(kind==='learn')prompt+=`\n候選規則只寫 ${path.join(runDir,'rule-proposals.json')}（JSON 陣列，最多三條）；不能修改 rules.json status。`;
+  const models=settings.matrix(config), {definitions,agentFiles}=agentDefinitions(config,runDir,deal);
   const args=activeProvider.cliArgs({model:models.main.model,effort:models.main.effort,writable:true,prompt,system:HEADLESS_SYS,agents:definitions,models:{sub:{model:config[selected].sub_model,effort:config[selected].effort.sub}},agentFiles});
-  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:listSkills().filter(k=>k.active).map(k=>({id:k.id,version:k.version})),rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
+  const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:listSkills().filter(k=>k.active).map(k=>({id:k.id,version:k.version})),rules:usedRules.map(r=>({rule_id:r.rule_id,version:r.version})),personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
   const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
   saveManifest();
   if(['pipeline','ingest','merge'].includes(kind))prompt+=`\nJSON 正本：同步維護 ${deal}/_analysis/drafts/questions_R${readState(dp).round}.json。每題包含 question_id、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。既有題永遠保留 question_id；只修改 revision，新題使用不重複 q-rN-NNN。合併與 delta 都更新同一 JSON，Markdown 是人讀版。`;
@@ -480,6 +511,11 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
     if (finished) return;
     finished = true;
     if (run.failed && code === 0) code = 1;
+    if(code===0&&kind==='learn'){
+      try{const fp=path.join(runDir,'rule-proposals.json');if(fs.existsSync(fp))ruleStore.propose(JSON.parse(fs.readFileSync(fp,'utf8')));}
+      catch(e){code=1;append('候選規則驗證失敗：'+e.message+'\n');}
+    }
+    ruleStore.read();
     manifest.ended_at=new Date().toISOString();manifest.exit_code=code;
     saveManifest();
     fs.copyFileSync(logPath,path.join(runDir,'run.log'));
@@ -592,6 +628,54 @@ const server = http.createServer(async (req, res) => {
       if (!cf) return json(res, 404, { error: 'no card' });
       const f = safeJoin(path.join(dp, '_analysis', 'cards'), cf);
       return json(res, 200, { file: q.get('file'), content: fs.readFileSync(f, 'utf8') });
+    }
+    if(u.pathname==='/api/rules/active'){
+      const deal=q.get('deal');dealPath(deal);return json(res,200,{rules:ruleStore.active(deal,q.get('scope')||'reviewer')});
+    }
+    if(u.pathname==='/api/rules'){
+      if(req.method==='GET'){const rules=ruleStore.read();return json(res,200,{rules,warnings:ruleStore.warnings()});}
+      if(req.method==='POST'){
+        const body=JSON.parse(await readBody(req,100000)),rule=ruleStore.mutate(body);let graduation=false;
+        if(body.action==='approve'&&body.deal&&ruleStore.read().filter(r=>r.status==='approved').length>=10&&!RUNS[body.deal]){
+          dealPath(body.deal);startRun(body.deal,'house-style','只派 distiller：已核准規則累積到門檻，提一版 house-style 方法論到 knowledge/skills/_proposed/<id>@<version>/SKILL.md；保留現行方法論並附 derived_from_rules:[rule-id@version]。不得自動啟用或 retire 規則。',null);graduation=true;
+        }
+        return json(res,200,{rule,graduation});
+      }
+      throw httpErr(405,'method not allowed');
+    }
+    if(u.pathname==='/api/learn'&&req.method==='POST'){
+      const {deal,provider:selectedProvider}=JSON.parse(await readBody(req));dealPath(deal);
+      if(!startLearning(deal,selectedProvider))throw httpErr(409,'引擎忙碌，請稍後重試');return json(res,200,{started:true});
+    }
+    if(u.pathname==='/api/learning'){
+      const dp=dealPath(q.get('deal')),feedback=readFeedback(dp),dir=path.join(dp,'_analysis','drafts');
+      const kpi=fs.existsSync(dir)?fs.readdirSync(dir).filter(f=>/^questions_R\d+\.json$/.test(f)).map(f=>{const rows=questions.normalize(JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')));return {round:Number(f.match(/R(\d+)/)[1]),human_only:rows.filter(r=>r.source==='你').length};}):[];
+      const runsDir=path.join(dp,'_analysis','runs');const runs=fs.existsSync(runsDir)?fs.readdirSync(runsDir).sort().reverse().flatMap(id=>{try{return [JSON.parse(fs.readFileSync(path.join(runsDir,id,'run.json'),'utf8'))];}catch{return [];}}):[];
+      let summary='';try{summary=fs.readFileSync(path.join(dp,'_analysis',`distill-report-r${readState(dp).round}.md`),'utf8');}catch{}
+      return json(res,200,{rules:ruleStore.read(),feedback,kpi,runs,summary,skill_proposals:skillProposals()});
+    }
+    if(u.pathname==='/api/skills/graduate'&&req.method==='POST'){
+      const {ref}=JSON.parse(await readBody(req));const proposal=skillProposals().find(p=>p.ref===ref);if(!proposal)throw httpErr(404,'找不到方法論提案');
+      if(!proposal.derived_from_rules.length||proposal.derived_from_rules.some(x=>typeof x!=='string'))throw httpErr(400,'缺少來源規則');
+      const current=listSkills().find(s=>s.id===proposal.id);if(proposal.version!==(Number(current?.version)||0)+1)throw httpErr(409,'方法論版本已改變，請重新提案');
+      const approved=ruleStore.read().filter(r=>r.status==='approved').map(r=>r.rule_id+'@'+r.version);
+      if(proposal.derived_from_rules.some(r=>!approved.includes(r)))throw httpErr(409,'來源規則已改變，請重新提案');
+      const dir=path.join(SKILLS_DIR,proposal.id);fs.mkdirSync(dir,{recursive:true});
+      if(proposal.before)fs.writeFileSync(path.join(SKILLS_DIR,'_proposed',ref,'previous.md'),proposal.before);
+      fs.writeFileSync(path.join(dir,'SKILL.md'),proposal.content);ruleStore.fold(proposal.derived_from_rules,ref);
+      fs.writeFileSync(SKILLS_ACTIVE,JSON.stringify({active:[...new Set([...readActiveSkills(),proposal.id])]},null,2));
+      fs.renameSync(path.join(SKILLS_DIR,'_proposed',ref,'SKILL.md'),path.join(SKILLS_DIR,'_proposed',ref,'approved.md'));
+      return json(res,200,{approved:ref});
+    }
+    if(u.pathname==='/api/questions/add'&&req.method==='POST'){
+      const {deal,text,cat,reason,evidence=[]}=JSON.parse(await readBody(req,100000));const dp=dealPath(deal),st=readState(dp);
+      if(st.closed)throw httpErr(409,'案件已結案');if(typeof text!=='string'||!text.trim()||typeof reason!=='string'||!reason.trim())throw httpErr(400,'新增問題與理由必填');
+      const result=questions.load(dp,st.round,parseDraftTable),question_id=`q-r${st.round}-`+randomUUID().slice(0,8);
+      const question={question_id,text:text.trim(),cat:cat||'人工新增',why:reason,evidence,wave:1,channel:'書面',source:'你',revision:1,persona:null};
+      const rows=questions.normalize([...result.questions,question]);fs.mkdirSync(path.join(dp,'_analysis','drafts'),{recursive:true});
+      fs.writeFileSync(path.join(dp,'_analysis','drafts',`questions_R${st.round}.json`),JSON.stringify(rows.map(({q,...r})=>r),null,2));
+      writeFeedback(dp,[{feedback_id:'fb-'+randomUUID(),ts:new Date().toISOString(),round:st.round,question_id,action:'add',before:null,after:question,reason,evidence,actor:'local-user'}]);
+      return json(res,200,{question});
     }
     if (u.pathname === '/api/settings') {
       if(req.method==='GET')return json(res,200,settings.readSettings());
@@ -802,7 +886,7 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/distill' && req.method === 'POST') {
       const { deal, model, provider: selectedProvider } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
-      const prompt = `結案蒸餾：案子「${deal}」。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則、per-deal profile 寫回「knowledge/question-bank.md」— 用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
+      const prompt = `結案蒸餾：案子「${deal}」。只派 distiller，另外檢查 approved 規則是否適合折入 house-style skill，先提版本到 knowledge/skills/_proposed/，不得自動啟用。照本專案 AGENTS.md 的階段 4 執行：讀取「${deal}/_analysis/diff-reports/」全部審核與差異紀錄、「${deal}/_analysis/drafts/」、「${deal}/qlist/」歷輪最終發出版、以及 _notes.md。把新 pattern（含同事題抽象化：方向＋深度＋問法）、反面規則、per-deal profile 寫回「knowledge/question-bank.md」— 用追加與合併，絕不刪除既有內容。動機推不出來的題目列成「待標註」清單，連同蒸餾摘要寫入「${deal}/_analysis/distill-report.md」。完成後即結束。`;
       startRun(deal, 'distill', prompt, null, model, selectedProvider);
       return json(res, 200, { started: true });
     }
@@ -846,12 +930,24 @@ const server = http.createServer(async (req, res) => {
       const { deal, decisions } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
-      const current=questions.load(dp,st.round,parseDraftTable).questions;
+      if(st.closed)throw httpErr(409,'案件已結案');
+      const current=reviewer.attach(dp,st.round,questions.load(dp,st.round,parseDraftTable)).questions;
+      const feedback=[];let previous={};try{previous=JSON.parse(fs.readFileSync(path.join(dp,'_analysis',`review-state-r${st.round}.json`),'utf8'));}catch{}
       const byId=new Map(current.map(q=>[q.question_id,q]));
       if(!Array.isArray(decisions))throw httpErr(400,'decisions must be an array');
       for(const d of decisions){
         d.question_id=d.question_id||current.find(q=>q.no===d.no)?.question_id;
         if(!byId.has(d.question_id))throw httpErr(400,'unknown question_id');
+        const original=byId.get(d.question_id);
+        if(typeof d.keep!=='boolean')throw httpErr(400,'keep 必須為布林值');
+        if(!d.keep&&(!d.reason||!String(d.reason).trim()))throw httpErr(400,'砍題必須填寫理由');
+        if(d.override_review&&!String(d.override_reason||'').trim())throw httpErr(400,'推翻 Reviewer 必須填寫理由');
+        d.q=original.q;d.cat=original.cat;d.why=original.why;
+        const event=(action,after,reason)=>feedback.push({feedback_id:'fb-'+randomUUID(),ts:new Date().toISOString(),round:st.round,question_id:d.question_id,action,before:original,after,reason:reason||'',evidence:original.evidence,actor:'local-user'});
+        if(!d.keep&&(previous[d.question_id]?.keep!==false||previous[d.question_id]?.reason!==d.reason))event('cut',null,d.reason);
+        if(d.editedText&&d.editedText!==original.q&&d.editedText!==previous[d.question_id]?.edited)event('edit',{...original,text:d.editedText},d.edit_reason||'使用者改寫');
+        if(d.override_review&&d.override_reason!==previous[d.question_id]?.override_reason)event('override_review',{keep:d.keep,text:d.editedText||original.q},d.override_reason);
+
       }
       const ts = new Date().toISOString().slice(0, 10);
       const rep = ['# 合併審核紀錄 — Round ' + st.round + '（' + ts + '）', ''];
@@ -878,9 +974,11 @@ const server = http.createServer(async (req, res) => {
         py.stdin.write(JSON.stringify({ path: out, rows, sheet: 'Q-list' }));
         py.stdin.end();
       });
-      fs.writeFileSync(path.join(dp,'_analysis',`review-state-r${st.round}.json`),JSON.stringify(Object.fromEntries(decisions.map(d=>[d.question_id,{keep:d.keep,reason:d.reason,edited:d.editedText||''} ])),null,2));
+      fs.writeFileSync(path.join(dp,'_analysis',`review-state-r${st.round}.json`),JSON.stringify(Object.fromEntries(decisions.map(d=>[d.question_id,{keep:d.keep,reason:d.reason,edited:d.editedText||'',override_reason:d.override_reason||''} ])),null,2));
+      writeFeedback(dp,feedback);
       st.lifecycle = 'merged'; writeState(dp, st);
-      return json(res, 200, { xlsx: `${deal}_merged Qlist_R${st.round}.xlsx` });
+      let learning=false;try{learning=startLearning(deal);}catch{}
+      return json(res, 200, { learning, xlsx: `${deal}_merged Qlist_R${st.round}.xlsx` });
     }
     if (u.pathname === '/api/download') {
       const dp = dealPath(q.get('deal'));

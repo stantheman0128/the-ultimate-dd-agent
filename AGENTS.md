@@ -86,7 +86,9 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 - 新文件走增量消化，加入對帳表找新矛盾。同名新版本→舊版移 `_archive/`＋**版本 diff**（改了哪些數字＝出題素材）。
 - 輪次推進與結案都是使用者手動決定；推進條件＝本輪最終版已發出。
 
-### 階段 4：蒸餾（兩層）
+### 階段 4：蒸餾（三層）
+- **即時蒸餾**：審核送出後派 distiller，從 feedback.jsonl 的 cut／edit／add／override_review 提出最多三條 proposed 規則，寫本次 run 的 rule-proposals.json；server 驗證後入庫，使用者在學習頁核准後下次派工生效。distiller 不讀原始 Data Room、不寫核准狀態。
+
 - **本輪蒸餾**（每輪最終發出版上傳後自動執行）：本輪 diff-reports（砍題原因→反面規則、編輯對→措辭規則）＋最終版 vs 合併版 diff（同事新增→盲區 pattern、修改→措辭）→ 增量寫回題庫＋`_analysis/distill-report-rN.md`。
 - **全案蒸餾**（結案時執行）：彙總全案。
 輸入：全部 diff-reports、砍題原因、編輯對、判定結果。輸出寫回 `knowledge/question-bank.md`：新 pattern（含同事題抽象化：方向＋深度＋問法三層）、反面規則、per-deal profile。同事題動機推不出來的列「待標註」問使用者。KPI：每案「使用者/同事有問、Codex 漏掉」題數遞減。
@@ -118,3 +120,7 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 
 ## 方法論 skill 注入
 派 persona、question-reviewer 與主 session 合併時，使用派工附上的啟用 skill 全文，依 frontmatter scope 過濾。card-extractor、reconciler、qc-sampler 不載入。無啟用項目時不自行回退到已停用 skill。run.json 記 id 與 version。
+
+## 派工訊息順序與優先序
+固定代理 prompt → 本案適用方法論（啟用 skill 全文）→ 本案適用規則（server 已按 approved／scope／deal 過濾，每條含 applies_when 與 exceptions）→ 本案資料。規則 > skill > 代理預設。同一 rule_id 取最新 approved 版本；只有該版本的條件成立才套用。問 AI 不注入這三層。
+蒸餾不得修改代理 system prompt、settings、active.json 或核准帳本。先查既有規則與 skill 是否涵蓋；衝突明列 skill 章節。結案或 approved 規則 ≥10 時，可提出 house-style SKILL 新版到 knowledge/skills/_proposed/，frontmatter derived_from_rules 使用 rule-id@version。核准後才由 server 啟用、把已折入規則標 retired＋folded_into。

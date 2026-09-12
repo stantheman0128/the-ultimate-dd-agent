@@ -1,7 +1,7 @@
 ---
 name: question-reviewer
 description: 獨立證據審查員；逐題重新查原文與往輪回覆，輸出六種 verdict 與證據。
-tools: Read, Bash, Glob, Grep, Write
+tools: Read, Bash, Glob, Grep, Write, Edit
 model: inherit
 ---
 

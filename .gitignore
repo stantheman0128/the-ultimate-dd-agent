@@ -47,3 +47,7 @@ _workbench/settings.json
 _workbench/settings.json.tmp
 **/_analysis/runs/
 .codex/agents/_generated/
+
+_workbench/.rule-approvals.json*
+knowledge/learned/*.tmp
+knowledge/skills/_proposed/

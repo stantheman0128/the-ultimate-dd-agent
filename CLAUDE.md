@@ -1,6 +1,6 @@
 # DD Q-list 引擎 — 工作規範
 
-這個資料夾是 VC 盡職調查 Q-list 助手。引擎 的角色是「同事」：收到新創的 Data Room 後消化文件、找出缺漏與疑點、獨立提出問題清單，與使用者的版本合併定稿，並支援多輪追問直到結案。所有 DD 規則以本檔為準；引擎 執行、工具與認證適配請先讀 `CODEX.md`；出題風格的完整細節見 `dd-qlist` skill，**活題庫在 `knowledge/question-bank.md`（以此為準，skill 內版本視為快照）**。
+這個資料夾是 VC 盡職調查 Q-list 助手。引擎 的角色是「同事」：收到新創的 Data Room 後消化文件、找出缺漏與疑點、獨立提出問題清單，與使用者的版本合併定稿，並支援多輪追問直到結案。所有 DD 規則以本檔為準；引擎 執行、工具與認證適配請先讀 `CODEX.md`；出題風格的完整細節見 派工訊息附上的方法論 skill，**活題庫在 `knowledge/question-bank.md`（以此為準，skill 內版本視為快照）**。
 
 ## 資料夾慣例
 
@@ -72,6 +72,9 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 
 匯整（去重＋覆蓋檢查）時的**基線定式檢查**（校準教訓）：題庫中標記 any＋wave 1 的定式（Top-N 客戶 roster＋合約狀態、營收區域分布、全年度營收/成本拆分表）不得因 number-anchored 題優先而被排擠 — 沒有錨定版本就用定式原樣補上。
 
+### 階段 1c：獨立審題
+主 session 匯整後必派 question-reviewer（fresh context，不讀 persona 推理）；追問輪必讀上輪最終版與公司回覆。逐題拆 facets、搜證含同義詞、記錄覆蓋、區分公司陳述與文件支持、重驗可比性、評價決策價值、給 verdict。寫 review_RN.json；suppress 與 merge 只標记，不刪除。rewrite 保留原句與新版；defer 降波次；needs_human_check 交人。來源「你」只給建議，不能自行改寫或刪除。
+
 ### 階段 2：統整校對
 - 使用者交出他的版本（工作台上傳至 `_analysis/inbox/`）後做三類 diff：共識（語意相同即算，措辭合併取較佳）／只有 引擎（使用者勾選決定，砍題附原因）／只有使用者（**自動進最終版＋記錄為盲區訓練資料**）。合併輸出 `draft_RN_merged.md`，含「來源」欄（共識／引擎／你）。
 - 使用者對題目的編輯：原句 vs 修改版**成對記錄**（措辭學習）。
@@ -83,7 +86,9 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 - 新文件走增量消化，加入對帳表找新矛盾。同名新版本→舊版移 `_archive/`＋**版本 diff**（改了哪些數字＝出題素材）。
 - 輪次推進與結案都是使用者手動決定；推進條件＝本輪最終版已發出。
 
-### 階段 4：蒸餾（兩層）
+### 階段 4：蒸餾（三層）
+- **即時蒸餾**：審核送出後派 distiller，從 feedback.jsonl 的 cut／edit／add／override_review 提出最多三條 proposed 規則，寫本次 run 的 rule-proposals.json；server 驗證後入庫，使用者在學習頁核准後下次派工生效。distiller 不讀原始 Data Room、不寫核准狀態。
+
 - **本輪蒸餾**（每輪最終發出版上傳後自動執行）：本輪 diff-reports（砍題原因→反面規則、編輯對→措辭規則）＋最終版 vs 合併版 diff（同事新增→盲區 pattern、修改→措辭）→ 增量寫回題庫＋`_analysis/distill-report-rN.md`。
 - **全案蒸餾**（結案時執行）：彙總全案。
 輸入：全部 diff-reports、砍題原因、編輯對、判定結果。輸出寫回 `knowledge/question-bank.md`：新 pattern（含同事題抽象化：方向＋深度＋問法三層）、反面規則、per-deal profile。同事題動機推不出來的列「待標註」問使用者。KPI：每案「使用者/同事有問、引擎 漏掉」題數遞減。
@@ -109,3 +114,13 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 ## 公開示範版的資料邊界
 
 版控與匯出僅保留合成案；不得把真實案件的名稱、profile、數字、交易條件或蒸餾紀錄寫入公開題庫。蒸餾的通用題型須抽象化並經檢查才可公開。
+
+## 題目 JSON 正本與穩定 ID
+所有 persona 與匯整層同時輸出 questions_RN.json 與 draft_RN.md。正本是 JSON 陣列，每題含 question_id（q-rN-NNN）、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。重排、改寫、合併與增量時既有 ID 不變，revision 遞增；新題用全新 ID。不得用題目順序作為 identity。合併題記 merged_from，原題留存並由 Reviewer 標 merge_duplicate。
+
+## 方法論 skill 注入
+派 persona、question-reviewer 與主 session 合併時，使用派工附上的啟用 skill 全文，依 frontmatter scope 過濾。card-extractor、reconciler、qc-sampler 不載入。無啟用項目時不自行回退到已停用 skill。run.json 記 id 與 version。
+
+## 派工訊息順序與優先序
+固定代理 prompt → 本案適用方法論（啟用 skill 全文）→ 本案適用規則（server 已按 approved／scope／deal 過濾，每條含 applies_when 與 exceptions）→ 本案資料。規則 > skill > 代理預設。同一 rule_id 取最新 approved 版本；只有該版本的條件成立才套用。問 AI 不注入這三層。
+蒸餾不得修改代理 system prompt、settings、active.json 或核准帳本。先查既有規則與 skill 是否涵蓋；衝突明列 skill 章節。結案或 approved 規則 ≥10 時，可提出 house-style SKILL 新版到 knowledge/skills/_proposed/，frontmatter derived_from_rules 使用 rule-id@version。核准後才由 server 啟用、把已折入規則標 retired＋folded_into。

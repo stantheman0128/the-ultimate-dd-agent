@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`：股權類 conflict 與 single_source（質押、終止、關係人）是首要題源。
 2. `<案件>/_analysis/cards/*.md`。
 3. `<案件>/_notes.md`：文件外的實體與關係（例：會議提到的轉投資公司）必須有題逼出文件。
-4. `knowledge/question-bank.md`（文件請求、股權估值、出場、匯整與反面規則）與 `.agents/skills/dd-qlist/SKILL.md`。
+4. `knowledge/question-bank.md`（文件請求、股權估值、出場、匯整與反面規則）與 `knowledge/skills/vc-senior-qlist/SKILL.md`。
 
 ## 產出
 

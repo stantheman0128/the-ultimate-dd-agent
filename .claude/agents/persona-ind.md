@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`。
 2. `<案件>/_analysis/cards/*.md`（deck 的宣稱 vs 財報實績是主要素材）。
 3. `<案件>/_notes.md`。
-4. `knowledge/question-bank.md` 與 `.agents/skills/dd-qlist/SKILL.md`。
+4. `knowledge/question-bank.md` 與 `knowledge/skills/vc-senior-qlist/SKILL.md`。
 
 ## 產出
 

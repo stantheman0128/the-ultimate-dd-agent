@@ -218,6 +218,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     <button class="tab" data-t="docs" onclick="pickTab('docs')">文件<span class="n num" id="tnDocs">0</span></button>
     <button class="tab" data-t="recon" onclick="pickTab('recon')">對帳</button>
     <button class="tab" data-t="review" onclick="pickTab('review')">Q-list 審核<span class="n num" id="tnReview">—</span></button>
+    <button class="tab" data-t="learning" onclick="pickTab('learning')">學習</button>
     <button class="tab" data-t="search" onclick="pickTab('search')">搜尋</button>
     <button class="tab" data-t="notes" onclick="pickTab('notes')">備註</button>
     <button class="tab" data-t="help" onclick="pickTab('help')">說明</button>
@@ -289,7 +290,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
         <select id="fSrc" onchange="applyRevFilters()"></select>
         <select id="fCat" onchange="applyRevFilters()"></select>
         <select id="fWave" onchange="applyRevFilters()"></select>
-        <select id="fVerdict" onchange="applyRevFilters()"><option value="">Reviewer：全部</option><option value="keep">keep</option><option value="rewrite">rewrite</option><option value="suppress_already_answered">suppress_already_answered</option><option value="merge_duplicate">merge_duplicate</option><option value="defer">defer</option><option value="needs_human_check">needs_human_check</option></select><button onclick="rerunReviewer()">重跑 Reviewer</button>
+        <select id="fVerdict" onchange="applyRevFilters()"><option value="">Reviewer：全部</option><option value="keep">keep</option><option value="rewrite">rewrite</option><option value="suppress_already_answered">suppress_already_answered</option><option value="merge_duplicate">merge_duplicate</option><option value="defer">defer</option><option value="needs_human_check">needs_human_check</option></select><button onclick="rerunReviewer()">重跑 Reviewer</button><button onclick="addQuestion()">＋ 新增問題</button>
         <button onclick="toggleAll()" id="selAllBtn">全選／取消全選</button>
         <span style="font-size:12px;color:var(--ink-3)" id="fCount"></span>
       </div>
@@ -308,6 +309,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
     </div>
   </section>
 
+  <section id="tab-learning"><div class="toolbar"><button class="primary" onclick="runLearning()">⚗ 產生候選規則</button><button onclick="loadLearning()">重新整理</button></div><div id="learningBody">載入中…</div></section>
   <section id="tab-search">
     <div class="panel">
       <h2>問 AI <span class="hint" id="aiHint">整份 Data Room 帶頁碼進 context，串流回答並標出處；點出處開原文</span></h2>
@@ -395,6 +397,7 @@ td.hl{outline:2px solid var(--danger);background:var(--danger-soft)!important}
   </div>
 </div>
 <div class="overlay" id="settingsOverlay"><div class="box" style="width:min(920px,100%)"><h3>進階設定</h3><p class="sub">模型、effort 與 persona 設定於下次執行生效；模型名稱可自行輸入。</p><div id="settingsBody"></div><div class="boxfoot"><button onclick="hide('settingsOverlay')">取消</button><button class="primary" onclick="saveSettings()">儲存設定</button></div></div></div>
+<div class="overlay" id="ruleEditOverlay"><div class="box"><h3>編輯候選規則</h3><p>修改後產生新版本，重新核准後才生效。</p><label>適用條件<textarea id="ruleWhen" style="width:100%"></textarea></label><label>指令<textarea id="ruleInstruction" style="width:100%"></textarea></label><label>例外（每行一項）<textarea id="ruleExceptions" style="width:100%"></textarea></label><div class="boxfoot"><button onclick="hide('ruleEditOverlay')">取消</button><button class="primary" onclick="saveRuleEdit()">提出新版</button></div></div></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -532,6 +535,38 @@ async function loadEvPage(n){
   }catch(e){$('evNav').innerHTML=''; $('evText').textContent='尚未索引：'+e.message;}
 }
 
+let LEARNING=null,EDIT_RULE=null;
+async function loadLearning(){
+ try{
+  const data=await api('/api/learning?'+enc({deal:cur}));LEARNING=data;
+  const card=r=>{
+   const source=data.feedback.filter(f=>r.source_feedback_ids.includes(f.feedback_id));
+   const last=data.runs.find(run=>run.rules.some(x=>x.rule_id===r.rule_id&&x.version===r.version));
+   return `<div class="panel"><h2>${esc(r.rule_id)} <span class="chip ${r.status==='approved'?'ok':r.status==='retired'?'todo':'warn'}">v${r.version} · ${esc(r.status)}</span></h2><p><b>適用：</b>${esc(r.applies_when)}</p><p><b>指令：</b>${esc(r.instruction)}</p><p><b>例外：</b>${esc(r.exceptions.join('；')||'無')}</p><p style="font-size:12px;color:var(--ink-2)">${esc(r.evidence_summary)}</p><p style="font-size:12px">${esc(r.scope)}${r.deal?' · 本案限定：'+esc(r.deal):''}${r.approved_at?' · 核准：'+esc(r.approved_at):''}${last?' · 最近載入：'+esc(last.run_id):''}${r.folded_into?' · 已納入 '+esc(r.folded_into):''}</p>
+   <details><summary>來源回饋（${source.length}）</summary>${source.map(f=>`<div class="card"><b>${esc(f.action)} · ${esc(f.reason)}</b><p>原句：${esc(f.before?.text||f.before?.q||'—')}</p><p>修改：${esc(f.after?.text||'—')}</p></div>`).join('')||'<p>來源回饋位於其他案件，請回來源案件檢視。</p>'}</details>
+   <div class="boxfoot">${r.status==='proposed'?`<button class="primary" data-rule="${esc(r.rule_id)}" data-v="${r.version}" onclick="ruleAction(this,'approve')">核准</button>`:''}${r.status!=='retired'?`<button data-rule="${esc(r.rule_id)}" data-v="${r.version}" onclick="editRule(this)">編輯提新版</button><button data-rule="${esc(r.rule_id)}" data-v="${r.version}" onclick="ruleAction(this,'retire')">${r.status==='proposed'?'退回':'停用'}</button>`:''}</div></div>`;
+  };
+  $('learningBody').innerHTML=`<div class="panel"><h2>每輪只有人問到的題數</h2><table><thead><tr><th>輪次</th><th>人獨有題</th></tr></thead><tbody>${data.kpi.map(k=>`<tr><td>Round ${k.round}</td><td>${k.human_only}</td></tr>`).join('')}</tbody></table><p style="font-size:12px;color:var(--ink-2)">依題目來源「你」統計，未比較的輪次不代表沒有漏題。</p></div>
+  <h3>候選規則</h3>${data.rules.filter(r=>r.status==='proposed').map(card).join('')||'<div class="emptynote">尚無候選規則；先在審核頁送出決定與理由。</div>'}
+  <h3>已核准規則</h3>${data.rules.filter(r=>r.status==='approved').map(card).join('')||'<p>尚無已核准規則。</p>'}
+  <details><summary>已退回／停用</summary>${data.rules.filter(r=>r.status==='retired').map(card).join('')}</details>
+  ${data.skill_proposals.map(p=>`<div class="panel"><h2>方法論升版：${esc(p.ref)}</h2><div class="evgrid"><div><h4>目前版本</h4><pre class="mdview">${esc(p.before||'（新方法論）')}</pre></div><div><h4>提案版本</h4><pre class="mdview">${esc(p.content)}</pre></div></div><p>折入規則：${esc(p.derived_from_rules.join('、'))}</p><button data-ref="${esc(p.ref)}" onclick="approveSkill(this.dataset.ref)">核准升版並停用已納入規則</button></div>`).join('')}
+  <div class="panel"><h2>題庫最近一次蒸餾摘要</h2><div class="mdr">${mdToHtml(data.summary||'尚無本輪蒸餾紀錄')}</div></div>`;
+ }catch(e){$('learningBody').textContent='載入失敗：'+e.message;}
+}
+async function runLearning(){try{await api('/api/learn',{method:'POST',body:JSON.stringify({deal:cur})});watchRun('learn');}catch(e){toast(e.message);}}
+async function ruleAction(el,action){try{await api('/api/rules',{method:'POST',body:JSON.stringify({rule_id:el.dataset.rule,version:Number(el.dataset.v),action,deal:cur})});await loadLearning();toast(action==='approve'?'規則已核准，下次派工生效':'規則已退回／停用');}catch(e){toast(e.message);}}
+function editRule(el){
+ EDIT_RULE=LEARNING.rules.find(r=>r.rule_id===el.dataset.rule&&r.version===Number(el.dataset.v));
+ $('ruleWhen').value=EDIT_RULE.applies_when;$('ruleInstruction').value=EDIT_RULE.instruction;$('ruleExceptions').value=EDIT_RULE.exceptions.join('\n');show('ruleEditOverlay');
+}
+async function saveRuleEdit(){try{await api('/api/rules',{method:'POST',body:JSON.stringify({rule_id:EDIT_RULE.rule_id,version:EDIT_RULE.version,action:'edit',patch:{applies_when:$('ruleWhen').value.trim(),instruction:$('ruleInstruction').value.trim(),exceptions:$('ruleExceptions').value.split('\n').map(x=>x.trim()).filter(Boolean)}})});hide('ruleEditOverlay');await loadLearning();toast('已提出新版，須重新核准');}catch(e){toast(e.message);}}
+async function approveSkill(ref){try{await api('/api/skills/graduate',{method:'POST',body:JSON.stringify({ref})});await loadLearning();await refreshSkills();toast('方法論升版已核准');}catch(e){toast(e.message);}}
+async function addQuestion(){
+ const text=window.prompt('新增問題：');if(!text?.trim())return;
+ const reason=window.prompt('為什麼問這題？');if(!reason?.trim())return;
+ try{await api('/api/questions/add',{method:'POST',body:JSON.stringify({deal:cur,text,reason})});await loadDraft();toast('問題已保存，來源標記為「你」');}catch(e){toast(e.message);}
+}
 async function refreshSkills(){
   const d=await api('/api/skills');
   $('skillsList').innerHTML=d.skills.map(k=>`<div style="font-size:12px;padding:6px 0"><label><input type="checkbox" data-skill="${esc(k.id)}" ${k.active?'checked':''} onchange="toggleSkills()"> ${esc(k.title)}</label> ${k.anonymized?'<span class="chip ok">去識別</span>':''}<button data-id="${esc(k.id)}" onclick="viewSkill(this.dataset.id)" style="font-size:11px;padding:2px 6px">檢視</button></div>`).join('');
@@ -862,6 +897,7 @@ function renderConflictMap(){
 function renderNotes(){ $('notesTa').value = D.notes || ''; }
 
 function pickTab(t){
+  if(t==='learning'&&cur)loadLearning();
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   document.querySelectorAll('main > section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
 }
@@ -942,7 +978,7 @@ async function runDistill(){
   } catch(e){ toast('無法啟動：'+e.message); }
 }
 const RUN_EST = {pipeline: 12*60e3, merge: 6*60e3, distill: 6*60e3, ingest: 3*60e3, resume: 10*60e3};
-const RUN_LABEL = {pipeline: '流程', merge: '合併', distill: '蒸餾', ingest: '單檔增量', resume: '流程'};
+const RUN_LABEL = {learn:'即時蒸餾',review:'獨立審題',pipeline: '流程', merge: '合併', distill: '蒸餾', ingest: '單檔增量', resume: '流程'};
 let runStart = 0, evSince = 0;
 function watchRun(kind){
   kind = kind || 'resume';
@@ -1059,7 +1095,7 @@ async function loadDraft(){
         ${evidenceChips(x.evidence)}
         <div class="reasons"><span style="font-size:12px;color:var(--ink-3)">砍題原因：</span>
           ${['太早問','改口頭','不適用','重複','其他'].map(r=>`<button class="rchip" onclick="pickReason(this,${i})">${r}</button>`).join('')}
-          <input type="text" class="otherbox" id="ob${i}" placeholder="自己寫一句原因…" oninput="saveRevState()">
+          <input type="text" class="otherbox" style="display:inline-block;width:100%" id="ob${i}" value="${suppressed?esc(x.review.reason):''}" placeholder="必填：具體說明為何砍題…" oninput="saveRevState()">
         </div>
       </div>
     </div>`;}).join('');
@@ -1136,7 +1172,7 @@ function rowToggle(cb,i){ $('qr'+i).classList.toggle('cut',!cb.checked); updateC
 function pickReason(el,i){
   el.parentElement.querySelectorAll('.rchip').forEach(c=>{if(c!==el)c.classList.remove('sel')});
   el.classList.toggle('sel');
-  $('ob'+i).style.display = (el.textContent==='其他'&&el.classList.contains('sel'))?'inline-block':'none';
+  $('ob'+i).style.display = 'inline-block';
   saveRevState();
 }
 // 審核中的勾選/原因/編輯即時存 localStorage：切輪次、切案件、重新整理都不會消失
@@ -1150,8 +1186,8 @@ function saveRevState(){
     const sel = r.querySelector('.rchip.sel');
     const ob = $('ob'+i);
     const e = EDITS[i];
-    if (cb.checked && !sel && !e && !(ob && ob.value)) return;
-    st[draft[i].question_id] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'' };
+
+    st[draft[i].question_id] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'', override_review:draft[i].override_review||false, override_reason:draft[i].override_reason||'' };
   });
   localStorage.setItem(revKey(), JSON.stringify(st));
 }
@@ -1161,9 +1197,10 @@ function restoreRevState(){
     if (!draft[i]) return;
     const s = st[draft[i].question_id]; if (!s) return;
     const cb = r.querySelector('input[type=checkbox]');
-    if (!s.keep && cb.checked && !cb.disabled){ cb.checked = false; r.classList.add('cut'); }
+    if(!cb.disabled){cb.checked=s.keep;r.classList.toggle('cut',!s.keep);if(s.keep)r.classList.remove('suppressed');}
+    draft[i].override_review=s.override_review;draft[i].override_reason=s.override_reason;
     if (s.reason) r.querySelectorAll('.rchip').forEach(c=>{ if (c.textContent === s.reason) c.classList.add('sel'); });
-    if (s.reason === '其他'){ const ob = $('ob'+i); if (ob){ ob.style.display='inline-block'; ob.value = s.other || ''; } }
+    if (s.other){ const ob = $('ob'+i); if (ob){ ob.style.display='inline-block'; ob.value = s.other || ''; } }
     if (s.edited){ EDITS[i] = s.edited; $('qt'+i).textContent = s.edited; }
   });
   updateCnt();
@@ -1194,10 +1231,11 @@ async function submitReview(){
     const keep=row.querySelector('input[type=checkbox]').checked;
     let reason='';
     if(!keep){const s=row.querySelector('.rchip.sel');reason=s?s.textContent:'';
-      if(reason==='其他')reason='其他：'+($('ob'+i).value.trim()||'（未填）');}
+      const detail=$('ob'+i).value.trim();reason=detail?([reason,detail].filter(Boolean).join('：')):'';}
     return {question_id:x.question_id,no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||'',override_review:x.override_review||false,override_reason:x.override_reason||''};
   });
   try {
+    if(decisions.some(d=>!d.keep&&!d.reason.trim()))return toast('每一題砍題都必須填寫具體理由');
     const r = await api('/api/review',{method:'POST',body:JSON.stringify({deal:cur,decisions})});
     localStorage.removeItem(revKey());
     D.state.lifecycle='merged';
@@ -1206,7 +1244,8 @@ async function submitReview(){
       <button data-f="${esc(r.xlsx)}" onclick="location.href='/api/download?'+enc({deal:cur,file:this.dataset.f})">⬇ 下載 ${esc(r.xlsx)}</button>
       <span style="font-size:12px;color:var(--ink-3)">已存 _analysis/drafts/ · 決定已入 diff-reports/</span>`;
     $('finalBlock').style.display='flex';
-    toast('合併版已產出，拿去與同事定稿');
+    toast(r.learning?'合併版已產出，候選規則產生中':'合併版已產出；引擎忙碌時可至學習頁手動產生規則');
+    if(r.learning)watchRun('learn');
   } catch(e){ toast('失敗：'+e.message); }
 }
 async function uploadFinal(fl){

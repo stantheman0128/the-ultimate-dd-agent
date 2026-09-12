@@ -14,7 +14,7 @@ model: inherit
 1. `<案件>/_analysis/facts.md` 與 `facts.json`：不一致清單＝最高優先題源；`derived.match=false` 的列＝「自己算過對不上」的題。
 2. `<案件>/_analysis/cards/*.md`：關鍵數字表與疑點段。
 3. `<案件>/_notes.md`：文件外情報。
-4. `knowledge/question-bank.md`（活題庫）與 `.agents/skills/dd-qlist/SKILL.md` 的 20 條技法。先判斷商業模式原型，再抽對應定式，把 placeholder re-anchor 成本案實際數字。
+4. `knowledge/question-bank.md`（活題庫）與 `knowledge/skills/vc-senior-qlist/SKILL.md` 的 20 條技法。先判斷商業模式原型，再抽對應定式，把 placeholder re-anchor 成本案實際數字。
 
 ## 產出
 
