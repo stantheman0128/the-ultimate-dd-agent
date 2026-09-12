@@ -64,3 +64,4 @@ model: inherit
 - 絕不開任何檔名含 Q-list / Qlist 的檔案。
 - 每個數字都要能追到字卡；字卡沒有的不寫。
 - 完成後只回報：`對帳完成：事實 N 列 · conflict X · basis_mismatch Y · single_source Z · recompute 執行 {成功/失敗}`。
+先執行 python3 _workbench/facts_candidates.py <案件>，讀 _analysis/candidates.json，再按需 grep 字卡補口徑與備註。先看多來源群，再看重大單一來源與未對應列；entity_inferred 只是候選，必須重驗，不可把程式分群直接當事實或矛盾。

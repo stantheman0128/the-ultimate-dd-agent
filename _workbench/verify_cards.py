@@ -8,8 +8,8 @@ CRITICAL = ('質押','擔保','保證','終止','關係人','期後','pledg','gu
 
 def norm(text):
     s=unicodedata.normalize('NFKC', str(text)).replace(',','').replace('−','-')
-    if '%' not in s:
-        s=re.sub(r'\(\s*([$€¥£]?\s*\d+(?:\.\d+)?)\s*\)',r'-\1',s)
+    s=re.sub(r'\(\s*([$€¥£]?\s*\d+(?:\.\d+)?)\s*\)',
+             lambda m:m.group() if s[:m.start()].rstrip().endswith('%') else '-'+m[1],s)
     result=[]
     for m in re.finditer(r'-?\d+(?:\.\d+)?\s*%?',s):
         raw=m.group().strip(); pct=raw.endswith('%')
