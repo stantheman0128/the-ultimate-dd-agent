@@ -8,6 +8,7 @@ const OpenAI = require('openai');
 const providers = {codex:require('./codex-provider'),claude:require('./claude-provider')};
 const provider=providers.codex;
 const settings=require('./settings');
+const questions=require('./questions');
 const {randomUUID}=require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -396,6 +397,7 @@ function startRun(deal, kind, prompt, onDone, model, selectedProvider, extra = {
   const manifest={run_id,kind,provider:selected,models,effort:models.main.effort,skills:[],rules:[],personas:config.personas,docs:listDocs(dp).map(d=>({file:d.name,mtime:d.mtime})),shards,started_at:new Date().toISOString(),ended_at:null,exit_code:null,cost_if_known:null,mock:MOCK,...extra};
   const saveManifest=()=>fs.writeFileSync(path.join(runDir,'run.json'),JSON.stringify(manifest,null,2)+'\n');
   saveManifest();
+  if(['pipeline','ingest','merge'].includes(kind))prompt+=`\nJSON 正本：同步維護 ${deal}/_analysis/drafts/questions_R${readState(dp).round}.json。每題包含 question_id、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。既有題永遠保留 question_id；只修改 revision，新題使用不重複 q-rN-NNN。合併與 delta 都更新同一 JSON，Markdown 是人讀版。`;
   prompt=`執行 ID：${run_id}。persona 名單以此為準：${config.personas.map(p=>'persona-'+p).join('、')}。\n`+prompt;
   const logPath = path.join(dp, '_analysis', 'run.log');
   const evPath = path.join(dp, '_analysis', 'run.events.jsonl');
@@ -555,6 +557,8 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === '/api/reviewlog') {
       const dp = dealPath(q.get('deal'));
       const round = Number(q.get('round')) || 1;
+      const saved=path.join(dp,'_analysis',`review-state-r${round}.json`);
+      if(fs.existsSync(saved))return json(res,200,{decisions:JSON.parse(fs.readFileSync(saved,'utf8'))});
       const dir = path.join(dp, '_analysis', 'diff-reports');
       let latest = null;
       if (fs.existsSync(dir)) {
@@ -767,20 +771,19 @@ const server = http.createServer(async (req, res) => {
       const dp = dealPath(q.get('deal'));
       const st = readState(dp);
       const round = Number(q.get('round')) || st.round;
-      const merged = path.join(dp, '_analysis', 'drafts', `draft_R${round}_merged.md`);
-      const plain = path.join(dp, '_analysis', 'drafts', `draft_R${round}.md`);
-      const f = fs.existsSync(merged) ? merged : plain;
-      const delta = path.join(dp, '_analysis', 'drafts', `draft_R${round}_delta.md`);
-      if (!fs.existsSync(f) && !fs.existsSync(delta)) return json(res, 200, { round, merged: false, questions: [] });
-      const isMerged = f === merged;
-      const rows = fs.existsSync(f) ? parseDraftTable(fs.readFileSync(f, 'utf8'), isMerged) : [];
-      if (fs.existsSync(delta)) for (const r of parseDraftTable(fs.readFileSync(delta, 'utf8'), false)) rows.push({ ...r, delta: true });
-      return json(res, 200, { round, merged: isMerged, questions: rows, hasDelta: fs.existsSync(delta) });
+      return json(res,200,questions.load(dp,round,parseDraftTable));
     }
     if (u.pathname === '/api/review' && req.method === 'POST') {
       const { deal, decisions } = JSON.parse(await readBody(req));
       const dp = dealPath(deal);
       const st = readState(dp);
+      const current=questions.load(dp,st.round,parseDraftTable).questions;
+      const byId=new Map(current.map(q=>[q.question_id,q]));
+      if(!Array.isArray(decisions))throw httpErr(400,'decisions must be an array');
+      for(const d of decisions){
+        d.question_id=d.question_id||current.find(q=>q.no===d.no)?.question_id;
+        if(!byId.has(d.question_id))throw httpErr(400,'unknown question_id');
+      }
       const ts = new Date().toISOString().slice(0, 10);
       const rep = ['# 合併審核紀錄 — Round ' + st.round + '（' + ts + '）', ''];
       for (const d of decisions) {
@@ -806,6 +809,7 @@ const server = http.createServer(async (req, res) => {
         py.stdin.write(JSON.stringify({ path: out, rows, sheet: 'Q-list' }));
         py.stdin.end();
       });
+      fs.writeFileSync(path.join(dp,'_analysis',`review-state-r${st.round}.json`),JSON.stringify(Object.fromEntries(decisions.map(d=>[d.question_id,{keep:d.keep,reason:d.reason,edited:d.editedText||''} ])),null,2));
       st.lifecycle = 'merged'; writeState(dp, st);
       return json(res, 200, { xlsx: `${deal}_merged Qlist_R${st.round}.xlsx` });
     }

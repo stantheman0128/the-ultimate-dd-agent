@@ -109,3 +109,6 @@ Canonical metric 登記表在 `knowledge/metrics.json`（id、別名、公式、
 ## 公開示範版的資料邊界
 
 版控與匯出僅保留合成案；不得把真實案件的名稱、profile、數字、交易條件或蒸餾紀錄寫入公開題庫。蒸餾的通用題型須抽象化並經檢查才可公開。
+
+## 題目 JSON 正本與穩定 ID
+所有 persona 與匯整層同時輸出 questions_RN.json 與 draft_RN.md。正本是 JSON 陣列，每題含 question_id（q-rN-NNN）、text、cat、why、evidence:[{doc,loc}]、wave、channel、source、revision、persona。重排、改寫、合併與增量時既有 ID 不變，revision 遞增；新題用全新 ID。不得用題目順序作為 identity。合併題記 merged_from，原題留存並由 Reviewer 標 merge_duplicate。

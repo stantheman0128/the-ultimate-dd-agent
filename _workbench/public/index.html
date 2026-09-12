@@ -1049,7 +1049,7 @@ async function loadDraft(){
       const {decisions} = await api('/api/reviewlog?' + enc({deal:cur, round:viewRound}));
       document.querySelectorAll('.qrow').forEach((r,i)=>{
         if (!draft[i]) return;
-        const dcx = decisions[String(draft[i].no)]; if (!dcx) return;
+        const dcx = decisions[draft[i].question_id] || decisions[String(draft[i].no)]; if (!dcx) return;
         if (!dcx.keep){
           const cb = r.querySelector('input[type=checkbox]');
           cb.checked = false; r.classList.add('cut');
@@ -1123,7 +1123,7 @@ function saveRevState(){
     const ob = $('ob'+i);
     const e = EDITS[i];
     if (cb.checked && !sel && !e && !(ob && ob.value)) return;
-    st[draft[i].no] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'' };
+    st[draft[i].question_id] = { keep: cb.checked, reason: sel?sel.textContent:'', other: ob?ob.value:'', edited: e||'' };
   });
   localStorage.setItem(revKey(), JSON.stringify(st));
 }
@@ -1131,7 +1131,7 @@ function restoreRevState(){
   let st; try { st = JSON.parse(localStorage.getItem(revKey())||'{}'); } catch { st = {}; }
   document.querySelectorAll('.qrow').forEach((r,i)=>{
     if (!draft[i]) return;
-    const s = st[draft[i].no]; if (!s) return;
+    const s = st[draft[i].question_id]; if (!s) return;
     const cb = r.querySelector('input[type=checkbox]');
     if (!s.keep && cb.checked && !cb.disabled){ cb.checked = false; r.classList.add('cut'); }
     if (s.reason) r.querySelectorAll('.rchip').forEach(c=>{ if (c.textContent === s.reason) c.classList.add('sel'); });
@@ -1167,7 +1167,7 @@ async function submitReview(){
     let reason='';
     if(!keep){const s=row.querySelector('.rchip.sel');reason=s?s.textContent:'';
       if(reason==='其他')reason='其他：'+($('ob'+i).value.trim()||'（未填）');}
-    return {no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||''};
+    return {question_id:x.question_id,no:x.no,cat:x.cat,q:x.q,why:(x.source?x.source+' · ':'')+(x.why||''),keep,reason,editedText:EDITS[i]||''};
   });
   try {
     const r = await api('/api/review',{method:'POST',body:JSON.stringify({deal:cur,decisions})});
