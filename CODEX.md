@@ -30,3 +30,10 @@ Codex CLI 使用主機既有 `codex login`、`CODEX_API_KEY` 或 `OPENAI_API_KEY
 只操作指定案件，跨案題型比對需另外要求。代理不可改核准帳本、settings、active.json 或呼叫核准 API。規則狀態與核准內容由 server 帳本驗證；此為本地單使用者工作流的資料完整性機制，不是對同帳號惡意程序的 OS 權限隔離。
 
 `npm --prefix _workbench test` 執行確定性測試。真實模型及代理覆寫的生效狀況需另外驗證，假 CLI 或設定能解析並不等於模型成功執行。
+
+
+## 與專案對話並存
+
+「搜尋資料 → 單次文件問答」使用上述雙 provider API／CLI 與 BM25 預算，端點 `/api/ask`。
+「專案對話」保留已合併的 OpenAI 多輪工具檢索與私有記憶，端點 `/api/chat/ask`，需要 OpenAI API key；讀取設定中的 codex.ask_model／ask_effort，輸入受 project-chat.js 的 48,000 bytes 上限約束，沒有 CLI fallback。記憶整理器沿用 QLIST_ASK_MODEL／QLIST_ASK_EFFORT 部署值。
+兩種樣式共用以上功能。詳見 `_workbench/CHAT_DESIGN.md`、`MEMORY_DESIGN.md` 與 `UI_DESIGN.md`。

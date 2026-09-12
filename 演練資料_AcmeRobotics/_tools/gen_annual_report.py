@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
-"""合成示範文件：Acme Robotics FY2025 完整年報（約 520 頁）＋ 客戶合約摘要 xlsx。
-
-為什麼要合成：現有 Acme 演練文件只有 3–6 頁，示範不了「幾百頁 PDF 翻到第 N 頁」。這份年報主表數字與
-既有三頁摘要版（Acme_Robotics_FY2025_Financials_Audited.pdf）完全一致，並在固定頁碼埋雷：
-
-  p.312  Note 27  Related Party Transactions — 向 CEO 全資公司採購 US$640,120（摘要版與 Deck 均未揭露）
-  p.486  Note 41  Credit Facility — 本輪增資逾 US$5.0M 或 change of control 須先取得銀行同意（Deck 未揭露）
-  Note 5           Customer concentration — Top-10 = 88%（與 Top10 xlsx 一致、與 Deck 68% 矛盾）
-  Note 15          Stock-based compensation — 已授予 280,000 股選擇權（解釋 Cap Table「Unallocated 5.2%」）
-
-另產出 demo_extra/Acme_客戶合約摘要_2026H1.xlsx（現場拖入用）：LogiOne 合約到期 2026-12-31，與 Deck 的 2027/06 矛盾。
+"""產生 Acme Robotics 合成示範年報與客戶合約摘要。
 
 用法：python3 演練資料_AcmeRobotics/_tools/gen_annual_report.py
-輸出：演練資料_AcmeRobotics/Acme_Robotics_FY2025_Annual_Report_Full.pdf、demo_extra/Acme_客戶合約摘要_2026H1.xlsx
+產物僅供測試與示範，不代表真實公司資料。
 """
 import os, random, datetime
 from reportlab.lib.pagesizes import letter

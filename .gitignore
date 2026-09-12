@@ -9,6 +9,7 @@
 !/ROADMAP.md
 !/.codex/
 !/.agents/
+!/.github/
 !/_workbench/
 !/knowledge/
 !/演練資料_AcmeRobotics/
@@ -51,3 +52,13 @@ _workbench/settings.json.tmp
 _workbench/.rule-approvals.json*
 knowledge/learned/*.tmp
 knowledge/skills/_proposed/
+# Private project conversations and disposable search databases
+**/_analysis/conversations/
+**/_analysis/retrieval/
+**/_analysis/index/*.meta
+**/_analysis/index/*.tmp
+
+_workbench/.tessdata/
+
+# Private learned memory, summaries, background jobs, rebuildable FTS index
+/_private_memory/

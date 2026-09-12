@@ -15,12 +15,17 @@ const {randomUUID}=require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const ruleStore=rulesModule.createStore(ROOT);
+const chat = require('./project-chat');
+const {MemoryStore}=require('./memory-store');
+
+const memory=new MemoryStore(ROOT,dealPath);
+function runMemoryJobs(){const apiKey=process.env.OPENAI_API_KEY||readToken();if(!MOCK&&apiKey)memory.drain(new OpenAI({apiKey,maxRetries:0,timeout:90000}),ASK_MODEL,chat).catch(e=>console.error('Memory job failed:',e.message));}
 const PUB = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT || 8765);
 const MOCK = process.env.QLIST_MOCK === '1';
 const EXCLUDE = new Set(['knowledge']);
 const PY = process.env.PYTHON_BIN || 'python3';
-// 問 AI（互動層）設定：整份文件帶頁碼進 context，用 prompt caching 固定住；超過預算才挑頁
+// Project chat uses bounded, local retrieval and explicit evidence tool calls.
 const ASK_MODEL = process.env.QLIST_ASK_MODEL || provider.DEFAULT_MODEL;
 const ASK_EFFORT = process.env.QLIST_ASK_EFFORT || 'low';
 const ASK_BUDGET = Number(process.env.QLIST_ASK_BUDGET_TOKENS || 150000); // 估算 token（拉丁字元 /4、CJK ×1.2）；1M context 留餘裕
@@ -80,7 +85,7 @@ function listDocs(dp) {
       cat: catMap[f] || guessCat(f),
       card: !!findCard(dp, f),
       verification:readCardVerification(dp).cards?.find(c=>c.file===f)||null,
-      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
+      index: im ? { kind: im.kind, pages: im.page_count || im.sheet_count || 0, needsOcr: im.needs_ocr_pages || 0, chars: im.total_chars || 0, status: im.preprocess_status, summary: im.enrichment?.summary_zh || '', warnings: im.warnings || [], error: im.error || '', stale: im.mtime !== st.mtimeMs / 1000 && Math.abs(im.mtime - st.mtimeMs / 1000) > 1 } : null,
       indexing: INDEXING.has(path.join(dir, f)),
     });
   };
@@ -224,6 +229,7 @@ function readCats(dp) {
 }
 
 // ---------- 可定位層：_analysis/index/<檔名>.index.json ----------
+const INDEX_META_CACHE = new Map();
 const INDEX_CACHE = new Map(); // indexPath -> { mtimeMs, data }
 const INDEXING = new Set();    // 正在索引的原始檔絕對路徑
 function indexDir(dp) { return path.join(dp, '_analysis', 'index'); }
@@ -234,7 +240,9 @@ function loadIndex(dp, file) {
   if (c && c.mtimeMs === st.mtimeMs) return c.data;
   try {
     const data = JSON.parse(fs.readFileSync(ip, 'utf8'));
-    INDEX_CACHE.set(ip, { mtimeMs: st.mtimeMs, data });
+    // Keep at most 8 source files / 32 MB; metadata has a separate lightweight cache.
+    if (st.size <= 32*1024*1024) INDEX_CACHE.set(ip, { mtimeMs: st.mtimeMs, data, bytes: st.size });
+    while (INDEX_CACHE.size > 8 || [...INDEX_CACHE.values()].reduce((n,c)=>n+c.bytes,0)>32*1024*1024) INDEX_CACHE.delete(INDEX_CACHE.keys().next().value);
     return data;
   } catch { return null; }
 }
@@ -245,8 +253,13 @@ function indexMeta(dp) {
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.index.json')) continue;
     const name = f.slice(0, -'.index.json'.length);
-    const d = loadIndex(dp, name);
-    if (d) out[name] = { kind: d.kind, page_count: d.page_count, sheet_count: d.sheet_count, needs_ocr_pages: d.needs_ocr_pages, total_chars: d.total_chars, mtime: d.mtime };
+    const ip=path.join(dir,f),st=fs.statSync(ip),cached=INDEX_META_CACHE.get(ip);
+    if(cached?.mtime===st.mtimeMs){out[name]=cached.meta;continue;}
+    let d;
+    try {const m=JSON.parse(fs.readFileSync(ip+'.meta','utf8'));if(m.indexSize===st.size&&Math.abs(m.indexMtime-st.mtimeMs/1000)<.001)d=m;}catch{}
+    if(!d)d=loadIndex(dp,name);
+    if(d){const meta={kind:d.kind,page_count:d.page_count,sheet_count:d.sheet_count,needs_ocr_pages:d.needs_ocr_pages,total_chars:d.total_chars,mtime:d.mtime,preprocess_status:d.preprocess_status,warnings:d.warnings,error:d.error,enrichment:d.enrichment};out[name]=meta;INDEX_META_CACHE.set(ip,{mtime:st.mtimeMs,meta});}
+    if(INDEX_META_CACHE.size>5000)INDEX_META_CACHE.delete(INDEX_META_CACHE.keys().next().value);
   }
   return out;
 }
@@ -254,11 +267,18 @@ function loadAllIndex(dp) {
   return Object.keys(indexMeta(dp)).map(n => loadIndex(dp, n)).filter(Boolean);
 }
 // 跑 index_doc.py（單檔或全案）。非同步、不阻塞 HTTP；回傳 promise 供需要等待的路由使用。
-function runIndexer(dp, file, force) {
+const INDEX_QUEUE=new Map();
+function runIndexer(dp,file,force){
+  const prior=INDEX_QUEUE.get(dp)||Promise.resolve();
+  const job=prior.catch(()=>{}).then(()=>runIndexerNow(dp,file,force));
+  INDEX_QUEUE.set(dp,job);job.finally(()=>{if(INDEX_QUEUE.get(dp)===job)INDEX_QUEUE.delete(dp)});return job;
+}
+function runIndexerNow(dp, file, force) {
   const args = [path.join(__dirname, 'index_doc.py'), dp];
   if (file) args.push('--file', file);
   if (force) args.push('--force');
-  if (file) INDEXING.add(path.isAbsolute(file) ? file : path.join(dp, file));
+  const targets=file?[path.isAbsolute(file)?file:path.join(dp,file)]:listDocs(dp).map(d=>path.join(dp,/^R\d+$/.test(d.round)?'round'+d.round.slice(1):'',d.name));
+  targets.forEach(f=>INDEXING.add(f));
   return new Promise(resolve => {
     const py = spawn(PY, args, { cwd: ROOT });
     let out = '', err = '';
@@ -266,8 +286,9 @@ function runIndexer(dp, file, force) {
     py.stderr.on('data', d => err += d);
     py.on('error', e => { err += String(e); });
     py.on('close', code => {
-      if (file) INDEXING.delete(path.isAbsolute(file) ? file : path.join(dp, file));
+      targets.forEach(f=>INDEXING.delete(f));
       let parsed = null; try { parsed = JSON.parse(out.trim().split('\n').pop()); } catch {}
+      if (code === 0) chat.retrieval(dp, {op:'catalog'}).catch(e => console.error('Retrieval index:', e.message));
       resolve({ code, result: parsed, error: code === 0 ? '' : err.slice(-600) });
     });
   });
@@ -639,6 +660,12 @@ const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   const q = u.searchParams;
   try {
+    // Local APIs may be called by the workbench or a local CLI, never by a foreign web origin.
+    if(u.pathname.startsWith('/api/')) {
+      const host=req.headers.host,listenPort=server.address()?.port||PORT;
+      if(![`127.0.0.1:${listenPort}`,`localhost:${listenPort}`].includes(host))throw httpErr(403,'不接受此工作台網址');
+      if((req.headers.origin && req.headers.origin!==`http://${host}`)||req.headers['sec-fetch-site']==='cross-site')throw httpErr(403,'不接受其他網站存取本機工作台');
+    }
     // ---- API ----
     if (u.pathname === '/api/deals') {
       const deals = fs.readdirSync(ROOT).filter(isDealName).map(dealSummary);
@@ -714,7 +741,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/engine') {
       const config=settings.readSettings(), statuses=Object.fromEntries(['codex','claude'].map(p=>[p,providerStatus(config,p)])), selected=statuses[config.provider], ask=askConfig(config);
-      return json(res,200,{...selected,provider:config.provider,providers:statuses,mock:MOCK,token:!!readToken(),askModel:ask.model,askEffort:ask.effort,askBudget:ask.budget,sdk:true,skills:readActiveSkills()});
+      return json(res,200,{...selected,provider:config.provider,providers:statuses,mock:MOCK,token:!!readToken(),askModel:ask.model,askEffort:ask.effort,askBudget:ask.budget,sdk:true,chat:{provider:'codex',model:askConfig({...config,provider:'codex'}).model,maxInputBytes:chat.MAX_INPUT_BYTES},skills:readActiveSkills()});
     }
     if (u.pathname === '/api/token' && req.method === 'POST') {
       const { token } = JSON.parse(await readBody(req));
@@ -821,8 +848,8 @@ const server = http.createServer(async (req, res) => {
       const dp = dealPath(q.get('deal'));
       const meta = indexMeta(dp);
       const docs = listDocs(dp).map(d => ({ name: d.name, round: d.round, index: d.index, indexing: d.indexing }));
-      const total = loadAllIndex(dp).reduce((s, d) => s + docChars(d), 0);
-      return json(res, 200, { docs, totalTokens: total, budget: ASK_BUDGET, wholeCorpus: total <= ASK_BUDGET });
+      const total = Object.values(meta).reduce((s,d)=>s+Math.ceil((d.total_chars||0)/3),0);
+      return json(res, 200, { docs, totalTokens: total, budget: ASK_BUDGET, wholeCorpus: false });
     }
     if (u.pathname === '/api/page') {
       const dp = dealPath(q.get('deal'));
@@ -1017,7 +1044,7 @@ const server = http.createServer(async (req, res) => {
       } else where = path.join(dp, '_analysis', 'drafts');
       const f = safeJoin(where, path.basename(q.get('file') || ''));
       if (!fs.existsSync(f)) throw httpErr(404, 'file not found');
-      const INLINE = { '.pdf': 'application/pdf', '.png': 'image/png', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
+      const INLINE = { '.pdf': 'application/pdf', '.png': 'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp', '.gif':'image/gif', '.bmp':'image/bmp', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
       const ct = INLINE[path.extname(f).toLowerCase()];
       res.writeHead(200, {
         'Content-Type': ct || 'application/octet-stream',
@@ -1185,7 +1212,13 @@ const server = http.createServer(async (req, res) => {
       const dr = path.join(an, 'drafts');
       if (fs.existsSync(dr)) for (const f of fs.readdirSync(dr)) if (f.endsWith('.md')) scanFile(path.join(dr, f), '草稿 · ' + f);
       scanFile(path.join(dp, '_notes.md'), '背景備註');
-      return json(res, 200, { hits });
+      let warnings=[];
+      try{
+        const found=await chat.retrieval(dp,{op:'search',query:needle});warnings=found.warnings||[];
+        // Preserve Chinese routing descriptions from project chat after evidence-first BM25 hits.
+        for(const m of found.matches||[])if(m.kind==='metadata'||!hits.length)hits.push({src:`${m.kind==='metadata'?'AI 導覽／描述':'內容'} · ${m.file} · ${m.location}`,text:m.snippet,evidenceId:m.id,score:0});
+      }catch(e){warnings.push('補充搜尋暫不可用：'+e.message);}
+      return json(res, 200, { hits, warnings });
     }
     if (u.pathname === '/api/ask' && req.method === 'POST') {
       // SSE 串流：{meta} → {delta}* → {usage} → {done}
@@ -1213,6 +1246,52 @@ const server = http.createServer(async (req, res) => {
       send({ done: true });
       return res.end();
     }
+    if(u.pathname==='/api/memory/status'){const deal=q.get('deal');dealPath(deal);const id=q.get('conversation');const job=memory.jobs(deal).filter(j=>j.conversationId===id).at(-1);return json(res,200,{status:job?.status||'none'});}
+    if (u.pathname === '/api/memory') {
+      if(req.method==='GET') {const scope=q.get('scope');memory.dir(scope);return json(res,200,{entries:memory.list(scope),jobs:memory.jobs(scope).map(j=>({id:j.id,status:j.status,error:j.error}))});}
+      const b=JSON.parse(await readBody(req,16000));memory.dir(b.scope);
+      if(req.method==='DELETE'){memory.remove(b.scope,b.id,b.revision);return json(res,200,{ok:true});}
+      if(req.method!=='POST')throw httpErr(405,'method not allowed');
+      return json(res,200,memory.save(b.scope,{title:b.title,content:b.content,status:b.status,kind:b.scope==='global'?'rule':'note'},{id:b.id,revision:b.revision}));
+    }
+    if (u.pathname === '/api/memory/retry' && req.method==='POST') {const b=JSON.parse(await readBody(req,16000));dealPath(b.deal);memory.retry(b.deal);runMemoryJobs();return json(res,200,{ok:true});}
+    if (u.pathname === '/api/conversation/memory' && req.method==='POST') {
+      const b=JSON.parse(await readBody(req,16000)),dp=dealPath(b.deal),c=chat.read(dp,b.id);
+      if(chat.locks.has(chat.fileFor(dp,c.id)))throw httpErr(409,'請等這輪回答完成再調整記憶');
+      const selected=memory.scopes(b.deal,b.projects).filter(s=>s!=='global'&&s!==b.deal);
+      if(JSON.stringify(selected.slice().sort())!==JSON.stringify((c.memoryProjects||[]).slice().sort()))c.memoryVersion=(c.memoryVersion||0)+1;
+      c.memoryProjects=selected;chat.save(dp,c);return json(res,200,c);
+    }
+    if (u.pathname === '/api/conversations') {
+      if (req.method === 'POST') {
+        const body=JSON.parse(await readBody(req, 16000));
+        const dp=dealPath(body.deal),projects=memory.scopes(body.deal,body.memoryProjects||[]).filter(s=>s!=='global'&&s!==body.deal),c=chat.create(dp);c.memoryProjects=projects;chat.save(dp,c);return json(res,200,c);
+      }
+      return json(res,200,{conversations:chat.list(dealPath(q.get('deal')))});
+    }
+    if (u.pathname === '/api/conversation') return json(res,200,chat.read(dealPath(q.get('deal')),q.get('id')));
+    if (u.pathname === '/api/evidence') {
+      const result=await chat.retrieval(dealPath(q.get('deal')),{op:'read',id:q.get('id')});
+      return json(res,result.error?404:200,result);
+    }
+    if (u.pathname === '/api/chat/ask' && req.method === 'POST') {
+      const body=JSON.parse(await readBody(req, 16000));
+      const dp=dealPath(body.deal);
+      const question=typeof body.question==='string'?body.question.trim():'';
+      if (!question || Buffer.byteLength(question)>6000) throw httpErr(400,'問題不可空白，且不得超過 6000 bytes');
+      const conversation=body.conversationId?chat.read(dp,body.conversationId):chat.create(dp);
+      if (chat.locks.has(chat.fileFor(dp,conversation.id))) throw httpErr(409,'此對話仍在回覆中');
+      const abort=new AbortController();res.on('close',()=>{if(!res.writableEnded)abort.abort()});
+      res.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-cache','Connection':'keep-alive','X-Accel-Buffering':'no'});
+      const send=e=>{if(!res.destroyed)res.write('data: '+JSON.stringify(e)+'\n\n')};
+      const apiKey=process.env.OPENAI_API_KEY||readToken();
+      await chat.run({dp,conversation,question,model:askConfig({...settings.readSettings(),provider:'codex'}).model,effort:askConfig({...settings.readSettings(),provider:'codex'}).effort,
+        client:apiKey?new OpenAI({apiKey,maxRetries:0,timeout:90000}):null,
+        mock:MOCK,memory,send,signal:abort.signal});
+      res.end();
+      if(!MOCK&&conversation.messages.at(-1)?.status==='completed'){memory.enqueue(body.deal,conversation);setImmediate(runMemoryJobs);}
+      return;
+    }
     // ---- 靜態 ----
     let p = u.pathname === '/' ? '/index.html' : u.pathname;
     const fp = safeJoin(PUB, '.' + p);
@@ -1228,3 +1307,5 @@ const server = http.createServer(async (req, res) => {
 if (require.main === module) server.listen(PORT, '127.0.0.1', () => console.log(`Pipeline DD 工作台 http://127.0.0.1:${server.address().port}  root=${ROOT}  mock=${MOCK}`));
 
 module.exports={tokenize,bm25Index,bm25Scores,server,buildAskContext,parseDraftTable,startRun,runConfig,agentDefinitions};
+
+if (require.main === module) setImmediate(runMemoryJobs);

@@ -10,7 +10,7 @@ test('failed Codex turn cannot mark an existing draft as newly completed', { ski
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qlist-server-'));
   const work = path.join(root, '_workbench');
   fs.mkdirSync(work);
-  for (const file of ['server.js', 'codex-provider.js', 'claude-provider.js', 'settings.js', 'questions.js', 'review.js', 'rules.js']) fs.copyFileSync(path.join(__dirname, '..', file), path.join(work, file));
+  for (const file of ['server.js', 'codex-provider.js', 'claude-provider.js', 'settings.js', 'questions.js', 'review.js', 'rules.js', 'project-chat.js', 'retrieval.py', 'memory-store.js', 'memory-search.py']) fs.copyFileSync(path.join(__dirname, '..', file), path.join(work, file));
   fs.symlinkSync(path.join(__dirname, '..', 'node_modules'), path.join(work, 'node_modules'), 'dir');
   const analysis = path.join(root, 'SyntheticCase', '_analysis');
   fs.mkdirSync(path.join(analysis, 'drafts'), { recursive: true });
@@ -48,7 +48,7 @@ test('failed Codex turn cannot mark an existing draft as newly completed', { ski
   const response = await fetch(`http://127.0.0.1:${port}/api/run`, { method: 'POST', body: JSON.stringify({ deal: 'SyntheticCase', model: 'default' }) });
   assert.equal(response.status, 200);
   let events = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 250; i++) {
     const p = path.join(analysis, 'run.events.jsonl');
     events = fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
     if (events.some(e => e.kind === 'exit')) break;

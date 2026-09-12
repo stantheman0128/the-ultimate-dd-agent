@@ -14,7 +14,7 @@ VC 盡職調查的 Q-list 助手。收到新創的 Data Room 後消化文件、�
 
 **沒有**：任何真實客戶的 Data Room。實際案件資料夾一律由 `.gitignore` 白名單擋在版控之外，不會進 repo。這是刻意的設計：`.gitignore` 預設忽略頂層一切，只放行確定不含機密的引擎檔案，新增的客戶資料夾會被預設擋下。
 
-想試跑，用 `演練資料_AcmeRobotics/`（埋了幾個地雷的假案，供引擎驗收）。
+想試跑，用 `演練資料_AcmeRobotics/`（合成案例，供操作示範與引擎驗收）。
 
 ## 快速上手
 
@@ -49,4 +49,4 @@ knowledge/question-bank.md   # 活題庫
 
 ## Next
 
-一鍵投委會報告、去識別 JSONL 訓練資料匯出、FTS5／hybrid 檢索、DD 進度儀表板。詳見 [ROADMAP.md](ROADMAP.md)。
+一鍵投委會報告、去識別 JSONL 訓練資料匯出、BM25／既有 FTS5 共用與 hybrid 檢索、DD 進度儀表板。詳見 [ROADMAP.md](ROADMAP.md)。

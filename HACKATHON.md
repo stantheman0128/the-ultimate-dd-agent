@@ -42,3 +42,6 @@ QLIST_MOCK=1 PORT=8765 node _workbench/server.js
 附帶的 facts 與 Reviewer 結果是手寫合成示範。假引擎時間軸、候選規則是明確標記的操作測試素材，不能代表真實模型已讀文件或完成學習。逐筆數值命中也不等於覆蓋率或事實正確率；QC 與原文審查仍必要。
 
 `bash _workbench/export_demo.sh /path/to/destination` 匯出通用引擎與合成案；匯出前確認允許目錄內沒有新增私有資料。
+
+
+專案對話保留另一輪已加入的 OpenAI 工具檢索與私有記憶，需要 OpenAI API key。雙 provider 單次問答位於搜尋資料頁；兩者不可混稱。經典／新版樣式均可切換，審題與學習功能共用。
