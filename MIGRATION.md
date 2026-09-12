@@ -59,3 +59,16 @@ AGENTS.md now contains the full DD rules, superseding the initially requested co
 - 保留 Host／Origin 驗證，PORT=0 測試採實際監聽 port。保留最新文件解析與索引失效處理，沒有另建 FTS 系統。
 - 合併後 50 個 Node 測試與 5 個 Python 測試通過；新增一項 DOM 模擬測試檢查整頁無重複 ID、設定 modal/provider render、審題建議及方法論差異顯示。這不是瀏覽器視覺驗收。
 - 隔離 HTTP 驗證同時覆蓋新 `/api/ask`、原專案對話的新端點、對話保存與搜尋；export_demo.sh 也包含兩條路徑所需模組，排除私有對話、記憶與執行期核准帳本。
+
+
+### DELTA 增補 — 2026-09-12
+
+`CODEX_TASKS_final_DELTA.md` 已合併至本次實作。以已合併 PR #4、#5 的 main（49bdb9b）為基礎新增 DELTA 分支；保留巢狀原檔、同名／symlink 防護、HTML/XML 索引與完整證據欄。
+
+- 3C：schema 4 全文索引預設零模型 token；PDF 表格／圖片面積聯集、PPTX 原生圖表、JPG／PNG／WebP／HEIC 視覺頁、LibreOffice 副本重算公式。PNG 渲染 API 與「圖 N 頁」chip，過期原檔拒絕渲染；docx／文字引用合成段號。既有 schema 3 索引需重建才有新欄位。
+- 字卡五段，合併保留重要陳述；≤60 字逐字摘錄去空白後核對引用頁，改寫／錯數字可抓出；QC 與 persona 同步。沒有 OCR 文字的圖上內容仍需人工核對，不繞過 miss 門檻。
+- 3J：metrics aliases 與同義詞擴展，原詞權重 1、擴展詞 0.6；CLI／搜尋頁／問 AI 共用 BM25。中英文財務詞可跨語言定位，sheet 命中保留實際格位。搜尋 CLI 先搜再讀頁，避免代理整份載入索引。
+- 3F 核准／deal scope／folded_into 與方法論升版沿用已完成實作，沒有重做。Token 帳與參數表補在 `_workbench/README.md`；用量數字是估算，非 live 實測。
+- Node 54 項通過，含 HTTP 圖片／過期拒絕、跨語言 sheet 搜尋、規則核准→派工注入、UI DOM 與原搜尋排名；Python 15 項通過，包括真實 LibreOffice PPTX→PDF→PNG、公式重算副本不改原檔、HEIC 解碼、PDF 表格與重疊圖片面積、巢狀渲染／同名防護、逐字陳述核對；CI 若未裝 LibreOffice，實際轉檔那一項會明示 skip，fallback 測試仍跑。
+- Codex／Claude 13 份代理正文一致；指定污染掃描無結果。合成測試檔只在暫存目錄產生，沒有新增真案資料或改動原示範二進位檔。
+- 瀏覽器視覺操作與真實模型 pipeline 仍未完成驗收；API／DOM 測試及本地轉檔測試不能替代它們。DOCX 完整嵌入圖片定位依 DELTA 保留 P2。

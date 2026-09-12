@@ -61,7 +61,7 @@
 | TXT／Markdown | 文字分段、中文用途摘要 |
 | 其他／損毀／加密 | 顯示抽取失敗及原因，請轉成上述格式；不是已完成索引 |
 
-OCR 使用既有 PyMuPDF 與 Tesseract 語言資料；視覺與中文摘要重用 OpenAI Responses SDK，圖片先縮至最長邊 2400px。沒有 API key 或 API 失敗時保留本地抽取結果並標為部分完成。預處理會將抽樣文字／需要辨識的圖片傳到已設定的 OpenAI API，按用量計費；`QLIST_INDEX_AI=0` 可停用，`QLIST_INDEX_MODEL` 可指定模型。原件未變更時不重做；要重試 AI 摘要請按重建索引。影像頁甚多時，首次視覺處理可能較久；同一案件的索引工作依序執行。
+OCR 使用既有 PyMuPDF 與 Tesseract 語言資料；視覺與中文摘要重用 OpenAI Responses SDK，圖片先縮至最長邊 2400px。沒有 API key 或 API 失敗時保留本地抽取結果並標為部分完成。預處理會將抽樣文字／需要辨識的圖片傳到已設定的 OpenAI API，按用量計費；DELTA 起預設停用額外模型描述，只有 `QLIST_INDEX_AI=1` 才啟用，`QLIST_INDEX_MODEL` 可指定模型。原件未變更時不重做；要重試 AI 摘要請按重建索引。影像頁甚多時，首次視覺處理可能較久；同一案件的索引工作依序執行。
 
 全文搜尋和專案對話共用 SQLite 檢索；繁簡中文詞彙可展開為常見英語財務詞，也能命中文件的中文 AI 描述。這不是任意跨語言同義詞均命中的保證。文件清單可展開中文說明，狀態與警告可查；搜尋結果區分原文與 AI 描述，並可檢視／下載來源。
 
@@ -70,3 +70,5 @@ OCR 使用既有 PyMuPDF 與 Tesseract 語言資料；視覺與中文摘要重�
 新增驗收：6 種圖片格式與掃描 PDF 的 OCR、Big5 CSV、Excel 公式、中文搜尋英文 PDF、AI 摘要／原文分離、降級狀態、千頁摘要取樣預算。合成發票 PNG 真實模型辨識得到 USD 18,600 與 2026-10-15，中文「倉庫巡檢攝影機」可找到該圖片；英文質押 PDF 以中文「設備質押」可命中原文。驗收資料留在本機 `多格式驗收_合成資料/`，不含客戶資料。
 
 來源：[PyMuPDF OCR](https://pymupdf.readthedocs.io/en/latest/recipes-ocr.html)、[Tesseract 官方語言模型](https://github.com/tesseract-ocr/tessdata_fast)、[OpenAI 視覺輸入](https://developers.openai.com/api/docs/guides/images-vision)。
+
+DELTA 索引契約與設定以 [README.md](README.md#delta全文視覺頁與陳述核對) 為準：掃描頁保留本地 OCR，原生索引不呼叫模型；獨立圖片不預先抽文字，改標視覺頁供 extractor 讀 PNG。
